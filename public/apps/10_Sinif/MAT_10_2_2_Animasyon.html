@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10.2.2 - Taksimetre (Doğrusal Fonksiyon) Animasyonu</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --panel-bg: #1e293b;
+            --primary: #f59e0b; /* Amber/Taxi Yellow */
+            --accent: #10b981; /* Green */
+            --danger: #ef4444; /* Red */
+            --text-main: #f8fafc;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        
+        body { background-color: var(--bg-color); color: var(--text-main); display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; }
+
+        .header { width: 100%; max-width: 1000px; display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background: var(--panel-bg); border-radius: 12px; margin-bottom: 20px; border: 1px solid rgba(245, 158, 11, 0.3); }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 800; color: var(--primary); font-size: 1.2rem; }
+        .kazanim { background: rgba(245, 158, 11, 0.1); padding: 5px 15px; border-radius: 6px; color: var(--primary); }
+
+        h1 { font-size: 2.2rem; margin-bottom: 10px; text-align: center; }
+        .subtitle { color: #94a3b8; font-size: 1.05rem; margin-bottom: 30px; text-align: center; max-width: 800px; }
+
+        .container { display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 1000px; }
+
+        .road-container {
+            height: 150px; background: #334155; border-radius: 12px; position: relative; overflow: hidden;
+            display: flex; align-items: center; border-bottom: 4px solid #94a3b8;
+        }
+        
+        .road-lines {
+            position: absolute; width: 200%; height: 6px; background: repeating-linear-gradient(90deg, transparent, transparent 40px, #f8fafc 40px, #f8fafc 80px);
+            bottom: 30px; left: 0;
+        }
+        
+        .taxi {
+            position: absolute; bottom: 35px; left: 50px; width: 80px; height: 40px;
+            background: var(--primary); border-radius: 10px 20px 0 0; display: flex; justify-content: center;
+            align-items: center; font-weight: 800; color: black; z-index: 10;
+        }
+        .taxi::before, .taxi::after { content: ''; position: absolute; bottom: -10px; width: 20px; height: 20px; background: #000; border-radius: 50%; }
+        .taxi::before { left: 10px; }
+        .taxi::after { right: 10px; }
+
+        .dashboard { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
+        @media(max-width: 800px) { .dashboard { grid-template-columns: 1fr; } }
+
+        .controls { background: var(--panel-bg); padding: 25px; border-radius: 12px; display: flex; flex-direction: column; gap: 20px; border: 1px solid rgba(255,255,255,0.05); }
+
+        .meter-box {
+            background: #020617; border: 2px solid var(--danger); border-radius: 8px; padding: 15px;
+            text-align: center; color: var(--danger); font-family: monospace; font-size: 2.5rem; font-weight: bold;
+            box-shadow: inset 0 0 15px rgba(239, 68, 68, 0.5);
+        }
+
+        .slider-group label { display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 8px; font-size: 0.95rem; }
+        input[type=range] { width: 100%; accent-color: var(--primary); }
+        .val-badge { color: var(--primary); font-weight: 800; background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 4px; }
+
+        .btn { background: var(--primary); color: black; border: none; padding: 12px; border-radius: 8px; font-size: 1.1rem; font-weight: 800; cursor: pointer; transition: 0.2s; }
+        .btn:hover { filter: brightness(1.1); }
+
+        .graph-container {
+            background: #0b1120; border-radius: 12px; border: 1px solid rgba(245, 158, 11, 0.3);
+            position: relative; overflow: hidden; min-height: 350px; display: flex; align-items: center; justify-content: center;
+        }
+
+        svg { width: 100%; height: 100%; display: block; }
+        .grid-line { stroke: rgba(245, 158, 11, 0.1); stroke-width: 1; }
+        .axis-line { stroke: rgba(245, 158, 11, 0.5); stroke-width: 2; }
+        .axis-label { fill: rgba(245, 158, 11, 0.6); font-size: 14px; font-weight: 600; }
+        
+        .line-path { stroke: var(--primary); stroke-width: 4; fill: none; filter: drop-shadow(0 0 5px var(--primary)); }
+        
+        .current-point { fill: var(--danger); stroke: white; stroke-width: 2; }
+        .current-label { fill: white; font-size: 16px; font-weight: 800; filter: drop-shadow(0 2px 2px #000); }
+
+        .math-eq { text-align: center; font-size: 1.2rem; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-top: 10px;}
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left"><span>@mufithocailematematik</span></div>
+        <div class="kazanim">MAT.10.2.2. Doğrusal Fonksiyonlar (Animasyon)</div>
+    </div>
+    
+    <h1>Taksimetre Animasyonu</h1>
+    <p class="subtitle">Gerçek hayattaki birçok artış doğrusal fonksiyondur. Taksimetrenin açılış ücreti (y-keseni) ve KM başı ücreti (eğim) belirleyip yolculuğu başlatın.</p>
+    
+    <div class="container">
+        
+        <div class="road-container">
+            <div class="road-lines" id="roadLines"></div>
+            <div class="taxi" id="taxiCar">TAKSİ</div>
+        </div>
+
+        <div class="dashboard">
+            <div class="controls">
+                <div class="meter-box" id="meterDisplay">0.00 ₺</div>
+                
+                <div class="slider-group">
+                    <label>Açılış Ücreti (n) <span class="val-badge" id="valN">10 ₺</span></label>
+                    <input type="range" id="slN" min="5" max="50" step="5" value="10">
+                </div>
+                <div class="slider-group">
+                    <label>KM Başı Ücret (m) <span class="val-badge" id="valM">5 ₺</span></label>
+                    <input type="range" id="slM" min="2" max="20" step="1" value="5">
+                </div>
+                
+                <button class="btn" id="btnRun">Yolculuğu Başlat</button>
+                <div class="math-eq" id="mathEq">\( f(x) = 5x + 10 \)</div>
+            </div>
+            
+            <div class="graph-container">
+                <svg viewBox="0 0 100 100" preserveAspectRatio="none" id="graphSvg">
+                    <g transform="scale(1, -1) translate(0, -100)">
+                        <g id="gridGroup"></g>
+                        <!-- Axes -->
+                        <line x1="5" y1="5" x2="100" y2="5" class="axis-line" />
+                        <line x1="5" y1="5" x2="5" y2="100" class="axis-line" />
+                        
+                        <path id="mainLine" class="line-path" d="" />
+                        <circle id="currPt" class="current-point" cx="5" cy="5" r="2" style="display:none;" />
+                    </g>
+                    <!-- Labels without flip -->
+                    <g id="labelsGroup"></g>
+                    <text id="currLbl" class="current-label" x="0" y="0" style="display:none;"></text>
+                </svg>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const slM = document.getElementById('slM');
+        const slN = document.getElementById('slN');
+        const valM = document.getElementById('valM');
+        const valN = document.getElementById('valN');
+        const meterDisplay = document.getElementById('meterDisplay');
+        const btnRun = document.getElementById('btnRun');
+        const mainLine = document.getElementById('mainLine');
+        const currPt = document.getElementById('currPt');
+        const currLbl = document.getElementById('currLbl');
+        const roadLines = document.getElementById('roadLines');
+        
+        let m = 5, n = 10;
+        let isRunning = false;
+        let currentKm = 0; // x
+        let maxKm = 20; // 20 km trip
+        let animFrame;
+
+        function updateParams() {
+            if(isRunning) return;
+            m = parseInt(slM.value);
+            n = parseInt(slN.value);
+            valM.innerText = `${m} ₺`;
+            valN.innerText = `${n} ₺`;
+            meterDisplay.innerText = `${n.toFixed(2)} ₺`;
+            
+            document.getElementById('mathEq').innerHTML = `\\( f(x) = ${m}x + ${n} \\)`;
+            MathJax.typesetPromise([document.getElementById('mathEq')]);
+            
+            drawBaseGraph();
+        }
+
+        function drawBaseGraph() {
+            let maxY = m * maxKm + n;
+            let gridHtml = ''; let labelHtml = '';
+            
+            // X axis: 0 to 20
+            // Map 0->20 to SVG 5->95
+            for(let x=0; x<=20; x+=2) {
+                let sx = 5 + (x / 20) * 90;
+                gridHtml += `<line x1="${sx}" y1="5" x2="${sx}" y2="95" class="grid-line"/>`;
+                if(x > 0) labelHtml += `<text x="${sx}" y="98" class="axis-label" text-anchor="middle">${x}km</text>`;
+            }
+            
+            // Y axis: 0 to maxY
+            let stepY = maxY > 100 ? 50 : (maxY > 50 ? 20 : 10);
+            for(let y=0; y<=maxY*1.1; y+=stepY) {
+                let sy = 5 + (y / (maxY*1.1)) * 90;
+                gridHtml += `<line x1="5" y1="${sy}" x2="95" y2="${sy}" class="grid-line"/>`;
+                if(y > 0) labelHtml += `<text x="4" y="${100 - sy}" class="axis-label" text-anchor="end" dominant-baseline="middle">${y}₺</text>`;
+            }
+            
+            document.getElementById('gridGroup').innerHTML = gridHtml;
+            document.getElementById('labelsGroup').innerHTML = labelHtml;
+            
+            // Initial dot
+            let sy_n = 5 + (n / (maxY*1.1)) * 90;
+            mainLine.setAttribute('d', `M 5 ${sy_n}`);
+            
+            currPt.style.display = 'none';
+            currLbl.style.display = 'none';
+            roadLines.style.transform = `translateX(0)`;
+        }
+
+        function animate() {
+            if(currentKm >= maxKm) {
+                isRunning = false;
+                btnRun.innerText = "Yeniden Başlat";
+                btnRun.disabled = false;
+                return;
+            }
+            
+            currentKm += 0.1;
+            let y = m * currentKm + n;
+            meterDisplay.innerText = `${y.toFixed(2)} ₺`;
+            
+            // Road animation
+            roadLines.style.transform = `translateX(-${(currentKm * 20) % 80}px)`;
+            
+            // Graph mapping
+            let maxY = m * maxKm + n;
+            let sx = 5 + (currentKm / maxKm) * 90;
+            let sy = 5 + (y / (maxY*1.1)) * 90;
+            
+            let d = mainLine.getAttribute('d');
+            d += ` L ${sx} ${sy}`;
+            mainLine.setAttribute('d', d);
+            
+            currPt.setAttribute('cx', sx);
+            currPt.setAttribute('cy', sy);
+            currPt.style.display = 'block';
+            
+            currLbl.setAttribute('x', sx - 15);
+            currLbl.setAttribute('y', 100 - sy - 5);
+            currLbl.textContent = `(${currentKm.toFixed(1)}, ${Math.round(y)})`;
+            currLbl.style.display = 'block';
+            
+            animFrame = requestAnimationFrame(animate);
+        }
+
+        btnRun.addEventListener('click', () => {
+            if(isRunning) {
+                cancelAnimationFrame(animFrame);
+                isRunning = false;
+                btnRun.innerText = "Devam Et";
+            } else {
+                if(currentKm >= maxKm) {
+                    currentKm = 0;
+                    drawBaseGraph();
+                }
+                isRunning = true;
+                btnRun.innerText = "Durdur";
+                animate();
+            }
+        });
+
+        slM.addEventListener('input', updateParams);
+        slN.addEventListener('input', updateParams);
+
+        window.onload = () => { updateParams(); };
+    </script>
+</body>
+</html>

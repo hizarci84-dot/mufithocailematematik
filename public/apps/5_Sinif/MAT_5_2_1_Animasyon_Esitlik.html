@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eşitliğin Korunumu Animasyonu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0F172A;
+            --bg-light: #1E293B;
+            --primary: #10B981;
+            --accent: #F43F5E;
+            --text-main: #F8FAFC;
+            --wood-dark: #78350F;
+            --wood-light: #B45309;
+            --metal: #94A3B8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body { 
+            background: linear-gradient(135deg, var(--bg-light) 0%, var(--bg-dark) 100%); 
+            color: var(--text-main); 
+            min-height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            overflow: hidden; 
+        }
+
+        .brand-header { 
+            position: absolute; top: 20px; 
+            display: flex; align-items: center; gap: 15px; 
+            background: rgba(255, 255, 255, 0.05); 
+            padding: 8px 20px; border-radius: 50px; 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            backdrop-filter: blur(10px); z-index: 100; 
+        }
+        .brand-header img { width: 40px; height: 40px; border-radius: 50%; object-fit: contain; background: white; padding: 2px;}
+        .brand-header span { color: #E2E8F0; font-weight: 600; font-size: 1.1rem; }
+
+        .kazanim-box { 
+            position: absolute; bottom: 20px; 
+            padding: 12px 25px; background: rgba(255, 255, 255, 0.05); 
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; 
+            text-align: center; z-index: 100; max-width: 90%;
+        }
+        .kazanim-box p { font-size: 0.9rem; color: #94A3B8; }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 1000px;
+            gap: 40px;
+            padding: 20px;
+        }
+
+        .title { 
+            font-size: 2.2rem; 
+            color: var(--primary); 
+            text-align: center;
+            opacity: 0; 
+            transform: translateY(-20px); 
+            transition: all 0.8s ease; 
+            height: 80px; /* Fixed height to prevent layout shifts */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .show-title .title { opacity: 1; transform: translateY(0); }
+
+        /* Fancy 3D Scale */
+        .scale-wrapper {
+            position: relative;
+            width: 500px;
+            height: 250px;
+            opacity: 0;
+            transform: scale(0.9);
+            transition: all 1s ease;
+        }
+        .show-scale .scale-wrapper { opacity: 1; transform: scale(1); }
+
+        .scale-base {
+            position: absolute;
+            bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 80px; height: 160px;
+            background: linear-gradient(to right, #451A03, #78350F, #451A03);
+            border-radius: 50px 50px 0 0;
+            box-shadow: inset -5px 0 10px rgba(0,0,0,0.5), 0 10px 20px rgba(0,0,0,0.5);
+            z-index: 1;
+        }
+        .scale-base::after {
+            content: ''; position: absolute; bottom: -10px; left: -20px;
+            width: 120px; height: 20px; border-radius: 10px;
+            background: #291002;
+        }
+        
+        .scale-pin {
+            position: absolute;
+            top: 20px; left: 50%; transform: translateX(-50%);
+            width: 20px; height: 20px; border-radius: 50%;
+            background: radial-gradient(circle, #FDE047, #CA8A04);
+            z-index: 3;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
+
+        .scale-beam-container {
+            position: absolute;
+            bottom: 125px; left: 50%;
+            width: 440px; height: 20px;
+            transform-origin: center;
+            transform: translateX(-50%) rotate(0deg);
+            transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 2;
+        }
+
+        .scale-beam {
+            width: 100%; height: 100%;
+            background: linear-gradient(to bottom, #E2E8F0, #94A3B8);
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .string {
+            position: absolute; top: 10px;
+            width: 2px; height: 120px;
+            background: #CBD5E1;
+            transform-origin: top;
+            transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 0;
+        }
+        .string.left { left: 20px; }
+        .string.right { right: 20px; }
+        
+        /* The chains (pseudo elements) */
+        .string::before, .string::after {
+            content: ''; position: absolute; top: 0; width: 1px; height: 100%; background: #CBD5E1; transform-origin: top;
+        }
+        .string::before { transform: rotate(15deg); }
+        .string::after { transform: rotate(-15deg); }
+
+        .plate {
+            position: absolute; bottom: -15px; left: 50%; transform: translateX(-50%);
+            width: 140px; height: 25px;
+            background: radial-gradient(ellipse at top, #E2E8F0, #64748B);
+            border-radius: 5px 5px 50px 50px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            display: flex; justify-content: center; align-items: flex-end;
+            padding-bottom: 25px; gap: 8px;
+        }
+
+        /* 3D Blocks */
+        .block {
+            width: 40px; height: 40px;
+            border-radius: 8px;
+            font-weight: 800; font-size: 1.5rem;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff;
+            box-shadow: 0 8px 0 rgba(0,0,0,0.2), inset 0 2px 0 rgba(255,255,255,0.4);
+            position: relative;
+            transform: translateY(-30px);
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .b-blue { background: #3B82F6; box-shadow: 0 6px 0 #1D4ED8; }
+        .b-pink { background: #EC4899; box-shadow: 0 6px 0 #BE185D; }
+        .b-gold { background: #F59E0B; box-shadow: 0 6px 0 #B45309; }
+
+        .show-b1 .b-blue, .show-b1 .b-gold { opacity: 1; transform: translateY(0); }
+        .show-b2 .b-pink { opacity: 1; transform: translateY(0); }
+
+        /* Equation Area */
+        .eq-display { 
+            font-size: 3.5rem; font-weight: 800; 
+            display: flex; gap: 30px; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.2); padding: 20px 40px; border-radius: 20px;
+            opacity: 0; transform: translateY(20px); transition: all 1s ease;
+            margin-top: 30px;
+        }
+        .show-eq .eq-display { opacity: 1; transform: translateY(0); }
+        
+        .part { display: flex; align-items: center; gap: 15px; }
+        .add-num { color: #EC4899; opacity: 0; transform: scale(0.5); transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); font-size: 3.5rem; }
+        .show-add .add-num { opacity: 1; transform: scale(1); }
+
+        #replayBtn { 
+            position: absolute; right: 20px; bottom: 20px; 
+            background: var(--primary); color: white; border: none; 
+            padding: 10px 20px; border-radius: 8px; font-size: 1rem; font-weight: 800; 
+            cursor: pointer; opacity: 0; pointer-events: none; transition: opacity 0.5s ease; z-index: 100; 
+        }
+        #replayBtn.visible { opacity: 1; pointer-events: auto; }
+        #replayBtn:hover { background: #059669; }
+
+        @media (max-width: 768px) {
+            .scale-wrapper { transform: scale(0.6); margin-bottom: -50px; }
+            .show-scale .scale-wrapper { transform: scale(0.7); }
+            .eq-display { font-size: 2rem; padding: 10px 20px; gap: 15px;}
+            .add-num { font-size: 2rem; }
+            .title { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="brand-header">
+        <img src="../../logom.png" alt="Logo">
+        <span>@mufithocailematematik</span>
+    </div>
+    
+    <div class="container" id="mainScene">
+        <div class="title" id="titleText">Eşitliğin sağlandığı bir terazimiz var.</div>
+        
+        <div class="scale-wrapper">
+            <div class="scale-base">
+                <div class="scale-pin"></div>
+            </div>
+            
+            <div class="scale-beam-container" id="beam">
+                <div class="scale-beam"></div>
+                <div class="string left" id="strL">
+                    <div class="plate">
+                        <div class="block b-blue">2</div>
+                        <div class="block b-blue">3</div>
+                        <div class="block b-pink add-block">4</div>
+                    </div>
+                </div>
+                <div class="string right" id="strR">
+                    <div class="plate">
+                        <div class="block b-gold">5</div>
+                        <div class="block b-pink add-block">4</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="eq-display">
+            <div class="part">
+                <span style="color:#60A5FA;">2 + 3</span>
+                <span class="add-num">+ 4</span>
+            </div>
+            <span style="color:#F8FAFC;">=</span>
+            <div class="part">
+                <span style="color:#FBBF24;">5</span>
+                <span class="add-num">+ 4</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="kazanim-box">
+        <p><strong>MAT.5.2.1.</strong> Eşitliğin her iki tarafına aynı sayı eklenirse eşitlik bozulmaz (Eşitliğin Korunumu).</p>
+    </div>
+    
+    <button id="replayBtn" onclick="startSequence()">Tekrar Oynat</button>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        
+        async function startSequence() {
+            const scene = document.getElementById('mainScene');
+            const beam = document.getElementById('beam');
+            const strL = document.getElementById('strL');
+            const strR = document.getElementById('strR');
+            const title = document.getElementById('titleText');
+            const btn = document.getElementById('replayBtn');
+
+            // Reset state
+            scene.classList.remove('show-title', 'show-scale', 'show-b1', 'show-b2', 'show-eq', 'show-add');
+            beam.style.transform = "translateX(-50%) rotate(-12deg)"; // Initial unbalanced look
+            strL.style.transform = "rotate(12deg)";
+            strR.style.transform = "rotate(12deg)";
+            
+            title.innerText = "Eşitliğin sağlandığı bir terazimiz var.";
+            title.style.color = "var(--primary)";
+            btn.classList.remove('visible');
+            
+            await sleep(500);
+
+            // 1. Show Title & Scale Frame
+            scene.classList.add('show-title', 'show-scale');
+            await sleep(1000);
+            
+            // 2. Drop Initial Blocks & Show Equation
+            scene.classList.add('show-b1', 'show-eq');
+            beam.style.transform = "translateX(-50%) rotate(0deg)"; // Balance it
+            strL.style.transform = "rotate(0deg)";
+            strR.style.transform = "rotate(0deg)";
+            await sleep(3500);
+
+            // 3. Question
+            title.style.opacity = 0;
+            await sleep(500);
+            title.innerText = "Her iki kefeye de aynı sayıyı (4) eklersek denge bozulur mu?";
+            title.style.color = "#FDE047";
+            title.style.opacity = 1;
+            await sleep(3000);
+
+            // 4. Drop Add Blocks & Wobble Scale
+            scene.classList.add('show-add', 'show-b2');
+            
+            // Wobble physics
+            beam.style.transform = "translateX(-50%) rotate(8deg)";
+            strL.style.transform = "rotate(-8deg)";
+            strR.style.transform = "rotate(-8deg)";
+            await sleep(400);
+            
+            beam.style.transform = "translateX(-50%) rotate(-6deg)";
+            strL.style.transform = "rotate(6deg)";
+            strR.style.transform = "rotate(6deg)";
+            await sleep(400);
+            
+            beam.style.transform = "translateX(-50%) rotate(3deg)";
+            strL.style.transform = "rotate(-3deg)";
+            strR.style.transform = "rotate(-3deg)";
+            await sleep(400);
+            
+            beam.style.transform = "translateX(-50%) rotate(0deg)";
+            strL.style.transform = "rotate(0deg)";
+            strR.style.transform = "rotate(0deg)";
+
+            // 5. Conclusion
+            title.style.opacity = 0;
+            await sleep(500);
+            title.innerText = "Hayır bozulmaz! Eşitlik her zaman korunur.";
+            title.style.color = "var(--primary)";
+            title.style.opacity = 1;
+            
+            await sleep(2000);
+            btn.classList.add('visible');
+        }
+        
+        window.onload = startSequence;
+    </script>
+</body>
+</html>

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yay Laboratuvarı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A; --surface: #1E293B; --text: #F8FAFC;
+            --primary: #3B82F6; --secondary: #10B981;
+            --tertiary: #F59E0B; --danger: #F43F5E;
+            --purple: #8B5CF6; --cyan: #06B6D4;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, var(--surface) 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--tertiary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .container {
+            width: 100%; max-width: 900px; display: flex; gap: 20px;
+        }
+
+        .canvas-panel {
+            flex: 1.5; background: #0B1120; border-radius: 20px; border: 2px solid var(--tertiary);
+            position: relative; overflow: hidden; height: 450px; display: flex; align-items: center; justify-content: center;
+        }
+
+        .control-panel {
+            flex: 1; background: rgba(255,255,255,0.03); border-radius: 20px; padding: 25px;
+            border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: flex; flex-direction: column; gap: 15px;
+        }
+
+        .control-panel h2 { font-size: 1.8rem; color: var(--tertiary); margin-bottom: 5px; font-weight: 900;}
+        .desc { font-size: 1rem; color: #94A3B8; margin-bottom: 10px; line-height: 1.4;}
+
+        .slider-container { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
+        .slider-label { font-weight: 800; color: white; font-size: 1.2rem; display: flex; justify-content: space-between;}
+        
+        input[type="range"] {
+            -webkit-appearance: none; width: 100%; height: 10px; border-radius: 5px;  
+            background: rgba(255,255,255,0.1); outline: none; margin: 10px 0;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none; width: 25px; height: 25px; border-radius: 50%;
+            background: var(--tertiary); cursor: pointer; box-shadow: 0 0 10px var(--tertiary);
+        }
+
+        .info-box {
+            background: rgba(0,0,0,0.4); padding: 15px; border-radius: 10px; border-left: 4px solid var(--primary);
+            font-size: 1.2rem; font-weight: 800; color: white; margin-top: 15px;
+        }
+
+        .input-group { display: flex; flex-direction: column; gap: 5px; margin-top: 15px;}
+        .input-group label { font-weight: 800; font-size: 1.2rem; color: var(--danger);}
+        .input-wrapper { display: flex; align-items: center; gap: 10px; }
+        .input-wrapper input {
+            background: rgba(0,0,0,0.5); border: 2px solid var(--danger); color: white;
+            font-size: 1.5rem; font-weight: 900; padding: 10px; border-radius: 8px; width: 120px; outline: none; transition: 0.3s;
+        }
+        .input-wrapper input:focus { border-color: var(--cyan); }
+        .unit { font-weight: 800; color: #94A3B8; font-size: 1.2rem;}
+
+        .btn-check {
+            background: var(--tertiary); color: white; border: none; padding: 15px; border-radius: 10px;
+            font-size: 1.2rem; font-weight: 900; cursor: pointer; transition: all 0.3s; margin-top: 15px;
+        }
+        .btn-check:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(245, 158, 11, 0.4);}
+
+        .feedback { font-size: 1.1rem; font-weight: 800; padding: 10px; border-radius: 8px; display: none; text-align: center; margin-top: 10px;}
+        .feedback.error { background: rgba(244, 63, 94, 0.1); color: var(--danger); border: 1px solid var(--danger); display: block;}
+        .feedback.success { background: rgba(16, 185, 129, 0.1); color: var(--secondary); border: 1px solid var(--secondary); display: block;}
+
+        /* SVG */
+        .circ-base { fill: rgba(255,255,255,0.05); stroke: rgba(255,255,255,0.1); stroke-width: 4; }
+        .slice-fill { fill: rgba(245, 158, 11, 0.2); }
+        .slice-line { stroke: var(--tertiary); stroke-width: 2; }
+        .arc-line { fill: none; stroke: var(--danger); stroke-width: 6; }
+        .center-dot { fill: white; }
+        .angle-text { font-size: 24px; font-weight: 900; fill: white; text-shadow: 0 0 5px black;}
+
+        @media (max-width: 768px) {
+            .container { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=3B82F6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.6.4.6. Yay Uzunluğu Laboratuvarı</div>
+    </div>
+
+    <div class="container">
+        
+        <div class="canvas-panel">
+            <svg width="400" height="400" viewBox="0 0 400 400">
+                <circle cx="200" cy="200" r="150" class="circ-base" />
+                
+                <path id="sliceFill" class="slice-fill" d="" />
+                
+                <line x1="200" y1="200" x2="350" y2="200" class="slice-line" />
+                <line id="sliceLine2" x1="200" y1="200" x2="350" y2="200" class="slice-line" />
+                
+                <path id="arcLine" class="arc-line" d="" />
+                
+                <text id="angText" x="230" y="195" class="angle-text">30°</text>
+
+                <circle cx="200" cy="200" r="4" class="center-dot" />
+            </svg>
+        </div>
+
+        <div class="control-panel">
+            <h2>Yay Laboratuvarı</h2>
+            <p class="desc">Aşağıdaki çemberin <b>Tüm Çevresi 720 cm</b>'dir. Kaydırıcıyı kullanarak merkez açıyı değiştirin ve oluşan Kırmızı Yayın uzunluğunu hesaplayın.</p>
+            
+            <div class="info-box">
+                Tüm Çevre (360°) = <span style="color:var(--primary);">720 cm</span>
+            </div>
+
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span>Merkez Açı:</span>
+                    <span id="sliderVal" style="color:var(--tertiary);">30°</span>
+                </div>
+                <input type="range" id="angSlider" min="10" max="360" step="10" value="30" oninput="updateVisuals()">
+            </div>
+
+            <div class="input-group">
+                <label>Kırmızı Yayın Uzunluğu</label>
+                <div class="input-wrapper">
+                    <input type="number" id="inpAns" placeholder="?"> <span class="unit">cm</span>
+                </div>
+            </div>
+
+            <button class="btn-check" onclick="checkAnswer()">Test Et</button>
+            <div class="feedback" id="fb"></div>
+
+        </div>
+
+    </div>
+
+    <script>
+        const totalCirc = 720;
+        const R = 150;
+        const CX = 200;
+        const CY = 200;
+
+        function updateVisuals() {
+            let angle = parseInt(document.getElementById('angSlider').value);
+            document.getElementById('sliderVal').innerText = angle + "°";
+            
+            // Calculate end point of the arc
+            let rad = angle * Math.PI / 180;
+            // X, Y starting at 0 degrees (right side)
+            let ex = CX + R * Math.cos(-rad); // negative because SVG y axis is down
+            let ey = CY + R * Math.sin(-rad);
+
+            let largeArcFlag = angle > 180 ? 1 : 0;
+
+            if(angle === 360) {
+                // Cannot draw 360 with a single arc command easily, use two arcs or circle
+                document.getElementById('sliceLine2').setAttribute('x2', 350);
+                document.getElementById('sliceLine2').setAttribute('y2', 200);
+                document.getElementById('arcLine').setAttribute('d', `M 350 200 A 150 150 0 1 0 350 199.99`);
+                document.getElementById('sliceFill').setAttribute('d', `M 200 200 L 350 200 A 150 150 0 1 0 350 199.99 Z`);
+            } else {
+                document.getElementById('sliceLine2').setAttribute('x2', ex);
+                document.getElementById('sliceLine2').setAttribute('y2', ey);
+                
+                let arcPath = `M 350 200 A 150 150 0 ${largeArcFlag} 0 ${ex} ${ey}`;
+                document.getElementById('arcLine').setAttribute('d', arcPath);
+                
+                let slicePath = `M 200 200 L 350 200 A 150 150 0 ${largeArcFlag} 0 ${ex} ${ey} Z`;
+                document.getElementById('sliceFill').setAttribute('d', slicePath);
+            }
+
+            // Text placement
+            let textRad = (angle / 2) * Math.PI / 180;
+            let tx = CX + (R/3) * Math.cos(-textRad);
+            let ty = CY + (R/3) * Math.sin(-textRad) + 5;
+            
+            let angText = document.getElementById('angText');
+            angText.setAttribute('x', tx);
+            angText.setAttribute('y', ty);
+            angText.innerText = angle + "°";
+
+            // Reset feedback
+            document.getElementById('fb').style.display = "none";
+            document.getElementById('inpAns').style.borderColor = "var(--danger)";
+        }
+
+        function checkAnswer() {
+            let angle = parseInt(document.getElementById('angSlider').value);
+            let userAns = parseFloat(document.getElementById('inpAns').value.replace(',', '.'));
+            let fb = document.getElementById('fb');
+
+            if(isNaN(userAns)) {
+                fb.className = "feedback error";
+                fb.innerText = "Lütfen bulduğunuz uzunluğu girin.";
+                return;
+            }
+
+            // Calculate correct
+            // Formula: Arc = (Angle / 360) * TotalCirc
+            let correctAns = (angle / 360) * totalCirc;
+
+            if(Math.abs(userAns - correctAns) < 0.1) {
+                fb.className = "feedback success";
+                fb.innerHTML = `<b>Mükemmel!</b><br>Doğru Orantı: (${angle} / 360) x 720 = ${correctAns} cm.`;
+                document.getElementById('inpAns').style.borderColor = "var(--secondary)";
+            } else {
+                fb.className = "feedback error";
+                fb.innerHTML = `Hatalı. Açı olan <b>${angle}°</b>'nin, tam açı olan 360°'nin kaçta kaçı olduğunu bul (oran kur), sonra bu oranı 720 ile çarp.`;
+            }
+        }
+
+        // Init
+        updateVisuals();
+
+        // Key bindings
+        document.getElementById('inpAns').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') checkAnswer();
+        });
+    </script>
+</body>
+</html>

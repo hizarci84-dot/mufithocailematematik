@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thales Gölge Boyu (Animasyon)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    
+    <!-- MATHJAX -->
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root { --bg:#0F0E17; --primary:#8B5CF6; --secondary:#10B981; --tertiary:#06B6D4; --danger:#F43F5E; --accent:#F59E0B; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Outfit',sans-serif; }
+        body { background:linear-gradient(135deg,var(--bg),#161625); color:#F8FAFC; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:20px; overflow-x:hidden; }
+        
+        .header { width:100%; max-width:1100px; display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); padding:15px 25px; border-radius:20px; border:1px solid rgba(139,92,246,0.2); margin-bottom:20px; backdrop-filter:blur(10px); }
+        .header-left { display:flex; align-items:center; gap:15px; font-weight:600; font-size:1.2rem; }
+        .header-left img { width:50px; height:50px; border-radius:50%; background:white; padding:2px; }
+        .kazanim { background:var(--primary); color:white; padding:8px 20px; border-radius:20px; font-weight:800; font-size:1rem; box-shadow: 0 0 20px rgba(139,92,246,0.4); }
+        
+        h1 { font-size:2.5rem; color:var(--tertiary); font-weight:900; text-align:center; margin-bottom:5px; }
+        .subtitle { color:#94A3B8; font-size:1.15rem; text-align:center; margin-bottom:25px; font-weight:600; max-width:800px; }
+        
+        .workspace { width:100%; max-width:1100px; background:#11111A; border:1px solid rgba(255,255,255,0.1); border-radius:24px; padding:30px; box-shadow:inset 0 0 50px rgba(0,0,0,0.5); display:flex; flex-direction:column; align-items:center; min-height:600px; position:relative; overflow:hidden; }
+        
+        .expl-text { background:rgba(139,92,246,0.15); border:1px solid rgba(139,92,246,0.4); padding:15px 25px; border-radius:15px; font-size:1.3rem; color:white; font-weight:800; text-align:center; width:100%; margin-bottom:20px; transition:all 0.5s; box-shadow:0 8px 32px rgba(0,0,0,0.3); min-height:65px; display:flex; align-items:center; justify-content:center; }
+        
+        .math-rule-box { background:rgba(15,14,23,0.95); border:2px solid #334155; padding:15px 30px; border-radius:15px; font-size:1.6rem; font-weight:900; color:white; display:flex; align-items:center; justify-content:center; transition:0.5s; min-width:400px; box-shadow:0 10px 20px rgba(0,0,0,0.5); margin-bottom:30px; }
+        
+        /* Scene Area */
+        .scene-container { position:relative; width:800px; height:450px; background:rgba(255,255,255,0.02); border-radius:10px; border:1px solid rgba(255,255,255,0.1); display:flex; justify-content:center; overflow:hidden; }
+        
+        /* Sun */
+        .sun { position:absolute; top:20px; left:20px; width:80px; height:80px; background:var(--accent); border-radius:50%; box-shadow:0 0 50px var(--accent); opacity:0.5; transition:0.5s; }
+        
+        /* Elements */
+        .ground { fill:none; stroke:#334155; stroke-width:4; }
+        
+        /* Tree */
+        .tree-trunk { fill:#8B5CF6; }
+        .tree-top { fill:var(--primary); opacity:0.8; }
+        
+        /* Stick */
+        .stick { fill:var(--secondary); }
+        
+        /* Shadows */
+        .shadow { fill:none; stroke:black; stroke-width:8; stroke-linecap:round; opacity:0.6; stroke-dasharray:600; stroke-dashoffset:600; transition:stroke-dashoffset 2s linear; }
+        
+        /* Sun rays (hypotenuse) */
+        .ray { fill:none; stroke:var(--accent); stroke-width:2; stroke-dasharray:10,5; opacity:0; transition:opacity 1s; }
+        
+        /* Highlight triangles */
+        .tri-hl { fill:rgba(245,158,11,0.1); stroke:var(--accent); stroke-width:3; opacity:0; transition:1s; }
+        
+        /* Labels */
+        .lbl { fill:white; font-family:Outfit; font-weight:800; font-size:16px; opacity:0; transition:1s; text-anchor: middle; dominant-baseline: middle; }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.9.4.3. Thales Teoremi (Animasyon)</div>
+    </div>
+    
+    <h1>Gölge Boyu (Thales)</h1>
+    <p class="subtitle">Thales, Mısır piramitlerinin yüksekliğini sadece bir çubuğun gölgesi ile piramidin gölgesini oranlayarak bulmuştur. (Benzerlik)</p>
+    
+    <div class="workspace">
+        <div class="expl-text" id="explText">Güneş yükseliyor... Yerde bir <b>Ağaç</b> ve bir <b>Çubuk</b> var.</div>
+        
+        <div class="math-rule-box" id="ruleBox">
+            <span id="mathOutput">\( \frac{h_{ağaç}}{h_{çubuk}} = \frac{\text{Gölge}_{ağaç}}{\text{Gölge}_{çubuk}} \)</span>
+        </div>
+        
+        <div class="scene-container">
+            <div class="sun" id="sun"></div>
+            
+            <svg width="100%" height="100%" viewBox="0 0 800 450" preserveAspectRatio="xMidYMid meet" id="sceneSvg">
+                
+                <path class="ground" d="M 0 380 L 800 380" />
+                
+                <!-- Shadows -->
+                <path class="shadow" id="shadowTree" d="M 200 380 L 550 380" /> <!-- Tree shadow (length 350) -->
+                <path class="shadow" id="shadowStick" d="M 650 380 L 720 380" /> <!-- Stick shadow (length 70) -->
+                
+                <!-- Tree (X:200, Y:380, Height:250 -> Top at 130) -->
+                <rect class="tree-trunk" x="190" y="150" width="20" height="230" />
+                <circle class="tree-top" cx="200" cy="130" r="50" />
+                
+                <!-- Stick (X:650, Y:380, Height:50 -> Top at 330) -->
+                <rect class="stick" x="647" y="330" width="6" height="50" />
+                
+                <!-- Rays from sun forming similar triangles -->
+                <!-- Sun ray to tree: from top of tree (200,130) to end of shadow (550,380) -->
+                <path class="ray" id="rayTree" d="M -50 -50 L 200 130 L 550 380" />
+                
+                <!-- Sun ray to stick: from top of stick (650,330) to end of shadow (720,380) -->
+                <path class="ray" id="rayStick" d="M -50 -50 L 650 330 L 720 380" />
+                
+                <!-- Highlight Triangles -->
+                <polygon class="tri-hl" id="triTree" points="200,130 200,380 550,380" />
+                <polygon class="tri-hl" id="triStick" points="650,330 650,380 720,380" />
+                
+                <!-- Labels -->
+                <text x="130" y="260" class="lbl" id="lblTreeH">h = ?</text>
+                <text x="350" y="410" class="lbl" id="lblTreeS">35 m (Gölge)</text>
+                
+                <text x="610" y="360" class="lbl" id="lblStickH">5 m</text>
+                <text x="660" y="410" class="lbl" id="lblStickS">7 m (Gölge)</text>
+
+            </svg>
+        </div>
+        
+    </div>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        const explText = document.getElementById('explText');
+        
+        function updateMath(texString) {
+            document.getElementById('mathOutput').innerHTML = texString;
+            MathJax.typesetPromise([document.getElementById('mathOutput')]);
+        }
+
+        async function runSequence() {
+            MathJax.typesetPromise();
+            await sleep(2000);
+            
+            // Step 1: Sun shines, shadows form
+            document.getElementById('sun').style.opacity = "1";
+            document.getElementById('sun').style.transform = "scale(1.2)";
+            
+            document.getElementById('shadowTree').style.strokeDashoffset = "0";
+            document.getElementById('shadowStick').style.strokeDashoffset = "0";
+            
+            explText.innerHTML = "Güneş ışınları birbirine paralel geldiği için, cisimlerin boyları ile gölgelerinin boyları orantılıdır.";
+            
+            await sleep(2500);
+            
+            // Step 2: Show sun rays
+            document.getElementById('rayTree').style.opacity = "1";
+            document.getElementById('rayStick').style.opacity = "1";
+            explText.innerHTML = "Işınlar yeri aynı açıyla keser. Burada <b>iki adet Benzer Dik Üçgen</b> oluşur.";
+            
+            await sleep(2000);
+            
+            // Step 3: Highlight triangles and labels
+            document.getElementById('triTree').style.opacity = "1";
+            document.getElementById('triStick').style.opacity = "1";
+            
+            document.getElementById('lblTreeH').style.opacity = "1";
+            document.getElementById('lblTreeS').style.opacity = "1";
+            document.getElementById('lblStickH').style.opacity = "1";
+            document.getElementById('lblStickS').style.opacity = "1";
+            
+            await sleep(3500);
+            
+            // Step 4: Math setup
+            explText.innerHTML = "Benzerlik oranını kuralım: Büyük üçgenin dik kenarları ile küçük üçgenin dik kenarlarını oranlayalım.";
+            updateMath(`\\( \\frac{h}{5} = \\frac{35}{7} \\)`);
+            
+            await sleep(4000);
+            
+            // Step 5: Solve
+            explText.innerHTML = "İçler dışlar çarpımı yaparak ağacın devasa boyunu, hiç üzerine tırmanmadan buluruz.";
+            updateMath(`\\( 7 \\cdot h = 35 \\cdot 5 \\implies 7h = 175 \\implies \\)`
+              + ` <span style="color:#F59E0B;font-size:1.8rem;font-weight:900">h = 25 m</span>`);
+            document.getElementById('lblTreeH').textContent = "h = 25 m";
+            document.getElementById('lblTreeH').style.fill = "var(--accent)";
+            document.getElementById('ruleBox').style.borderColor = "var(--secondary)";
+            
+            await sleep(4000);
+            explText.innerHTML = "🔄 Animasyon bitti. Thales teoremi, ölçülemeyeni zekayla ölçme sanatıdır.";
+        }
+
+        window.onload = runSequence;
+    </script>
+</body>
+</html>

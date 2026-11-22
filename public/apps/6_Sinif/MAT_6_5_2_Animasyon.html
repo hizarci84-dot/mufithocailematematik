@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yanıltıcı İstatistikler - Animasyon</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A; --text: #F8FAFC;
+            --primary: #3B82F6; --secondary: #10B981;
+            --tertiary: #F59E0B; --danger: #F43F5E;
+            --purple: #8B5CF6; --cyan: #06B6D4;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 900px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--danger); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; width: 100%; max-width: 800px; margin-bottom: 20px; height: 110px;}
+        h1 { font-size: 2.2rem; color: var(--danger); text-shadow: 0 5px 15px rgba(0,0,0,0.5); line-height: 1.3;}
+        .subtitle { font-size: 1.2rem; color: #94A3B8; margin-top: 10px; line-height: 1.5; min-height: 55px;}
+        .subtitle span { color: white; font-weight: 800; background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 5px;}
+
+        .canvas-area {
+            position: relative; width: 100%; max-width: 800px; height: 450px; 
+            background: #0B1120; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.3); 
+            overflow: hidden; display: flex; align-items: center; justify-content: center;
+        }
+
+        .graph-container {
+            width: 500px; height: 300px; border-bottom: 3px solid white; border-left: 3px solid white;
+            position: relative; display: flex; align-items: flex-end; justify-content: space-around;
+            padding-left: 20px; padding-bottom: 20px;
+        }
+
+        .y-axis-labels {
+            position: absolute; left: -50px; height: 100%; display: flex; flex-direction: column-reverse;
+            justify-content: space-between; font-weight: 800; color: #94A3B8; width: 40px; text-align: right;
+            transition: all 1s;
+        }
+
+        .bar-group { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .bar { width: 80px; transition: all 1s ease-in-out; display: flex; align-items: flex-start; justify-content: center; border-radius: 5px 5px 0 0; }
+        .bar-a { background: linear-gradient(0deg, var(--primary), #60A5FA); height: 280px; } /* Start tall */
+        .bar-b { background: linear-gradient(0deg, var(--secondary), #34D399); height: 40px; } /* Start small */
+        
+        .bar span { margin-top: 10px; font-weight: 900; color: white; text-shadow: 0 0 5px black;}
+        .brand-lbl { font-weight: 900; font-size: 1.2rem; color: white; }
+
+        .news-banner {
+            position: absolute; bottom: 20px; width: 80%; background: var(--danger); padding: 15px; border-radius: 10px;
+            color: white; font-weight: 900; font-size: 1.5rem; text-align: center; border: 2px solid white;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.5s; z-index: 10;
+            text-transform: uppercase;
+        }
+
+        .btn-start {
+            margin-top: 30px; background: var(--danger); color: white; border: none; padding: 15px 40px; border-radius: 50px;
+            font-size: 1.2rem; font-weight: 800; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 20px rgba(244, 63, 94, 0.4);
+        }
+        .btn-start:hover { transform: scale(1.05); }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=3B82F6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.6.5.2. İstatistikleri Eleştirme</div>
+    </div>
+
+    <div class="title-area">
+        <h1 id="mTitle">Veri Dedektifi: Grafiğin Sırrı</h1>
+        <p class="subtitle" id="mSub">Televizyondaki bu reklam grafiğine iyi bakın. Sizce <span>A Markası</span> gerçekten B'den kat kat daha mı iyi?</p>
+    </div>
+
+    <div class="canvas-area">
+        
+        <div class="graph-container">
+            <div class="y-axis-labels" id="yLabels">
+                <span>95</span>
+                <span>96</span>
+                <span>97</span>
+                <span>98</span>
+                <span>99</span>
+                <span>100</span>
+            </div>
+
+            <div class="bar-group">
+                <div class="bar bar-a" id="b1"><span>99 Puan</span></div>
+                <div class="brand-lbl">A Markası</div>
+            </div>
+            
+            <div class="bar-group">
+                <div class="bar bar-b" id="b2"><span>96 Puan</span></div>
+                <div class="brand-lbl">B Markası</div>
+            </div>
+        </div>
+
+        <div class="news-banner" id="banner">
+            Şok! A Markası B'yi Ezip Geçti!
+        </div>
+
+    </div>
+
+    <button class="btn-start" id="startBtn" onclick="runTimeline()">Hileyi Ortaya Çıkar</button>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        const mTitle = document.getElementById('mTitle');
+        const mSub = document.getElementById('mSub');
+        const startBtn = document.getElementById('startBtn');
+        const banner = document.getElementById('banner');
+        const b1 = document.getElementById('b1');
+        const b2 = document.getElementById('b2');
+        const yLabels = document.getElementById('yLabels');
+        
+        async function runTimeline() {
+            startBtn.style.display = 'none';
+
+            // Intro Banner
+            banner.style.opacity = 1;
+            await sleep(3500);
+            banner.style.opacity = 0;
+
+            mTitle.innerText = "Y-Eksenine Dikkat Edin!";
+            mSub.innerHTML = "Reklamcılar bilerek Y-eksenini <span>95'ten başlattılar!</span> Bu yüzden aradaki 3 puanlık fark uçurum gibi görünüyor.";
+            
+            await sleep(4000);
+
+            mTitle.innerText = "Gerçek Grafiği Çizelim";
+            mSub.innerHTML = "Grafiğin adaletli olması için Y-ekseni <span>Sıfırdan (0) başlamalıdır.</span> Düzeltiyoruz...";
+
+            // Update Labels
+            yLabels.innerHTML = `
+                <span>0</span>
+                <span>20</span>
+                <span>40</span>
+                <span>60</span>
+                <span>80</span>
+                <span>100</span>
+            `;
+
+            await sleep(1000);
+
+            // Update Bars based on 0-100 scale (height out of 300px roughly)
+            // 100 = 300px -> 1 = 3px
+            // 99 = 297px
+            // 96 = 288px
+            b1.style.height = '297px';
+            b2.style.height = '288px';
+
+            await sleep(2000);
+
+            mTitle.innerText = "İşte Gerçek!";
+            mSub.innerHTML = "A Markası ile B Markası arasında neredeyse <span>hiç fark yokmuş!</span> Bir veri dedektifi daima eksenleri kontrol eder.";
+
+            banner.innerText = "Sonuç: Eşit Kalitede Ürünler!";
+            banner.style.background = "var(--secondary)";
+            banner.style.opacity = 1;
+
+            setTimeout(() => {
+                startBtn.style.display = 'block';
+                startBtn.innerText = "Sayfayı Yenile";
+                startBtn.onclick = () => location.reload();
+            }, 6000);
+        }
+    </script>
+</body>
+</html>

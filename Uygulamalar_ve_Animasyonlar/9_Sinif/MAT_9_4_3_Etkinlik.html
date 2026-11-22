@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sierpinski Benzerlik Fraktalı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    
+    <!-- MATHJAX -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root { --bg:#0F0E17; --primary:#8B5CF6; --secondary:#10B981; --tertiary:#06B6D4; --danger:#F43F5E; --accent:#F59E0B; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Outfit',sans-serif; }
+        body { background:linear-gradient(135deg,var(--bg),#161625); color:#F8FAFC; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:20px; overflow-x:hidden; }
+        
+        .header { width:100%; max-width:1100px; display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); padding:15px 25px; border-radius:20px; border:1px solid rgba(139,92,246,0.2); margin-bottom:20px; backdrop-filter:blur(10px); }
+        .header-left { display:flex; align-items:center; gap:15px; font-weight:600; font-size:1.2rem; }
+        .header-left img { width:50px; height:50px; border-radius:50%; background:white; padding:2px; }
+        .kazanim { background:var(--primary); color:white; padding:8px 20px; border-radius:20px; font-weight:800; font-size:1rem; box-shadow: 0 0 20px rgba(139,92,246,0.4); }
+        
+        h1 { font-size:2.5rem; color:var(--tertiary); font-weight:900; text-align:center; margin-bottom:5px; }
+        .subtitle { color:#94A3B8; font-size:1.15rem; text-align:center; margin-bottom:25px; font-weight:600; max-width:800px; }
+        
+        .workspace { width:100%; max-width:1100px; background:#11111A; border:1px solid rgba(255,255,255,0.1); border-radius:24px; padding:30px; box-shadow:inset 0 0 50px rgba(0,0,0,0.5); display:flex; flex-direction:column; align-items:center; min-height:600px; }
+        
+        .expl-text { background:rgba(139,92,246,0.15); border:1px solid rgba(139,92,246,0.4); padding:15px 25px; border-radius:15px; font-size:1.3rem; color:white; font-weight:800; text-align:center; width:100%; margin-bottom:20px; }
+        
+        /* Sliders */
+        .controls { display:flex; gap:30px; width:100%; max-width:800px; margin-bottom:20px; }
+        .slider-group { flex:1; background:rgba(255,255,255,0.02); border-radius:15px; padding:20px; border:1px solid rgba(255,255,255,0.05); }
+        .slider-header { display:flex; justify-content:space-between; margin-bottom:15px; font-weight:800; color:#CBD5E1; }
+        .slider-header span.val { color:var(--tertiary); font-size:1.5rem; font-family:'Courier New', monospace; }
+        
+        input[type=range] { -webkit-appearance:none; width:100%; background:transparent; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; height:24px; width:24px; border-radius:50%; background:var(--primary); cursor:pointer; margin-top:-10px; box-shadow:0 0 10px var(--primary); transition:0.2s; }
+        input[type=range]::-webkit-slider-thumb:hover { transform:scale(1.2); }
+        input[type=range]::-webkit-slider-runnable-track { width:100%; height:4px; cursor:pointer; background:rgba(255,255,255,0.2); border-radius:2px; }
+
+        .math-rule-box { background:rgba(0,0,0,0.5); border:2px solid #334155; padding:15px 30px; border-radius:15px; font-size:1.5rem; font-weight:900; color:white; display:flex; align-items:center; justify-content:center; box-shadow:0 10px 20px rgba(0,0,0,0.5); transition:all 0.5s; width:100%; max-width:800px; margin-bottom:20px; min-height:80px; gap:40px; }
+
+        /* SVG Board */
+        .svg-board { width:100%; max-width:800px; height:500px; background:rgba(255,255,255,0.02); border-radius:15px; border:2px solid #475569; position:relative; overflow:hidden; display:flex; justify-content:center; align-items:center; }
+        
+        .fraktal-path { fill:rgba(139,92,246,0.3); stroke:var(--primary); stroke-width:1; }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.9.4.3. Üçgende Benzerlik (Etkinlik)</div>
+    </div>
+    
+    <h1>Sierpinski Benzerlik Fraktalı</h1>
+    <p class="subtitle">Bir üçgeni kenarlarının orta noktalarından birleştirerek sürekli daha küçük <b>benzer üçgenler</b> oluşturduğunuzda Sierpinski Fraktalı elde edilir.</p>
+    
+    <div class="workspace">
+        <div class="expl-text">Görev: İterasyon (Adım) sayısını kaydırarak, üçgenlerin benzerlik oranının ve sayısının nasıl değiştiğini gözlemleyin.</div>
+        
+        <div class="controls">
+            <div class="slider-group">
+                <div class="slider-header"><span>İterasyon (Adım) Derinliği: <span id="valN">0</span></span></div>
+                <input type="range" id="slN" min="0" max="6" value="0" oninput="draw()">
+            </div>
+        </div>
+        
+        <div class="math-rule-box" id="ruleBox">
+            <span id="mathOutput1"></span>
+            <span id="mathOutput2"></span>
+        </div>
+        
+        <div class="svg-board">
+            <svg width="100%" height="100%" viewBox="0 0 600 500" preserveAspectRatio="xMidYMid meet" id="svgContainer">
+                <g id="fraktalGroup"></g>
+            </svg>
+        </div>
+    </div>
+
+    <script>
+        let debounceTimer;
+        function updateMath(n) {
+            let count = Math.pow(3, n);
+            let ratio = `\\frac{1}{2^${n}}`;
+            if (n === 0) ratio = "1";
+            
+            let areaRatio = `\\frac{1}{4^${n}}`;
+            if (n === 0) areaRatio = "1";
+
+            document.getElementById('mathOutput1').innerHTML = `\\( \\text{Üçgen Sayısı: } 3^${n} = \\) <span style="color:#F59E0B;font-weight:900;font-size:1.6rem">${count}</span>`;
+            document.getElementById('mathOutput2').innerHTML = `\\( \\text{Benzerlik Oranı (k): } ${ratio} \\quad \\implies \\text{Alan Oranı (k²): } ${areaRatio} \\)`;
+            
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                MathJax.typesetPromise([document.getElementById('mathOutput1'), document.getElementById('mathOutput2')]);
+            }, 50);
+        }
+
+        // Draw Sierpinski Triangle
+        function drawSierpinski(x, y, size, depth, paths) {
+            if (depth === 0) {
+                // Draw a downward or upward triangle?
+                // Let's standard upward triangle: base at y+size, top at y
+                // wait, if x,y is top vertex.
+                // Top: (x, y)
+                // Bottom-left: (x - size/2, y + size * sqrt(3)/2)
+                // Bottom-right: (x + size/2, y + size * sqrt(3)/2)
+                
+                let h = size * Math.sqrt(3) / 2;
+                let pts = `${x},${y} ${x - size/2},${y + h} ${x + size/2},${y + h}`;
+                paths.push(`<polygon points="${pts}" class="fraktal-path" />`);
+            } else {
+                let newSize = size / 2;
+                let h = newSize * Math.sqrt(3) / 2;
+                
+                // Top triangle
+                drawSierpinski(x, y, newSize, depth - 1, paths);
+                // Bottom-left triangle
+                drawSierpinski(x - newSize/2, y + h, newSize, depth - 1, paths);
+                // Bottom-right triangle
+                drawSierpinski(x + newSize/2, y + h, newSize, depth - 1, paths);
+            }
+        }
+
+        function draw() {
+            let n = parseInt(document.getElementById('slN').value);
+            document.getElementById('valN').textContent = n;
+            
+            let group = document.getElementById('fraktalGroup');
+            let paths = [];
+            
+            // Initial size: 500
+            // Top vertex: x=300, y=20
+            drawSierpinski(300, 20, 500, n, paths);
+            
+            group.innerHTML = paths.join('');
+            
+            updateMath(n);
+        }
+        
+        // Init
+        draw();
+    </script>
+</body>
+</html>

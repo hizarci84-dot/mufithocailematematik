@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İstatistiğin Kalbi - Animasyon</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A; --text: #F8FAFC;
+            --primary: #3B82F6; --secondary: #10B981;
+            --tertiary: #F59E0B; --danger: #F43F5E;
+            --purple: #8B5CF6; --cyan: #06B6D4;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 900px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--danger); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; width: 100%; max-width: 800px; margin-bottom: 20px; height: 110px;}
+        h1 { font-size: 2.2rem; color: var(--danger); text-shadow: 0 5px 15px rgba(0,0,0,0.5); line-height: 1.3;}
+        .subtitle { font-size: 1.2rem; color: #94A3B8; margin-top: 10px; line-height: 1.5; min-height: 55px;}
+        .subtitle span { color: white; font-weight: 800; background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 5px;}
+
+        .canvas-area {
+            position: relative; width: 100%; max-width: 800px; height: 400px; 
+            background: #0B1120; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.3); 
+            overflow: hidden; display: flex; align-items: center; justify-content: center;
+        }
+
+        .data-container {
+            display: flex; gap: 20px; align-items: flex-end; height: 250px; position: relative;
+        }
+
+        .bar-col {
+            display: flex; flex-direction: column-reverse; gap: 5px; align-items: center; width: 60px;
+            transition: all 1s ease-in-out;
+        }
+
+        .block {
+            width: 50px; height: 50px; background: rgba(255,255,255,0.1); border: 2px solid var(--primary);
+            border-radius: 10px; display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; font-weight: 900; color: white; transition: all 0.5s;
+        }
+        
+        .block.highlight-mode { background: var(--tertiary); border-color: white; transform: scale(1.1); box-shadow: 0 0 15px var(--tertiary); z-index: 10;}
+        .block.highlight-median { background: var(--purple); border-color: white; transform: scale(1.1); box-shadow: 0 0 15px var(--purple); z-index: 10;}
+        .block.highlight-mean { background: var(--secondary); border-color: white;}
+
+        .col-lbl {
+            position: absolute; bottom: -40px; font-size: 1.2rem; font-weight: 800; color: #94A3B8;
+            width: 100%; text-align: center; opacity: 0; transition: opacity 0.5s;
+        }
+
+        .mean-pool {
+            position: absolute; width: 100%; height: 100px; background: rgba(16, 185, 129, 0.2);
+            bottom: 0; left: 0; border-top: 2px dashed var(--secondary); opacity: 0; transition: opacity 1s;
+            display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 900; color: var(--secondary);
+        }
+
+        .btn-start {
+            margin-top: 30px; background: var(--danger); color: white; border: none; padding: 15px 40px; border-radius: 50px;
+            font-size: 1.2rem; font-weight: 800; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 20px rgba(244, 63, 94, 0.4);
+        }
+        .btn-start:hover { transform: scale(1.05); }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=3B82F6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.6.5.1. Merkezî Eğilim Ölçüleri</div>
+    </div>
+
+    <div class="title-area">
+        <h1 id="mTitle">Verilerin Kalbi</h1>
+        <p class="subtitle" id="mSub">Bir veri grubunu <span>tek bir sayıyla</span> anlatmak istesek hangisini seçerdik?</p>
+    </div>
+
+    <div class="canvas-area">
+        
+        <div class="mean-pool" id="mPool">Toplam: 20 (Paylaştırılıyor...)</div>
+
+        <div class="data-container" id="dCont">
+            <!-- Data: 2, 3, 3, 4, 8 -->
+            <div class="bar-col" id="col0">
+                <div class="block b0">2</div>
+                <div class="block b0">2</div>
+                <div class="col-lbl l-lbl">1. Kişi</div>
+            </div>
+            
+            <div class="bar-col" id="col1">
+                <div class="block b1">3</div>
+                <div class="block b1">3</div>
+                <div class="block b1">3</div>
+                <div class="col-lbl l-lbl">2. Kişi</div>
+            </div>
+
+            <div class="bar-col" id="col2">
+                <div class="block b2">3</div>
+                <div class="block b2">3</div>
+                <div class="block b2">3</div>
+                <div class="col-lbl l-lbl">3. Kişi</div>
+            </div>
+
+            <div class="bar-col" id="col3">
+                <div class="block b3">4</div>
+                <div class="block b3">4</div>
+                <div class="block b3">4</div>
+                <div class="block b3">4</div>
+                <div class="col-lbl l-lbl">4. Kişi</div>
+            </div>
+
+            <div class="bar-col" id="col4">
+                <div class="block b4">8</div>
+                <div class="block b4">8</div>
+                <div class="block b4">8</div>
+                <div class="block b4">8</div>
+                <div class="block b4">8</div>
+                <div class="block b4">8</div>
+                <div class="block b4">8</div>
+                <div class="block b4">8</div>
+                <div class="col-lbl l-lbl">5. Kişi</div>
+            </div>
+        </div>
+
+    </div>
+
+    <button class="btn-start" id="startBtn" onclick="runTimeline()">Animasyonu Başlat</button>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        const mTitle = document.getElementById('mTitle');
+        const mSub = document.getElementById('mSub');
+        const startBtn = document.getElementById('startBtn');
+        const mPool = document.getElementById('mPool');
+        
+        async function runTimeline() {
+            startBtn.style.display = 'none';
+
+            // Reset
+            mPool.style.opacity = 0;
+            document.querySelectorAll('.block').forEach(el => {
+                el.className = "block " + el.classList[1];
+                el.style.opacity = 1;
+                el.style.transform = 'scale(1)';
+            });
+            document.querySelectorAll('.l-lbl').forEach(el => el.style.opacity = 1);
+            
+            // Re-assign initial text based on column just in case
+            const initialVals = [2, 3, 3, 4, 8];
+            for(let i=0; i<5; i++) {
+                let blocks = document.querySelectorAll('.b'+i);
+                blocks.forEach(b => b.innerText = initialVals[i]);
+            }
+            
+            // Layout reset
+            for(let i=0; i<5; i++) {
+                let col = document.getElementById('col'+i);
+                col.style.transform = "translateY(0)";
+            }
+
+            await sleep(1000);
+
+            // Intro
+            mTitle.innerText = "Sıralı Veri Setimiz";
+            mSub.innerHTML = "Elimizde 5 kişinin okuduğu kitap sayıları var: <span>2, 3, 3, 4, 8</span>";
+            await sleep(3500);
+
+            // Tepe Değer (Mode)
+            mTitle.innerText = "1. Tepe Değer (Mod)";
+            mSub.innerHTML = "En çok tekrar eden (en yüksek tepeyi oluşturan) sayıdır. Burada <span>3 sayısı</span> iki kez tekrar etmiş.";
+            
+            document.querySelectorAll('.b1, .b2').forEach(el => el.classList.add('highlight-mode'));
+            await sleep(4000);
+            document.querySelectorAll('.block').forEach(el => el.classList.remove('highlight-mode'));
+
+            // Ortanca (Median)
+            mTitle.innerText = "2. Ortanca (Medyan)";
+            mSub.innerHTML = "Küçükten büyüğe sıralandığında <span>tam ortada</span> kalan sayıdır. Uçlardaki aşırı değerlerden (8 gibi) etkilenmez.";
+            
+            // Dim others
+            document.querySelectorAll('.b0, .b1, .b3, .b4').forEach(el => el.style.opacity = 0.2);
+            document.querySelectorAll('.b2').forEach(el => el.classList.add('highlight-median'));
+            await sleep(4000);
+            
+            document.querySelectorAll('.block').forEach(el => {
+                el.style.opacity = 1;
+                el.classList.remove('highlight-median');
+            });
+
+            // Aritmetik Ortalama (Mean)
+            mTitle.innerText = "3. Aritmetik Ortalama";
+            mSub.innerHTML = "Tüm kitapları bir havuza toplayıp, herkese <span>eşit paylaştırırsak</span> kişi başı kaç kitap düşer?";
+            
+            await sleep(2000);
+
+            // Pool animation
+            mPool.style.opacity = 1;
+            document.querySelectorAll('.block').forEach(el => {
+                el.innerText = "";
+                el.classList.add('highlight-mean');
+            });
+            
+            // Move blocks to look like pooling
+            for(let i=0; i<5; i++) {
+                document.getElementById('col'+i).style.transform = "translateY(100px)";
+            }
+            
+            await sleep(2000);
+            mSub.innerHTML = "Toplam 20 kitap, 5 kişiye eşit paylaştırılıyor... <span>20 ÷ 5 = 4</span>";
+            mPool.innerText = "Kişi Başı: 4";
+            
+            // Re-distribute equally (4 blocks each)
+            document.querySelectorAll('.b0, .b1, .b2').forEach(el => el.style.opacity = 0); // Hide original
+            document.querySelectorAll('.b3, .b4').forEach(el => el.style.opacity = 0); 
+            
+            // Show exactly 4 blocks in each column visually
+            let html = "";
+            for(let i=0; i<5; i++) {
+                let colHtml = `<div class="bar-col" style="z-index:20;">`;
+                for(let j=0; j<4; j++) {
+                    colHtml += `<div class="block highlight-mean" style="opacity:1;">4</div>`;
+                }
+                colHtml += `<div class="col-lbl" style="opacity:1; bottom:-60px;">${i+1}. Kişi</div></div>`;
+                html += colHtml;
+            }
+            
+            document.getElementById('dCont').innerHTML = html;
+
+            setTimeout(() => {
+                startBtn.style.display = 'block';
+                startBtn.innerText = "Sayfayı Yenile (Tekrar)";
+                startBtn.onclick = () => location.reload();
+            }, 6000);
+        }
+    </script>
+</body>
+</html>

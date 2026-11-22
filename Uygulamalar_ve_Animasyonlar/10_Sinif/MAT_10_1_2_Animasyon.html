@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10.1.2 - EKOK Çark ve Dişli Animasyonu</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0F172A; /* Slate 900 */
+            --panel-bg: #1E293B; /* Slate 800 */
+            --primary: #38BDF8; /* Sky 400 */
+            --secondary: #A78BFA; /* Violet 400 */
+            --accent: #F472B6; /* Pink 400 */
+            --danger: #F43F5E; /* Rose 500 */
+            --success: #10B981; /* Emerald 500 */
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background-color: var(--bg-color); color: var(--text-main);
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 900px; display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 25px; background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px); border-radius: 20px; border: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 800; color: var(--primary); }
+        .header-left img { width: 40px; height: 40px; border-radius: 10px; }
+        .kazanim { background: rgba(56, 189, 248, 0.1); padding: 8px 15px; border-radius: 12px; color: var(--primary); font-weight: 600; font-size: 0.9rem; }
+
+        h1 { font-size: 2.5rem; font-weight: 900; margin-bottom: 10px; text-align: center; 
+             background: linear-gradient(135deg, var(--primary), var(--secondary)); 
+             -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+             
+        .subtitle { color: var(--text-muted); font-size: 1.1rem; margin-bottom: 30px; text-align: center; max-width: 700px; }
+
+        .workspace { display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 900px; align-items: center; }
+
+        .expl-text {
+            background: rgba(167, 139, 250, 0.1); color: var(--secondary); padding: 15px 25px;
+            border-radius: 15px; border: 1px solid rgba(167, 139, 250, 0.3);
+            font-size: 1.2rem; font-weight: 600; text-align: center; width: 100%;
+            transition: all 0.5s; min-height: 50px;
+        }
+
+        .svg-board {
+            width: 100%; height: 450px; background: rgba(255,255,255,0.02);
+            border-radius: 20px; border: 2px dashed rgba(255,255,255,0.1);
+            position: relative; overflow: hidden; display: flex; justify-content: center; align-items: center;
+        }
+
+        .math-rule-box {
+            background: rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.1);
+            padding: 20px; border-radius: 15px; font-size: 1.5rem; font-weight: 600; color: white;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+            width: 100%; min-height: 80px; transition: 0.5s; box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        }
+
+        /* Gear Styles */
+        .gear-group { transform-origin: center; }
+        .gear-body1 { fill: rgba(56, 189, 248, 0.1); stroke: var(--primary); stroke-width: 4; }
+        .gear-body2 { fill: rgba(167, 139, 250, 0.1); stroke: var(--secondary); stroke-width: 4; }
+        .tooth { stroke-width: 4; stroke-linecap: round; }
+        .tooth1 { stroke: var(--primary); }
+        .tooth2 { stroke: var(--secondary); }
+        .marker { fill: var(--danger); stroke: white; stroke-width: 2; }
+        .center-pin { fill: var(--bg-color); stroke: rgba(255,255,255,0.2); stroke-width: 3; }
+        .gear-text { fill: white; font-size: 32px; font-weight: 900; text-anchor: middle; dominant-baseline: middle; }
+
+        .btn-action {
+            background: linear-gradient(135deg, var(--primary), var(--secondary)); border: none;
+            color: white; padding: 12px 30px; border-radius: 12px; font-weight: 800; font-size: 1.2rem;
+            cursor: pointer; transition: all 0.3s; margin-top: 10px;
+        }
+        .btn-action:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(167, 139, 250, 0.4); }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=38BDF8&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.10.1.2. EBOB ve EKOK Mantığı (Animasyon)</div>
+    </div>
+    
+    <h1>EKOK: En Küçük Ortak Kat</h1>
+    <p class="subtitle">Farklı büyüklükteki iki dişli çark döndüklerinde, aynı kırmızı işaretli dişlerin tekrar yan yana gelmesi için toplam kaç diş geçmesi gerekir?</p>
+    
+    <div class="workspace">
+        <div class="expl-text" id="explText">Soldaki çark 12 dişli, sağdaki çark 18 dişlidir. Şu an kırmızı işaretli dişler temas halinde.</div>
+        
+        <div class="svg-board">
+            <svg width="100%" height="100%" viewBox="0 0 800 450" preserveAspectRatio="xMidYMid meet" id="gearSvg">
+                <!-- Group 1: 12 teeth. Center at (300, 225), radius 90 -->
+                <g id="gear1" class="gear-group" transform="translate(300, 225)">
+                    <circle cx="0" cy="0" r="90" class="gear-body1" />
+                    <g id="teeth1"></g>
+                    <!-- Marker on the right (0 degrees) -->
+                    <circle cx="90" cy="0" r="10" class="marker" />
+                    <circle cx="0" cy="0" r="15" class="center-pin" />
+                    <text x="0" y="0" class="gear-text">12</text>
+                </g>
+                
+                <!-- Group 2: 18 teeth. Center at (480, 225), radius 135 (Wait, 90+135 = 225, distance should match sum of radii) 
+                     If 12 teeth = r90, then 18 teeth = r135.
+                     Center 1 = 265, Center 2 = 490 (Distance 225)
+                -->
+                <g id="gear2" class="gear-group" transform="translate(490, 225)">
+                    <circle cx="0" cy="0" r="135" class="gear-body2" />
+                    <g id="teeth2"></g>
+                    <!-- Marker on the left (180 degrees) -->
+                    <circle cx="-135" cy="0" r="10" class="marker" />
+                    <circle cx="0" cy="0" r="15" class="center-pin" />
+                    <text x="0" y="0" class="gear-text">18</text>
+                </g>
+            </svg>
+        </div>
+        
+        <button class="btn-action" id="btnPlay" style="display:none;" onclick="runSequence()">Mekanizmayı Çalıştır</button>
+        
+        <div class="math-rule-box" id="ruleBox">
+            <span id="mathOutput"></span>
+        </div>
+    </div>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        const explText = document.getElementById('explText');
+        const ruleBox = document.getElementById('ruleBox');
+        const mathOutput = document.getElementById('mathOutput');
+        const btnPlay = document.getElementById('btnPlay');
+        
+        const gear1 = document.getElementById('gear1');
+        const gear2 = document.getElementById('gear2');
+        const teeth1 = document.getElementById('teeth1');
+        const teeth2 = document.getElementById('teeth2');
+        
+        let debounceTimer;
+        function updateMath(texString) {
+            mathOutput.innerHTML = texString;
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                MathJax.typesetPromise([mathOutput]);
+            }, 50);
+        }
+
+        // Draw teeth
+        function drawTeeth(group, count, radius, cls) {
+            let html = '';
+            let angleStep = 360 / count;
+            for(let i=0; i<count; i++) {
+                let a = i * angleStep * Math.PI / 180;
+                let x1 = Math.cos(a) * radius;
+                let y1 = Math.sin(a) * radius;
+                let x2 = Math.cos(a) * (radius + 15);
+                let y2 = Math.sin(a) * (radius + 15);
+                html += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="tooth ${cls}" />`;
+            }
+            group.innerHTML = html;
+        }
+
+        function init() {
+            // Gear 1: 12 teeth, radius 90, center 265
+            // Gear 2: 18 teeth, radius 135, center 490
+            gear1.setAttribute('transform', 'translate(265, 225)');
+            drawTeeth(teeth1, 12, 90, 'tooth1');
+            drawTeeth(teeth2, 18, 135, 'tooth2');
+            
+            updateMath(`\\( \\text{EKOK}(12, 18) = ? \\)`);
+            runSequence();
+        }
+
+        async function runSequence() {
+            btnPlay.style.display = 'none';
+            
+            await sleep(2000);
+            explText.innerHTML = "Çarklar dönmeye başlıyor. Her iki çarktan da eşit sayıda diş geçmek zorundadır.";
+            
+            // Animation logic
+            // EKOK(12, 18) = 36.
+            // Gear 1 turns 3 times (3 * 12 = 36). Angle = 3 * 360 = 1080 deg (Clockwise)
+            // Gear 2 turns 2 times (2 * 18 = 36). Angle = -2 * 360 = -720 deg (Counter-clockwise)
+            
+            let duration = 6000; // 6 seconds
+            gear1.style.transition = `transform ${duration}ms cubic-bezier(0.4, 0.0, 0.2, 1)`;
+            gear2.style.transition = `transform ${duration}ms cubic-bezier(0.4, 0.0, 0.2, 1)`;
+            
+            // Note: origin is center, but SVG transform is translate + rotate
+            gear1.style.transform = `translate(265px, 225px) rotate(1080deg)`;
+            gear2.style.transform = `translate(490px, 225px) rotate(-720deg)`;
+            
+            // Count up numbers
+            let start = performance.now();
+            function updateCount(now) {
+                let t = (now - start) / duration;
+                if(t > 1) t = 1;
+                // Easing function out-cubic
+                let eased = 1 - Math.pow(1 - t, 3);
+                
+                let passed = Math.round(eased * 36);
+                
+                updateMath(`Geçen Toplam Diş Sayısı (Ortak Kat) = \\( ${passed} \\)`);
+                
+                if(t < 1) requestAnimationFrame(updateCount);
+                else {
+                    finalize();
+                }
+            }
+            requestAnimationFrame(updateCount);
+        }
+
+        function finalize() {
+            explText.innerHTML = "Kırmızı işaretler tekrar buluştu! 1. Çark 3 tam tur, 2. Çark 2 tam tur attı.";
+            ruleBox.style.borderColor = "var(--success)";
+            ruleBox.style.boxShadow = "0 0 30px rgba(16, 185, 129, 0.4)";
+            updateMath(`\\( \\text{EKOK}(12, 18) = 36 \\) <br><br> \\( 12 \\times 3 = 36 \\quad \\text{ve} \\quad 18 \\times 2 = 36 \\)`);
+            
+            // Re-enable button to restart
+            setTimeout(() => {
+                btnPlay.style.display = 'block';
+                btnPlay.innerHTML = "Tekrar İzle";
+                btnPlay.onclick = () => {
+                    // reset
+                    gear1.style.transition = 'none';
+                    gear2.style.transition = 'none';
+                    gear1.style.transform = `translate(265px, 225px) rotate(0deg)`;
+                    gear2.style.transform = `translate(490px, 225px) rotate(0deg)`;
+                    
+                    // reflow
+                    void gear1.offsetWidth;
+                    runSequence();
+                };
+            }, 2000);
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>

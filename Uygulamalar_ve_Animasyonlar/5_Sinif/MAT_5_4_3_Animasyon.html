@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kare'nin Sihri - Animasyon</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A;
+            --text: #F8FAFC;
+            --primary: #F59E0B; /* Amber */
+            --secondary: #3B82F6; /* Blue */
+            --tertiary: #10B981; /* Green */
+            --danger: #F43F5E; /* Rose */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 900px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: #0F172A; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; width: 100%; max-width: 800px; margin-bottom: 20px; height: 120px;}
+        h1 { font-size: 2.2rem; color: var(--primary); text-shadow: 0 5px 15px rgba(0,0,0,0.5); line-height: 1.3;}
+        .subtitle { font-size: 1.2rem; color: #94A3B8; margin-top: 10px; line-height: 1.5; min-height: 55px;}
+        .subtitle span { color: white; font-weight: 800; background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 5px;}
+
+        .canvas-area {
+            position: relative; width: 100%; max-width: 800px; height: 450px; 
+            background: #0B1120; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.3); 
+            overflow: hidden; display: flex; align-items: center; justify-content: center;
+        }
+
+        svg { width: 100%; height: 100%; overflow: visible; }
+        
+        /* Background Grid */
+        .grid-line { stroke: rgba(255, 255, 255, 0.03); stroke-width: 1; }
+
+        .rect-shape { fill: rgba(16, 185, 129, 0.2); stroke: var(--secondary); stroke-width: 5; stroke-linejoin: round; transition: all 1.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .r-label { font-size: 22px; font-weight: 900; fill: white; transition: all 1.5s cubic-bezier(0.4, 0, 0.2, 1); text-anchor: middle;}
+        .r-label.v { dominant-baseline: central; }
+        
+        .stat-text { font-size: 28px; font-weight: 900; opacity: 0; transition: opacity 0.5s; text-anchor: middle; }
+        .s-perim { fill: var(--primary); }
+        .s-area { fill: var(--tertiary); }
+
+        .btn-start {
+            margin-top: 30px; background: var(--secondary); color: white; border: none; padding: 15px 40px; border-radius: 50px;
+            font-size: 1.2rem; font-weight: 800; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4);
+        }
+        .btn-start:hover { transform: scale(1.05); }
+
+        .big-alert {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
+            background: var(--danger); color: white; padding: 25px 40px; border-radius: 20px;
+            font-size: 2rem; font-weight: 900; box-shadow: 0 15px 40px rgba(244, 63, 94, 0.5);
+            transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-align: center;
+        }
+        .big-alert.show { transform: translate(-50%, -50%) scale(1); }
+
+        @media (max-width: 768px) {
+            .header { flex-direction: column; gap: 10px; }
+            h1 { font-size: 1.5rem; }
+            .canvas-area { height: 300px; }
+            .title-area { height: 140px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.5.4.3. Karenin Sihri</div>
+    </div>
+
+    <div class="title-area">
+        <h1 id="mTitle">Kare'nin Sihri</h1>
+        <p class="subtitle" id="mSub">Bazen alan, bazen de çevre sabittir. Peki şekil nasıl olmalı?</p>
+    </div>
+
+    <div class="canvas-area">
+        <svg viewBox="0 0 800 450" id="svgView">
+            <g id="gridGroup"></g>
+            
+            <rect id="mRect" class="rect-shape" x="0" y="0" width="0" height="0" style="opacity: 0;"></rect>
+            
+            <text id="lblT" class="r-label" x="0" y="0" style="opacity:0;"></text>
+            <text id="lblL" class="r-label v" x="0" y="0" style="opacity:0;"></text>
+
+            <text id="stat1" class="stat-text s-perim" x="200" y="400"></text>
+            <text id="stat2" class="stat-text s-area" x="600" y="400"></text>
+        </svg>
+
+        <div id="bigAlert" class="big-alert">Maksimum Alan için KARE!</div>
+    </div>
+
+    <button class="btn-start" id="startBtn" onclick="runTimeline()">Animasyonu Başlat</button>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        
+        const mTitle = document.getElementById('mTitle');
+        const mSub = document.getElementById('mSub');
+        const startBtn = document.getElementById('startBtn');
+        
+        const mRect = document.getElementById('mRect');
+        const lblT = document.getElementById('lblT');
+        const lblL = document.getElementById('lblL');
+        const stat1 = document.getElementById('stat1');
+        const stat2 = document.getElementById('stat2');
+        const bigAlert = document.getElementById('bigAlert');
+        const gridGroup = document.getElementById('gridGroup');
+
+        let UNIT = 15; 
+        
+        // Background Grid
+        for(let i=1; i<800/UNIT; i++) {
+            let l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            l.setAttribute('x1', i*UNIT); l.setAttribute('y1', 0); l.setAttribute('x2', i*UNIT); l.setAttribute('y2', 450);
+            l.setAttribute('class', 'grid-line');
+            gridGroup.appendChild(l);
+        }
+        for(let i=1; i<450/UNIT; i++) {
+            let l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            l.setAttribute('x1', 0); l.setAttribute('y1', i*UNIT); l.setAttribute('x2', 800); l.setAttribute('y2', i*UNIT);
+            l.setAttribute('class', 'grid-line');
+            gridGroup.appendChild(l);
+        }
+
+        function setRect(w, h, p, a, special=false) {
+            let pxW = w * UNIT;
+            let pxH = h * UNIT;
+            let sx = 400 - (pxW / 2);
+            let sy = 180 - (pxH / 2); 
+
+            mRect.setAttribute('x', sx);
+            mRect.setAttribute('y', sy);
+            mRect.setAttribute('width', pxW);
+            mRect.setAttribute('height', pxH);
+
+            lblT.setAttribute('x', sx + pxW/2); lblT.setAttribute('y', sy - 15);
+            lblL.setAttribute('x', sx - 25); lblL.setAttribute('y', sy + pxH/2);
+
+            lblT.textContent = w + ' br'; 
+            lblL.textContent = h + ' br'; 
+            
+            stat1.textContent = `ÇEVRE: ${p} br`;
+            stat2.textContent = `ALAN: ${a} br²`;
+
+            if(special) {
+                mRect.style.fill = "rgba(244, 63, 94, 0.3)"; 
+                mRect.style.stroke = "var(--danger)";
+            } else {
+                mRect.style.fill = "rgba(16, 185, 129, 0.2)"; 
+                mRect.style.stroke = "var(--secondary)";
+            }
+        }
+
+        async function runTimeline() {
+            startBtn.style.display = 'none';
+
+            // Reset
+            mRect.style.opacity = 0;
+            lblT.style.opacity = 0; lblL.style.opacity = 0;
+            stat1.style.opacity = 0; stat2.style.opacity = 0;
+            bigAlert.classList.remove('show');
+            UNIT = 20; // reset unit scale
+            await sleep(500);
+
+            // ----------------------------------------------------
+            // BÖLÜM 1: Sabit Çevre (24)
+            // ----------------------------------------------------
+            mTitle.innerText = "Bölüm 1: Çitimiz Sabit (24 br)";
+            mSub.innerHTML = "Elimizdeki <span>24 birimlik</span> çit ile <span>en geniş</span> tarlayı nasıl yaparız?";
+            
+            // 11x1 (Çevre 24, Alan 11)
+            setRect(11, 1, 24, 11);
+            mRect.style.opacity = 1;
+            lblT.style.opacity = 1; lblL.style.opacity = 1;
+            await sleep(1000);
+            stat1.style.opacity = 1; stat2.style.opacity = 1;
+            await sleep(3000);
+
+            // 8x4 (Çevre 24, Alan 32)
+            mSub.innerHTML = "Kenarları birbirine yaklaştıralım (8x4). Çevre hala 24 ama alan <span>32 br²</span> oldu!";
+            setRect(8, 4, 24, 32);
+            await sleep(4000);
+
+            // 6x6 (Çevre 24, Alan 36)
+            mSub.innerHTML = "Kenarları eşit yaparsak (6x6 KARE). Alan <span>36 br²</span> ile zirveye ulaştı!";
+            setRect(6, 6, 24, 36, true);
+            await sleep(1500);
+            
+            bigAlert.innerText = "Maksimum Alan için KARE!";
+            bigAlert.classList.add('show');
+            await sleep(3500);
+            bigAlert.classList.remove('show');
+            await sleep(1000);
+
+            // Fade out
+            mRect.style.opacity = 0; lblT.style.opacity = 0; lblL.style.opacity = 0;
+            stat1.style.opacity = 0; stat2.style.opacity = 0;
+            await sleep(1000);
+
+
+            // ----------------------------------------------------
+            // BÖLÜM 2: Sabit Alan (36)
+            // ----------------------------------------------------
+            mTitle.innerText = "Bölüm 2: Tarla Sabit (36 br²)";
+            mSub.innerHTML = "Şimdi tam tersi! Tarlamız <span>36 br²</span> olmak zorunda. Acaba <span>en az çiti</span> nasıl harcarız?";
+            UNIT = 12; // zoom out for 36 width
+
+            // 36x1 (Alan 36, Çevre 74)
+            setRect(36, 1, 74, 36);
+            mRect.style.opacity = 1; lblT.style.opacity = 1; lblL.style.opacity = 1;
+            stat1.style.opacity = 1; stat2.style.opacity = 1;
+            await sleep(4000);
+
+            // 12x3 (Alan 36, Çevre 30)
+            mSub.innerHTML = "Kenarları yaklaştıralım (12x3). Tarla aynı ama harcanan çit (çevre) <span>30'a düştü!</span>";
+            UNIT = 15; // zoom in slightly
+            setRect(12, 3, 30, 36);
+            await sleep(4000);
+
+            // 6x6 (Alan 36, Çevre 24)
+            mSub.innerHTML = "Yine kenarları eşit yaparsak (6x6 KARE). Sadece <span>24 br</span> çit harcayarak işi bitirdik!";
+            UNIT = 20; // zoom in more
+            setRect(6, 6, 24, 36, true);
+            await sleep(1500);
+
+            bigAlert.innerText = "Minimum Çevre için de KARE!";
+            bigAlert.classList.add('show');
+            await sleep(3500);
+            bigAlert.classList.remove('show');
+
+            // End
+            mTitle.innerText = "Kare'nin Altın Kuralı";
+            mSub.innerHTML = "Kenarlar birbirine ne kadar yakınsa; alan o kadar <span>büyük</span>, çevre o kadar <span>küçük</span> olur. 🎓";
+            
+            setTimeout(() => {
+                startBtn.style.display = 'block';
+                startBtn.innerText = "Tekrar İzle";
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

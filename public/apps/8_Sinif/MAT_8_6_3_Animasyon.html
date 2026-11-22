@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yanıltıcı Grafik - Kritik Okuma</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg:#0F0E17; --primary:#8B5CF6; --secondary:#10B981; --tertiary:#06B6D4; --danger:#F43F5E; --accent:#F59E0B; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Outfit',sans-serif; }
+        body { background:linear-gradient(135deg,var(--bg),#161625); color:#F8FAFC; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:20px; }
+        .header { width:100%; max-width:1000px; display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); padding:15px 25px; border-radius:20px; border:1px solid rgba(139,92,246,0.2); margin-bottom:20px; }
+        .header-left { display:flex; align-items:center; gap:15px; font-weight:600; font-size:1.2rem; }
+        .header-left img { width:50px; height:50px; border-radius:50%; background:white; padding:2px; }
+        .kazanim { background:var(--primary); color:white; padding:5px 15px; border-radius:20px; font-weight:800; font-size:0.9rem; }
+        h1 { font-size:2rem; color:var(--tertiary); font-weight:900; text-align:center; }
+        .subtitle { color:#94A3B8; font-size:1.05rem; margin-top:5px; text-align:center; margin-bottom:20px; }
+        .compare-row { display:flex; gap:20px; width:100%; max-width:1000px; flex-wrap:wrap; justify-content:center; }
+        .chart-box { background:#11111A; border-radius:20px; border:2px solid; padding:20px; flex:1; min-width:280px; max-width:450px; }
+        .box-tricky { border-color:var(--danger); }
+        .box-honest { border-color:var(--secondary); }
+        .box-title { font-size:1.1rem; font-weight:900; margin-bottom:15px; display:flex; align-items:center; gap:8px; }
+        canvas { display:block; width:100%; border-radius:10px; background:#161625; }
+        .verdict { padding:12px 20px; border-radius:12px; font-weight:700; font-size:1rem; margin-top:15px; }
+        .explain-box { background:#11111A; border-radius:20px; border:1px solid rgba(255,255,255,0.05); padding:20px; width:100%; max-width:1000px; margin-top:20px; }
+        .explain-title { font-size:1.2rem; font-weight:900; color:var(--accent); margin-bottom:10px; }
+        .tip-list { display:flex; flex-direction:column; gap:8px; }
+        .tip { display:flex; align-items:flex-start; gap:10px; padding:10px; background:rgba(255,255,255,0.03); border-radius:10px; }
+        .tip-icon { font-size:1.4rem; flex-shrink:0; }
+        .tip-text { font-size:0.95rem; font-weight:600; color:#CBD5E1; line-height:1.5; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.8.6.4. Yanıltıcı Grafik (Animasyon)</div>
+    </div>
+    <h1>Grafikleri Eleştirel Okuyun!</h1>
+    <p class="subtitle">Aynı veri, farklı çizildiğinde çok farklı izlenimler bırakabilir. Aldatmacayı yakala!</p>
+    <div class="compare-row">
+        <div class="chart-box box-tricky">
+            <div class="box-title" style="color:var(--danger);">😈 Yanıltıcı Grafik</div>
+            <canvas id="cvsTricky" height="220"></canvas>
+            <div class="verdict" style="background:rgba(244,63,94,0.1);border:1px solid var(--danger);color:var(--danger);">
+                ⚠️ Y ekseni 95'ten başlıyor → küçük fark devasa görünüyor!
+            </div>
+        </div>
+        <div class="chart-box box-honest">
+            <div class="box-title" style="color:var(--secondary);">✅ Dürüst Grafik</div>
+            <canvas id="cvsHonest" height="220"></canvas>
+            <div class="verdict" style="background:rgba(16,185,129,0.1);border:1px solid var(--secondary);color:var(--secondary);">
+                ✅ Y ekseni 0'dan başlıyor → gerçek oran görünüyor.
+            </div>
+        </div>
+    </div>
+    <div class="explain-box">
+        <div class="explain-title">📚 Grafiği Eleştirel Okuma İpuçları</div>
+        <div class="tip-list">
+            <div class="tip"><div class="tip-icon">📏</div><div class="tip-text"><b>Eksenin başlangıcını kontrol edin:</b> Y ekseni her zaman 0'dan başlamak zorunda değildir, ancak sıfırdan farklı başlayan grafikler farkları abartır.</div></div>
+            <div class="tip"><div class="tip-icon">📐</div><div class="tip-text"><b>Ölçek tutarlı mı?</b> Çubuk genişlikleri ya da çemberin boyutları orantısızsa veri çarpıtılıyor olabilir.</div></div>
+            <div class="tip"><div class="tip-icon">🎨</div><div class="tip-text"><b>Renkler ve 3D efektler:</b> Bazı renk seçimleri ve 3D pasta grafikleri belirli dilimleri olduğundan büyük gösterebilir.</div></div>
+            <div class="tip"><div class="tip-icon">🏷️</div><div class="tip-text"><b>Başlık ve kaynak:</b> Grafik başlığı taraflı mı? Verinin kaynağı belirtilmiş mi? Kim hazırladı ve ne amaçla?</div></div>
+        </div>
+    </div>
+    <script>
+        const data={labels:['Ocak','Şubat','Mart','Nisan'],vals:[97,98,99,100]};
+        const COLORS=['#8B5CF6','#10B981','#06B6D4','#F59E0B'];
+
+        function drawChart(canvasId,yMin,yMax){
+            const cvs=document.getElementById(canvasId);cvs.width=cvs.offsetWidth;
+            const ctx=cvs.getContext('2d');
+            let W=cvs.width,H=220;
+            let padL=45,padR=15,padT=20,padB=40;
+            let n=data.vals.length,bw=(W-padL-padR)/n;
+            let chartH=H-padT-padB;
+            ctx.clearRect(0,0,W,H);ctx.fillStyle='#161625';ctx.fillRect(0,0,W,H);
+            // Y gridlines + labels
+            for(let i=0;i<=4;i++){
+                let v=yMin+(yMax-yMin)*i/4;
+                let y=padT+chartH*(1-i/4);
+                ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=1;
+                ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(W-padR,y);ctx.stroke();
+                ctx.fillStyle='#94A3B8';ctx.font='600 11px Outfit';ctx.textAlign='right';
+                ctx.fillText(v.toFixed(0),padL-6,y+4);
+            }
+            // Bars
+            data.vals.forEach((v,i)=>{
+                let bH=(v-yMin)/(yMax-yMin)*chartH;
+                let x=padL+i*bw+bw*0.1;
+                let bWidth=bw*0.8;
+                let grd=ctx.createLinearGradient(x,padT+chartH-bH,x,padT+chartH);
+                grd.addColorStop(0,COLORS[i]);grd.addColorStop(1,COLORS[i]+'55');
+                ctx.fillStyle=grd;
+                ctx.beginPath();ctx.roundRect(x,padT+chartH-bH,bWidth,bH,6);ctx.fill();
+                ctx.fillStyle='white';ctx.font='700 12px Outfit';ctx.textAlign='center';
+                ctx.fillText(v,x+bWidth/2,padT+chartH-bH-6);
+                ctx.fillStyle='#94A3B8';ctx.font='600 11px Outfit';
+                ctx.fillText(data.labels[i],x+bWidth/2,H-10);
+            });
+            // Axis
+            ctx.strokeStyle='rgba(255,255,255,0.3)';ctx.lineWidth=2;
+            ctx.beginPath();ctx.moveTo(padL,padT);ctx.lineTo(padL,padT+chartH);ctx.lineTo(W-padR,padT+chartH);ctx.stroke();
+            // Y min label warning
+            if(yMin>0){
+                ctx.fillStyle='#F43F5E';ctx.font='800 12px Outfit';ctx.textAlign='right';
+                ctx.fillText('⚠ Y: '+yMin+'→'+yMax,W-padR,padT-5);
+            }
+        }
+
+        window.addEventListener('resize',()=>{drawChart('cvsTricky',95,101);drawChart('cvsHonest',0,110);});
+        drawChart('cvsTricky',95,101);
+        drawChart('cvsHonest',0,110);
+    </script>
+</body>
+</html>

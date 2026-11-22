@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doğruların Durumları Animasyonu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A;
+            --text: #F8FAFC;
+            --primary: #38BDF8; /* Light Blue */
+            --secondary: #F43F5E; /* Rose */
+            --tertiary: #10B981; /* Green */
+            --highlight: #FDE047; /* Yellow */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 900px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--secondary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; width: 100%; max-width: 800px; margin-bottom: 20px; height: 120px;}
+        h1 { font-size: 2.2rem; color: var(--highlight); text-shadow: 0 5px 15px rgba(0,0,0,0.5); line-height: 1.3; transition: opacity 0.5s;}
+        .subtitle { font-size: 1.2rem; color: #94A3B8; margin-top: 10px; transition: opacity 0.5s;}
+        .subtitle span { color: white; font-weight: 800; background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 5px;}
+
+        .canvas-area {
+            position: relative; width: 100%; max-width: 800px; height: 450px; 
+            background: rgba(255,255,255,0.02); border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3); overflow: hidden; display: flex; align-items: center; justify-content: center;
+        }
+
+        svg { width: 100%; height: 100%; overflow: visible; }
+        
+        .line { stroke-width: 6; stroke-linecap: round; }
+        .l1 { stroke: white; }
+        .l2 { stroke: var(--highlight); }
+        .l3 { stroke: var(--tertiary); }
+        
+        .point { fill: white; r: 0; transition: r 0.3s; }
+        
+        .arc { fill: none; stroke-width: 30; opacity: 0.8;}
+        .arc-blue { stroke: var(--primary); }
+        .arc-red { stroke: var(--secondary); }
+        
+        .rect-90 { fill: none; stroke: white; stroke-width: 3; }
+
+        .angle-label {
+            font-size: 18px; font-weight: 800; fill: white; text-anchor: middle; dominant-baseline: central;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.8); font-variant-numeric: tabular-nums;
+        }
+
+        .btn-start {
+            margin-top: 30px; background: var(--secondary); color: white; border: none; padding: 15px 40px; border-radius: 50px;
+            font-size: 1.2rem; font-weight: 800; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 20px rgba(244, 63, 94, 0.4);
+        }
+        .btn-start:hover { transform: scale(1.05); }
+
+        @media (max-width: 768px) {
+            .header { flex-direction: column; gap: 10px; }
+            h1 { font-size: 1.5rem; }
+            .canvas-area { height: 300px; }
+            .title-area { height: 140px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.5.3.4. Çıkarım Yapma</div>
+    </div>
+
+    <div class="title-area">
+        <h1 id="mTitle">Düzlemde Doğruların Dansı</h1>
+        <p class="subtitle" id="mSub">İki veya üç doğrunun birbirine göre durumları...</p>
+    </div>
+
+    <div class="canvas-area">
+        <svg viewBox="0 0 800 450" id="svgView">
+            <g id="arcsGroup"></g>
+            <g id="rectsGroup"></g>
+            
+            <line id="l1" class="line l1" x1="100" y1="225" x2="700" y2="225" />
+            <line id="l2" class="line l2" x1="100" y1="225" x2="700" y2="225" />
+            <line id="l3" class="line l3" x1="100" y1="225" x2="700" y2="225" opacity="0" />
+            
+            <circle id="pt1" class="point" cx="400" cy="225" />
+            <circle id="pt2" class="point" cx="400" cy="225" />
+
+            <g id="textsGroup"></g>
+        </svg>
+    </div>
+
+    <button class="btn-start" id="startBtn" onclick="runTimeline()">Animasyonu Başlat</button>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        
+        // State
+        let state = {
+            l1_y: 225,
+            l3_y: 225,
+            l3_opacity: 0,
+            l2_angle: 45, // degrees from horizontal
+            l2_dy: 0, // y offset of l2 center from 225
+            mode: 'none', // none, ters, butunler, dik, paralel, kesen
+            show_points: true
+        };
+
+        const arcsGroup = document.getElementById('arcsGroup');
+        const rectsGroup = document.getElementById('rectsGroup');
+        const textsGroup = document.getElementById('textsGroup');
+        const mTitle = document.getElementById('mTitle');
+        const mSub = document.getElementById('mSub');
+        const startBtn = document.getElementById('startBtn');
+        const l1 = document.getElementById('l1');
+        const l2 = document.getElementById('l2');
+        const l3 = document.getElementById('l3');
+        const pt1 = document.getElementById('pt1');
+        const pt2 = document.getElementById('pt2');
+
+        function polar2Cart(cx, cy, r, angleDeg) {
+            let rad = angleDeg * Math.PI / 180;
+            return { x: cx + r * Math.cos(rad), y: cy - r * Math.sin(rad) };
+        }
+
+        function createArc(cx, cy, r, startAngle, endAngle, className) {
+            let start = polar2Cart(cx, cy, r, startAngle);
+            let end = polar2Cart(cx, cy, r, endAngle);
+            let diff = endAngle - startAngle;
+            if(diff < 0) diff += 360;
+            let largeArc = diff > 180 ? 1 : 0;
+            
+            let path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', `M ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 0 ${end.x} ${end.y}`);
+            path.setAttribute('class', `arc ${className}`);
+            return path;
+        }
+
+        function createText(cx, cy, r, midAngle, textVal, color) {
+            let pos = polar2Cart(cx, cy, r, midAngle);
+            let text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', pos.x);
+            text.setAttribute('y', pos.y);
+            text.setAttribute('class', 'angle-label');
+            text.setAttribute('fill', color);
+            text.textContent = textVal + "°";
+            return text;
+        }
+
+        function createRect90(cx, cy, angleBase) {
+            let p1 = polar2Cart(cx, cy, 30, angleBase);
+            let p2 = polar2Cart(p1.x, p1.y, 30, angleBase+90);
+            let p3 = polar2Cart(cx, cy, 30, angleBase+90);
+            
+            let poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            poly.setAttribute('points', `${cx},${cy} ${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y}`);
+            poly.setAttribute('class', 'rect-90');
+            return poly;
+        }
+
+        function drawIntersection(cx, cy, a1) {
+            if(a1 === 0 || a1 === 180) return; // Parallel, no intersection
+            
+            let a2 = 180 - a1;
+            
+            if (state.mode === 'dik' && a1 === 90) {
+                rectsGroup.appendChild(createRect90(cx, cy, 0));
+                rectsGroup.appendChild(createRect90(cx, cy, 90));
+                rectsGroup.appendChild(createRect90(cx, cy, 180));
+                rectsGroup.appendChild(createRect90(cx, cy, 270));
+                return;
+            }
+
+            if(state.mode === 'ters' || state.mode === 'all') {
+                arcsGroup.appendChild(createArc(cx, cy, 50, 0, a1, 'arc-blue'));
+                textsGroup.appendChild(createText(cx, cy, 75, a1/2, a1, 'white'));
+                
+                arcsGroup.appendChild(createArc(cx, cy, 50, 180, 180+a1, 'arc-blue'));
+                textsGroup.appendChild(createText(cx, cy, 75, 180 + a1/2, a1, 'white'));
+            }
+
+            if(state.mode === 'butunler' || state.mode === 'all') {
+                arcsGroup.appendChild(createArc(cx, cy, 50, a1, 180, 'arc-red'));
+                textsGroup.appendChild(createText(cx, cy, 75, a1 + a2/2, a2, 'white'));
+                
+                if(state.mode === 'all') {
+                    arcsGroup.appendChild(createArc(cx, cy, 50, 180+a1, 360, 'arc-red'));
+                    textsGroup.appendChild(createText(cx, cy, 75, 180+a1 + a2/2, a2, 'white'));
+                }
+            }
+            
+            if(state.mode === 'butunler' && state.mode !== 'all') {
+                arcsGroup.appendChild(createArc(cx, cy, 50, 0, a1, 'arc-blue'));
+                textsGroup.appendChild(createText(cx, cy, 75, a1/2, a1, 'white'));
+            }
+        }
+
+        function render() {
+            arcsGroup.innerHTML = '';
+            rectsGroup.innerHTML = '';
+            textsGroup.innerHTML = '';
+
+            l1.setAttribute('y1', state.l1_y);
+            l1.setAttribute('y2', state.l1_y);
+
+            l3.setAttribute('y1', state.l3_y);
+            l3.setAttribute('y2', state.l3_y);
+            l3.setAttribute('opacity', state.l3_opacity);
+
+            let rad = state.l2_angle * Math.PI / 180;
+            let cx = 400;
+            let cy = 225 + state.l2_dy;
+            
+            // Draw Line 2
+            let rL = 400;
+            l2.setAttribute('x1', cx - rL * Math.cos(rad));
+            l2.setAttribute('y1', cy + rL * Math.sin(rad));
+            l2.setAttribute('x2', cx + rL * Math.cos(rad));
+            l2.setAttribute('y2', cy - rL * Math.sin(rad));
+
+            // Calc Intersection with L1
+            if(Math.sin(rad) !== 0) {
+                let t1 = (cy - state.l1_y) / Math.sin(rad);
+                // BUG FIXED HERE: It must be `+` instead of `-` because X = cx + r*cos(rad)
+                let ix1 = cx + t1 * Math.cos(rad);
+                let iy1 = state.l1_y;
+                
+                if(state.show_points) { pt1.style.r = 6; pt1.setAttribute('cx', ix1); pt1.setAttribute('cy', iy1); }
+                else { pt1.style.r = 0; }
+                
+                drawIntersection(ix1, iy1, state.l2_angle);
+            } else {
+                pt1.style.r = 0;
+            }
+
+            // Calc Intersection with L3
+            if(state.l3_opacity > 0 && Math.sin(rad) !== 0) {
+                let t3 = (cy - state.l3_y) / Math.sin(rad);
+                // BUG FIXED HERE: Same as above.
+                let ix3 = cx + t3 * Math.cos(rad);
+                let iy3 = state.l3_y;
+                
+                if(state.show_points) { pt2.style.r = 6; pt2.setAttribute('cx', ix3); pt2.setAttribute('cy', iy3); }
+                else { pt2.style.r = 0; }
+                
+                drawIntersection(ix3, iy3, state.l2_angle);
+            } else {
+                pt2.style.r = 0;
+            }
+        }
+
+        async function animateState(updates, duration) {
+            let startState = { ...state };
+            let startTime = performance.now();
+            
+            return new Promise(resolve => {
+                function step(time) {
+                    let progress = (time - startTime) / duration;
+                    if(progress > 1) progress = 1;
+                    
+                    // ease in out
+                    let ease = progress < 0.5 ? 2 * progress * progress : -1 + (4 - 2 * progress) * progress;
+
+                    for(let key in updates) {
+                        state[key] = startState[key] + (updates[key] - startState[key]) * ease;
+                    }
+                    render();
+                    
+                    if(progress < 1) requestAnimationFrame(step);
+                    else resolve();
+                }
+                requestAnimationFrame(step);
+            });
+        }
+
+        async function runTimeline() {
+            startBtn.style.display = 'none';
+
+            // RESET
+            state = { l1_y: 225, l3_y: 225, l3_opacity: 0, l2_angle: 90, l2_dy: -300, mode: 'none', show_points: false };
+            render();
+
+            // Intro: Line 2 drops in
+            mTitle.innerText = "1. Kesişen Doğrular";
+            mSub.innerHTML = "İki doğru düzlemde <span>tek bir noktada</span> kesişirse açılar oluşur.";
+            await animateState({l2_dy: 0, l2_angle: 45}, 1500);
+            
+            state.show_points = true;
+            render();
+            await sleep(1500);
+
+            // TERS AÇI
+            mSub.innerHTML = "Karşılıklı oluşan açılara <span>Ters Açılar</span> denir ve ölçüleri <span>daima eşittir.</span>";
+            state.mode = 'ters'; render();
+            await sleep(3500);
+            state.mode = 'none'; render(); await sleep(500);
+
+            // BÜTÜNLER AÇI
+            mSub.innerHTML = "Yan yana olan açılara ise <span>Komşu Bütünler</span> denir. Toplamları daima <span>180°</span> yapar.";
+            state.mode = 'butunler'; render();
+            await sleep(3500);
+            state.mode = 'none'; render(); await sleep(500);
+
+            // DİK AÇI
+            mTitle.innerText = "2. Dik Kesişen Doğrular";
+            mSub.innerHTML = "Eğer iki doğru birbirini tam dik olarak keserse...";
+            await animateState({l2_angle: 90}, 1500);
+            
+            mSub.innerHTML = "...tam <span>dört adet Dik Açı (90°)</span> meydana gelir.";
+            state.mode = 'dik'; render();
+            await sleep(3500);
+            state.mode = 'none'; render(); await sleep(500);
+
+            // PARALEL
+            mTitle.innerText = "3. Paralel Doğrular";
+            mSub.innerHTML = "Doğruların <span>hiçbir ortak noktası yoksa</span>, onlar paraleldir ve aralarında açı oluşmaz.";
+            state.show_points = false; render();
+            await animateState({l2_angle: 0, l2_dy: -100}, 2000);
+            await sleep(3000);
+
+            // KESEN
+            mTitle.innerText = "4. Üç Doğru (İki Paralel, Bir Kesen)";
+            mSub.innerHTML = "Paralel iki doğruyu kesen üçüncü bir doğru <span>(Kesen)</span> çizdiğimizde...";
+            
+            await animateState({l1_y: 150, l3_y: 300, l3_opacity: 1}, 1000);
+            await animateState({l2_angle: 60, l2_dy: 0}, 1500);
+            
+            state.show_points = true; render();
+            await sleep(1000);
+            
+            mSub.innerHTML = "İç ters, dış ters ve yöndeş kurallarıyla <span>toplam 8 adet açı</span> oluşur. Dar açılar kendi aralarında, geniş açılar kendi aralarında eşittir.";
+            state.mode = 'all'; render();
+            await sleep(5000);
+
+            // END
+            mTitle.innerText = "Harika!";
+            mSub.innerHTML = "Doğruların düzlemdeki durumlarına ait tüm sırları keşfettin! 🎓";
+            
+            setTimeout(() => {
+                startBtn.style.display = 'block';
+                startBtn.innerText = "Tekrar İzle";
+            }, 2000);
+        }
+
+        // Init
+        render();
+    </script>
+</body>
+</html>

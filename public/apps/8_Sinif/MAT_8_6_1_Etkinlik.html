@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ortalama, Medyan, Mod Laboratuvarı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg:#0F0E17; --surface:#1A1A24; --primary:#8B5CF6; --secondary:#10B981; --tertiary:#06B6D4; --danger:#F43F5E; --accent:#F59E0B; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Outfit',sans-serif; }
+        body { background:linear-gradient(135deg,var(--bg),#161625); color:#F8FAFC; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:20px; }
+        .header { width:100%; max-width:1100px; display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); padding:15px 25px; border-radius:20px; border:1px solid rgba(139,92,246,0.2); margin-bottom:20px; }
+        .header-left { display:flex; align-items:center; gap:15px; font-weight:600; font-size:1.2rem; }
+        .header-left img { width:50px; height:50px; border-radius:50%; background:white; padding:2px; }
+        .kazanim { background:var(--primary); color:white; padding:5px 15px; border-radius:20px; font-weight:800; font-size:0.9rem; }
+        h1 { font-size:2rem; color:var(--tertiary); font-weight:900; text-align:center; }
+        .subtitle { color:#94A3B8; font-size:1.05rem; margin-top:5px; text-align:center; margin-bottom:20px; }
+        .panel { background:#11111A; border-radius:24px; border:1px solid rgba(255,255,255,0.05); box-shadow:inset 0 0 30px rgba(0,0,0,0.5); padding:25px; width:100%; max-width:1100px; display:flex; flex-direction:column; gap:20px; }
+        /* Input row */
+        .input-area { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+        .input-area input[type=number] { width:70px; background:var(--surface); border:2px solid #334155; border-radius:10px; color:white; font-size:1.2rem; font-weight:700; padding:8px 10px; text-align:center; outline:none; transition:border-color 0.3s; }
+        .input-area input[type=number]:focus { border-color:var(--primary); }
+        .btn-calc { background:var(--primary); color:white; border:none; padding:10px 25px; border-radius:12px; font-size:1rem; font-weight:900; cursor:pointer; transition:all 0.3s; }
+        .btn-calc:hover { transform:translateY(-2px); box-shadow:0 6px 15px rgba(139,92,246,0.4); }
+        .btn-random { background:rgba(245,158,11,0.2); color:var(--accent); border:2px solid var(--accent); padding:10px 20px; border-radius:12px; font-size:1rem; font-weight:800; cursor:pointer; }
+        /* Results */
+        .results-row { display:flex; gap:15px; flex-wrap:wrap; justify-content:center; }
+        .res-card { background:var(--surface); padding:20px 25px; border-radius:18px; border-left:6px solid; flex:1; min-width:180px; max-width:220px; }
+        .res-title { font-size:1rem; font-weight:800; color:#94A3B8; margin-bottom:5px; }
+        .res-val { font-size:2.2rem; font-weight:900; }
+        .res-formula { font-size:0.85rem; color:#64748B; margin-top:5px; }
+        /* Number line */
+        .numline-area { background:#161625; border-radius:15px; padding:20px; }
+        .numline-title { font-size:1.1rem; font-weight:800; margin-bottom:15px; color:white; }
+        canvas { display:block; width:100%; border-radius:10px; }
+        /* Sorted display */
+        .sorted-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+        .num-bubble { padding:8px 14px; border-radius:50px; font-size:1.1rem; font-weight:800; background:var(--surface); color:white; border:2px solid #334155; transition:all 0.3s; }
+        .num-bubble.median { border-color:var(--danger); background:rgba(244,63,94,0.2); color:var(--danger); transform:scale(1.2); }
+        .num-bubble.mode { border-color:var(--secondary); background:rgba(16,185,129,0.2); color:var(--secondary); }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.8.6.1. Ortalama / Medyan / Mod (Etkinlik)</div>
+    </div>
+    <h1>Merkezi Eğilim Ölçüleri Laboratuvarı</h1>
+    <p class="subtitle">Veri setini değiştirerek ortalama, medyan ve modun nasıl değiştiğini gözlemleyin.</p>
+    <div class="panel">
+        <div class="input-area">
+            <span style="font-weight:800;color:white;font-size:1.1rem;">Veriler:</span>
+            <input type="number" class="dval" value="4" min="-999" max="999" step="1">
+            <input type="number" class="dval" value="7" min="-999" max="999" step="1">
+            <input type="number" class="dval" value="7" min="-999" max="999" step="1">
+            <input type="number" class="dval" value="2" min="-999" max="999" step="1">
+            <input type="number" class="dval" value="9" min="-999" max="999" step="1">
+            <input type="number" class="dval" value="7" min="-999" max="999" step="1">
+            <input type="number" class="dval" value="5" min="-999" max="999" step="1">
+            <input type="number" class="dval" value="3" min="-999" max="999" step="1">
+            <button class="btn-calc" onclick="calculate()">📊 Hesapla</button>
+            <button class="btn-random" onclick="randomize()">🎲 Rastgele</button>
+        </div>
+        <div class="results-row" id="resultsRow">
+            <div class="res-card" style="border-color:var(--primary);">
+                <div class="res-title">ORTALAMA (x̄)</div>
+                <div class="res-val" style="color:var(--primary);" id="rMean">-</div>
+                <div class="res-formula">Toplam ÷ Eleman Sayısı</div>
+            </div>
+            <div class="res-card" style="border-color:var(--danger);">
+                <div class="res-title">MEDYAN (Ortanca)</div>
+                <div class="res-val" style="color:var(--danger);" id="rMedian">-</div>
+                <div class="res-formula">Sıralandığında ortadaki değer</div>
+            </div>
+            <div class="res-card" style="border-color:var(--secondary);">
+                <div class="res-title">MOD (Tepe Değer)</div>
+                <div class="res-val" style="color:var(--secondary);" id="rMode">-</div>
+                <div class="res-formula">En çok tekrar eden değer</div>
+            </div>
+            <div class="res-card" style="border-color:var(--accent);">
+                <div class="res-title">ARALIK (Range)</div>
+                <div class="res-val" style="color:var(--accent);" id="rRange">-</div>
+                <div class="res-formula">Maks − Min değer</div>
+            </div>
+        </div>
+        <div class="numline-area">
+            <div class="numline-title">📌 Sıralı Veri (Medyan = 🔴, Mod = 🟢)</div>
+            <div class="sorted-row" id="sortedRow"></div>
+        </div>
+        <div class="numline-area">
+            <div class="numline-title">📈 Sayı Doğrusu Gösterimi</div>
+            <canvas id="cvs" height="80"></canvas>
+        </div>
+    </div>
+    <script>
+        const cvs = document.getElementById('cvs');
+        const ctx = cvs.getContext('2d');
+
+        function getVals() {
+            return [...document.querySelectorAll('.dval')].map(i=>parseFloat(i.value)||0);
+        }
+
+        function calculate() {
+            let data = getVals();
+            if(data.length === 0) return;
+            // Mean
+            let sum = data.reduce((a,b)=>a+b,0);
+            let mean = (sum/data.length).toFixed(2);
+            // Sorted
+            let sorted = [...data].sort((a,b)=>a-b);
+            // Median
+            let mid = Math.floor(sorted.length/2);
+            let median = sorted.length%2===0 ? ((sorted[mid-1]+sorted[mid])/2).toFixed(2) : sorted[mid].toFixed(2);
+            let medianIdx = sorted.length%2===0 ? [mid-1,mid] : [mid];
+            // Mode
+            let freq = {};
+            data.forEach(v=>freq[v]=(freq[v]||0)+1);
+            let maxFreq = Math.max(...Object.values(freq));
+            let modes = Object.keys(freq).filter(k=>freq[k]===maxFreq).map(Number);
+            let modeStr = maxFreq===1 ? 'Yok' : modes.join(', ');
+            // Range
+            let range = sorted[sorted.length-1] - sorted[0];
+
+            document.getElementById('rMean').textContent = mean;
+            document.getElementById('rMedian').textContent = median;
+            document.getElementById('rMode').textContent = modeStr;
+            document.getElementById('rRange').textContent = range;
+
+            // Sorted bubbles
+            const sr = document.getElementById('sortedRow');
+            sr.innerHTML = '';
+            sorted.forEach((v,i)=>{
+                let b = document.createElement('div');
+                b.className = 'num-bubble';
+                b.textContent = v;
+                if(medianIdx.includes(i)) b.classList.add('median');
+                if(modes.includes(v) && maxFreq>1) b.classList.add('mode');
+                sr.appendChild(b);
+            });
+            // Draw number line
+            drawLine(sorted, parseFloat(mean), parseFloat(median), modes);
+        }
+
+        function drawLine(sorted, mean, median, modes) {
+            cvs.width = cvs.offsetWidth;
+            let W = cvs.width, H = 80;
+            let minV = sorted[0]-1, maxV = sorted[sorted.length-1]+1;
+            function px(v){return 40+(v-minV)/(maxV-minV)*(W-80);}
+            ctx.clearRect(0,0,W,H);
+            // Line
+            ctx.strokeStyle='rgba(255,255,255,0.3)';ctx.lineWidth=2;
+            ctx.beginPath();ctx.moveTo(40,40);ctx.lineTo(W-40,40);ctx.stroke();
+            // Data points
+            sorted.forEach(v=>{
+                ctx.beginPath();ctx.arc(px(v),40,6,0,Math.PI*2);
+                ctx.fillStyle=modes.includes(v)?'#10B981':'#8B5CF6';ctx.fill();
+                ctx.fillStyle='white';ctx.font='600 11px Outfit';ctx.textAlign='center';
+                ctx.fillText(v,px(v),58);
+            });
+            // Mean marker
+            ctx.strokeStyle='#8B5CF6';ctx.lineWidth=3;
+            ctx.beginPath();ctx.moveTo(px(mean),20);ctx.lineTo(px(mean),40);ctx.stroke();
+            ctx.fillStyle='#8B5CF6';ctx.font='800 12px Outfit';ctx.textAlign='center';
+            ctx.fillText('x̄='+mean,px(mean),16);
+            // Median marker
+            ctx.strokeStyle='#F43F5E';ctx.lineWidth=3;
+            ctx.beginPath();ctx.moveTo(px(median),40);ctx.lineTo(px(median),60);ctx.stroke();
+            ctx.fillStyle='#F43F5E';ctx.textAlign='center';
+            ctx.fillText('Me='+median,px(median),76);
+        }
+
+        function randomize() {
+            document.querySelectorAll('.dval').forEach(i=>{
+                i.value = Math.floor(Math.random()*15)+1;
+            });
+            // Add bias so mode appears
+            let biasVal = Math.floor(Math.random()*10)+1;
+            let inputs = [...document.querySelectorAll('.dval')];
+            inputs[Math.floor(Math.random()*inputs.length)].value = biasVal;
+            inputs[Math.floor(Math.random()*inputs.length)].value = biasVal;
+            calculate();
+        }
+
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'BUTTON' && !e.target.hasAttribute('data-spam-locked')) {
+                e.target.setAttribute('data-spam-locked','true'); e.target.style.opacity='0.7'; e.target.style.pointerEvents='none';
+                setTimeout(() => { e.target.removeAttribute('data-spam-locked'); e.target.style.opacity='1'; e.target.style.pointerEvents='auto'; }, 400);
+            }
+        });
+
+        window.addEventListener('resize',()=>calculate());
+        calculate();
+    </script>
+</body>
+</html>

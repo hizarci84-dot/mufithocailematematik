@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dairenin Alanı Laboratuvarı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F0E17; --surface: #1A1A24; --text: #F8FAFC;
+            --primary: #8B5CF6; --secondary: #10B981;
+            --tertiary: #06B6D4; --danger: #F43F5E;
+            --accent: #F59E0B;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, #161625 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(139, 92, 246, 0.2); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; margin-bottom: 20px;}
+        h1 { font-size: 2.2rem; color: var(--tertiary); font-weight: 900;}
+        .subtitle { color: #94A3B8; font-size: 1.1rem; margin-top: 5px;}
+
+        .main-container {
+            display: flex; gap: 30px; width: 100%; max-width: 1000px; flex-wrap: wrap; justify-content: center;
+        }
+
+        .panel {
+            background: #11111A; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.4); 
+            padding: 30px; display: flex; flex-direction: column; align-items: center; width: 100%;
+        }
+
+        /* Circle / Sectors area */
+        .interactive-area {
+            width: 100%; height: 350px; position: relative; display: flex; flex-direction: column; align-items: center;
+        }
+
+        /* CSS for the sectors */
+        .circle-container {
+            width: 200px; height: 200px; position: relative; transition: all 1s;
+        }
+
+        .sector {
+            position: absolute; width: 100px; height: 100px;
+            transform-origin: 100% 100%; border-radius: 100% 0 0 0;
+            background: var(--primary);
+            transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* 16 sectors, 22.5 deg each */
+        /* To make a semi-circle slice with clip-path or rotation */
+        /* It's easier to use SVG for accurate slices */
+
+        .slider-box {
+            width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 10px; margin-top: 20px;
+            background: rgba(0,0,0,0.3); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        input[type=range] { width: 100%; cursor: pointer; accent-color: var(--secondary); }
+
+        .expl-text {
+            font-size: 1.2rem; font-weight: 800; color: white; text-align: center; margin-bottom: 20px;
+            min-height: 60px;
+        }
+
+        .alert-box {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
+            background: rgba(16, 185, 129, 0.95); border: 2px solid white; color: white;
+            padding: 30px 50px; border-radius: 20px; font-weight: 900; font-size: 2rem;
+            opacity: 0; transition: all 0.5s; text-align: center; z-index: 100;
+            backdrop-filter: blur(10px); box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.7.4.7. Dairenin Alanı (Etkinlik)</div>
+    </div>
+
+    <div class="title-area">
+        <h1>Daireyi Dilimle</h1>
+        <p class="subtitle">Daireyi parçalara ayırarak adım adım dikdörtgene dönüştürün.</p>
+    </div>
+
+    <div class="main-container">
+        
+        <div class="panel">
+            
+            <div class="expl-text" id="explText">1. Sürgüyü sağa çekerek daireyi 16 eş dilime ayır.</div>
+            
+            <div class="interactive-area">
+                <svg width="600" height="300" id="svgArea" viewBox="0 0 600 300">
+                    <g id="sectorsGroup" transform="translate(300, 150)"></g>
+                    
+                    <g id="rectLabels" style="opacity: 0; transition: opacity 1s;">
+                        <text x="300" y="220" fill="var(--secondary)" font-size="20" font-weight="900" text-anchor="middle">Uzunluk: Çevrenin Yarısı (π × r)</text>
+                        <text x="100" y="150" fill="var(--tertiary)" font-size="20" font-weight="900" text-anchor="middle" transform="rotate(-90 100,150)">Yarıçap (r)</text>
+                    </g>
+                </svg>
+            </div>
+
+            <div class="slider-box">
+                <div style="display:flex; justify-content:space-between; font-weight:800; color:var(--accent);">
+                    <span>Daire</span>
+                    <span>Parçalanmış</span>
+                    <span>Dikdörtgen</span>
+                </div>
+                <input type="range" id="slider" min="0" max="100" value="0" oninput="updateShape()">
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="alert-box" id="alertBox">HARİKA! Alan = (π.r) × r = πr²</div>
+
+    <script>
+        const sectorsGroup = document.getElementById('sectorsGroup');
+        const slider = document.getElementById('slider');
+        const explText = document.getElementById('explText');
+        const rectLabels = document.getElementById('rectLabels');
+        const alertBox = document.getElementById('alertBox');
+        
+        const numSectors = 16;
+        const radius = 100;
+        const angle = (2 * Math.PI) / numSectors;
+
+        // Generate SVG path for a sector pointing UP (center at 0,0, arc at top)
+        function getSectorPath() {
+            // start at 0,0
+            // line to r*cos(-angle/2), r*sin(-angle/2)
+            // arc to r*cos(angle/2), r*sin(angle/2)
+            // line to 0,0
+            const halfA = angle / 2;
+            const x1 = radius * Math.sin(-halfA);
+            const y1 = -radius * Math.cos(-halfA);
+            const x2 = radius * Math.sin(halfA);
+            const y2 = -radius * Math.cos(halfA);
+            
+            return `M 0 0 L ${x1} ${y1} A ${radius} ${radius} 0 0 1 ${x2} ${y2} Z`;
+        }
+
+        const sectorPathStr = getSectorPath();
+
+        // Create sectors
+        for(let i=0; i<numSectors; i++) {
+            let path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            path.setAttribute("d", sectorPathStr);
+            // alternating colors
+            path.setAttribute("fill", i%2===0 ? "var(--primary)" : "var(--tertiary)");
+            path.setAttribute("stroke", "white");
+            path.setAttribute("stroke-width", "1");
+            path.id = "sec" + i;
+            sectorsGroup.appendChild(path);
+        }
+
+        let done = false;
+
+        function updateShape() {
+            let val = parseInt(slider.value);
+            
+            // Phase 1 (0 to 50): Explode slightly outwards
+            // Phase 2 (50 to 100): Arrange into a rectangle line
+            
+            if(val < 10) {
+                explText.innerText = "1. Sürgüyü sağa çekerek daireyi 16 eş dilime ayır.";
+            } else if (val < 90) {
+                explText.innerText = "2. Dilimleri açıp yan yana, biri ters biri düz olacak şekilde dizelim.";
+            } else {
+                explText.innerText = "3. Ortaya çıkan şekil bir DİKDÖRTGENE benzer!";
+            }
+
+            // Target rectangle parameters:
+            // Width = half circumference = pi * r
+            // We have 16 sectors. 8 point up, 8 point down.
+            // Sector width at base is approx arc length = (2*pi*r)/16
+            const secWidth = (2 * Math.PI * radius) / numSectors;
+            const totalWidth = 8 * secWidth;
+            const startX = -totalWidth / 2 + secWidth/2;
+
+            for(let i=0; i<numSectors; i++) {
+                let path = document.getElementById("sec" + i);
+                let currentAngleDeg = (i * 360 / numSectors); // circle position
+                
+                // Rectangle position
+                // Even: point up (rot 0)
+                // Odd: point down (rot 180)
+                // x pos: index 0 -> startX, index 1 -> startX + secWidth/2, index 2 -> startX + secWidth ...
+                
+                let isOdd = i % 2 !== 0;
+                let pairIndex = Math.floor(i / 2);
+                
+                let rectX = startX + (pairIndex * secWidth);
+                if(isOdd) rectX += secWidth / 2;
+                
+                let rectY = isOdd ? radius/2 : -radius/2;
+                let rectRot = isOdd ? 180 : 0;
+
+                // Interpolate
+                let p = val / 100;
+                
+                // Explode radius
+                let explodeR = Math.sin(p * Math.PI) * 50; 
+                
+                // Circle pos
+                let circX = explodeR * Math.sin(currentAngleDeg * Math.PI/180);
+                let circY = -explodeR * Math.cos(currentAngleDeg * Math.PI/180);
+                
+                let finalX = circX * (1-p) + rectX * p;
+                let finalY = circY * (1-p) + rectY * p;
+                
+                let finalRot = currentAngleDeg * (1-p) + rectRot * p;
+
+                path.setAttribute("transform", `translate(${finalX}, ${finalY}) rotate(${finalRot})`);
+            }
+
+            if(val > 95) {
+                rectLabels.style.opacity = 1;
+                if(!done && val === 100) {
+                    done = true;
+                    setTimeout(() => {
+                        alertBox.style.opacity = 1;
+                        alertBox.style.transform = "translate(-50%, -50%) scale(1)";
+                        setTimeout(() => {
+                            alertBox.style.opacity = 0;
+                            alertBox.style.transform = "translate(-50%, -50%) scale(0)";
+                        }, 4000);
+                    }, 500);
+                }
+            } else {
+                rectLabels.style.opacity = 0;
+                done = false;
+            }
+        }
+
+        // Init
+        updateShape();
+
+    </script>
+
+    <script>
+        // Global spam click prevention for Etkinlik files
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'BUTTON' && !e.target.hasAttribute('data-spam-locked')) {
+                e.target.setAttribute('data-spam-locked', 'true');
+                let originalOpacity = e.target.style.opacity || '1';
+                e.target.style.opacity = '0.7';
+                e.target.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    e.target.removeAttribute('data-spam-locked');
+                    e.target.style.opacity = originalOpacity;
+                    e.target.style.pointerEvents = 'auto';
+                }, 400);
+            }
+        });
+    </script>
+</body>
+</html>

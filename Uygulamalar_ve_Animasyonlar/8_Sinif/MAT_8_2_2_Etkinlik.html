@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taksi Ücreti Simülatörü</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F0E17; --surface: #1A1A24; --text: #F8FAFC;
+            --primary: #8B5CF6; --secondary: #10B981;
+            --tertiary: #06B6D4; --danger: #F43F5E;
+            --accent: #F59E0B;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, #161625 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(139, 92, 246, 0.2); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; margin-bottom: 20px;}
+        h1 { font-size: 2.2rem; color: var(--tertiary); font-weight: 900;}
+        .subtitle { color: #94A3B8; font-size: 1.1rem; margin-top: 5px;}
+
+        .main-container {
+            display: flex; gap: 30px; width: 100%; max-width: 1000px; flex-wrap: wrap; justify-content: center;
+        }
+
+        .panel {
+            background: #11111A; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.4); 
+            padding: 30px; display: flex; width: 100%; gap: 30px; align-items: center; justify-content: center; flex-wrap: wrap;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex; flex-direction: column; gap: 20px; width: 300px;
+        }
+
+        .card {
+            background: var(--surface); padding: 20px; border-radius: 15px; border-left: 5px solid var(--primary);
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        
+        .c-val { font-size: 2rem; color: var(--accent); font-weight: 900;}
+
+        input[type=range] { width: 100%; cursor: pointer; accent-color: var(--primary); margin-top: 10px;}
+
+        /* The SVG Graph */
+        .graph-wrapper {
+            width: 400px; height: 400px; background: #161625; border: 2px solid #334155; border-radius: 10px; position: relative;
+        }
+
+        svg { width: 100%; height: 100%; overflow: visible; }
+
+        .axis { stroke: white; stroke-width: 2; }
+        .grid { stroke: rgba(255,255,255,0.1); stroke-width: 1; }
+        
+        /* The Line */
+        .func-line { stroke: var(--secondary); stroke-width: 4; stroke-linecap: round; transition: all 0.2s;}
+
+        .lbl { fill: #94A3B8; font-size: 12px; font-weight: 800; font-family: 'Outfit'; }
+        
+        /* Equation Display */
+        .eq-box {
+            background: rgba(16, 185, 129, 0.1); border: 2px solid var(--secondary);
+            padding: 15px; border-radius: 15px; font-size: 1.5rem; font-weight: 900; color: white; text-align: center;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.8.2.2. Doğrusal Fonksiyonlar (Etkinlik)</div>
+    </div>
+
+    <div class="title-area">
+        <h1>Taksi Ücreti (y = mx + n)</h1>
+        <p class="subtitle">Bağımlı Değişken (Ücret), Bağımsız Değişkene (Gidilen Yol) bağlı olarak doğrusal artar.</p>
+    </div>
+
+    <div class="main-container">
+        
+        <div class="panel">
+            
+            <div class="controls">
+                <div class="card">
+                    <span style="font-weight:800; color:white;">Açılış Ücreti (Sabit n)</span>
+                    <span class="c-val" id="valN">10 ₺</span>
+                    <input type="range" id="sliderN" min="0" max="50" step="5" value="10" oninput="updateGraph()">
+                    <span style="font-size:0.9rem; color:#94A3B8;">Araca bindiğiniz an ödenen tutar. Grafiğin y eksenini kestiği yer.</span>
+                </div>
+                
+                <div class="card" style="border-left-color: var(--secondary);">
+                    <span style="font-weight:800; color:white;">KM Başına Ücret (Eğim m)</span>
+                    <span class="c-val" style="color:var(--secondary);" id="valM">5 ₺</span>
+                    <input type="range" id="sliderM" min="1" max="20" step="1" value="5" oninput="updateGraph()">
+                    <span style="font-size:0.9rem; color:#94A3B8;">Her 1 km'de ücretin artış miktarı (Değişim Oranı).</span>
+                </div>
+
+                <div class="eq-box" id="eqBox">
+                    Ücret = 5x + 10
+                </div>
+            </div>
+
+            <div class="graph-wrapper">
+                <svg viewBox="0 0 400 400" id="svgGraph">
+                    <!-- Grid -->
+                    <!-- X: 0 to 20 km (step 2), Y: 0 to 200 TL (step 20) -->
+                    <!-- Wait, let's keep it simple. X axis is bottom, Y axis is left -->
+                    
+                    <g id="gridLines"></g>
+                    
+                    <!-- Axes -->
+                    <line x1="40" y1="360" x2="380" y2="360" class="axis"/>
+                    <line x1="40" y1="20" x2="40" y2="360" class="axis"/>
+
+                    <text x="360" y="380" class="lbl" fill="white">Yol (x)</text>
+                    <text x="10" y="30" class="lbl" fill="white">Ücret (y)</text>
+
+                    <!-- The Function Line -->
+                    <line id="theLine" class="func-line" x1="40" y1="360" x2="380" y2="100"/>
+                </svg>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        const valN = document.getElementById('valN');
+        const valM = document.getElementById('valM');
+        const sliderN = document.getElementById('sliderN');
+        const sliderM = document.getElementById('sliderM');
+        const eqBox = document.getElementById('eqBox');
+        const theLine = document.getElementById('theLine');
+        const gridLines = document.getElementById('gridLines');
+
+        // Setup fixed grid labels (X: 0 to 20, Y: 0 to 200)
+        // px mapped: x_px = 40 + (x/20)*340
+        // y_px = 360 - (y/200)*340
+        for(let i=0; i<=20; i+=4) {
+            let pxX = 40 + (i/20)*340;
+            gridLines.innerHTML += `<line x1="${pxX}" y1="20" x2="${pxX}" y2="360" class="grid"/>`;
+            gridLines.innerHTML += `<text x="${pxX-5}" y="375" class="lbl">${i}</text>`;
+        }
+        for(let i=0; i<=200; i+=40) {
+            let pxY = 360 - (i/200)*340;
+            gridLines.innerHTML += `<line x1="40" y1="${pxY}" x2="380" y2="${pxY}" class="grid"/>`;
+            if(i > 0) gridLines.innerHTML += `<text x="10" y="${pxY+5}" class="lbl">${i}</text>`;
+        }
+
+        function getPx(x, y) {
+            return {
+                x: 40 + (x/20)*340,
+                y: 360 - (y/200)*340
+            };
+        }
+
+        function updateGraph() {
+            let n = parseInt(sliderN.value);
+            let m = parseInt(sliderM.value);
+
+            valN.innerText = n + " ₺";
+            valM.innerText = m + " ₺";
+
+            eqBox.innerHTML = `y = ${m}x + ${n}`;
+
+            // Line starts at x=0, y=n
+            let start = getPx(0, n);
+            
+            // Line ends at x=20, y = 20*m + n
+            let endY_val = (20 * m) + n;
+            let endX_val = 20;
+
+            // If it goes off chart (y > 200), clip it
+            if(endY_val > 200) {
+                endY_val = 200;
+                // x = (y - n) / m
+                endX_val = (200 - n) / m;
+            }
+
+            let end = getPx(endX_val, endY_val);
+
+            theLine.setAttribute('x1', start.x);
+            theLine.setAttribute('y1', start.y);
+            theLine.setAttribute('x2', end.x);
+            theLine.setAttribute('y2', end.y);
+        }
+
+        // Global spam click prevention for Etkinlik files
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'BUTTON' && !e.target.hasAttribute('data-spam-locked')) {
+                e.target.setAttribute('data-spam-locked', 'true');
+                let originalOpacity = e.target.style.opacity || '1';
+                e.target.style.opacity = '0.7';
+                e.target.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    e.target.removeAttribute('data-spam-locked');
+                    e.target.style.opacity = originalOpacity;
+                    e.target.style.pointerEvents = 'auto';
+                }, 400);
+            }
+        });
+
+        updateGraph();
+    </script>
+</body>
+</html>

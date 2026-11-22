@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Olasılık ve Tümleyen Laboratuvarı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F0E17; --surface: #1A1A24; --text: #F8FAFC;
+            --primary: #8B5CF6; --secondary: #10B981;
+            --tertiary: #06B6D4; --danger: #F43F5E;
+            --accent: #F59E0B;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, #161625 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(139, 92, 246, 0.2); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; margin-bottom: 20px;}
+        h1 { font-size: 2.2rem; color: var(--tertiary); font-weight: 900;}
+        .subtitle { color: #94A3B8; font-size: 1.1rem; margin-top: 5px;}
+
+        .main-container {
+            display: flex; gap: 30px; width: 100%; max-width: 1000px; flex-wrap: wrap; justify-content: center;
+        }
+
+        .panel {
+            background: #11111A; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.4); 
+            padding: 30px; display: flex; width: 100%; gap: 30px; align-items: center; justify-content: center;
+        }
+
+        .visual-area {
+            flex: 1; display: flex; flex-direction: column; align-items: center; gap: 20px;
+            background: rgba(0,0,0,0.3); padding: 30px; border-radius: 20px;
+        }
+
+        .circle-bar {
+            width: 250px; height: 250px; border-radius: 50%; position: relative;
+            background: conic-gradient(var(--secondary) 0% var(--pct), var(--danger) var(--pct) 100%);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 10px 30px rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: center; transition: background 0.5s;
+        }
+
+        .circle-inner {
+            width: 200px; height: 200px; background: #11111A; border-radius: 50%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        }
+        
+        .circle-inner h2 { font-size: 2.5rem; font-weight: 900; color: white;}
+        .circle-inner p { color: #94A3B8; font-weight: 800;}
+
+        .control-area {
+            flex: 1; display: flex; flex-direction: column; gap: 20px;
+        }
+
+        .card {
+            background: var(--surface); padding: 20px; border-radius: 15px; border-left: 5px solid;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .card.pos { border-color: var(--secondary); }
+        .card.neg { border-color: var(--danger); }
+
+        .card-header { display: flex; justify-content: space-between; font-weight: 900; font-size: 1.2rem; color: white;}
+        .card-val { font-size: 1.5rem; color: var(--accent);}
+
+        input[type=range] { width: 100%; cursor: pointer; accent-color: var(--secondary); margin-top: 10px;}
+
+        .formula {
+            background: rgba(139, 92, 246, 0.1); border: 2px dashed var(--primary);
+            padding: 20px; border-radius: 15px; text-align: center; font-size: 1.3rem; font-weight: 900;
+        }
+        
+        @media (max-width: 800px) {
+            .panel { flex-direction: column; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.7.6.1. Olasılık Hesaplama (Etkinlik)</div>
+    </div>
+
+    <div class="title-area">
+        <h1>Olay ve Tümleyeni</h1>
+        <p class="subtitle">Bir olayın "Olma Olasılığı" ile "Olmama Olasılığının" toplamı her zaman 1 Bütüne (%100) eşittir.</p>
+    </div>
+
+    <div class="main-container">
+        
+        <div class="panel">
+            
+            <div class="visual-area">
+                <div class="circle-bar" id="cBar" style="--pct: 60%">
+                    <div class="circle-inner">
+                        <h2>%<span id="cVal">60</span></h2>
+                        <p>Kazanma İhtimali</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-area">
+                
+                <div class="card pos">
+                    <div class="card-header">
+                        <span>Olay (Kazanma)</span>
+                        <span class="card-val" id="vPos">%60</span>
+                    </div>
+                    <p style="color:#94A3B8; font-size: 0.9rem;">(İstenen Durum)</p>
+                    <input type="range" id="sliderPos" min="0" max="100" value="60" oninput="updateVals(this.value)">
+                </div>
+
+                <div class="card neg">
+                    <div class="card-header">
+                        <span>Tümleyen Olay (Kaybetme)</span>
+                        <span class="card-val" id="vNeg" style="color:var(--danger);">%40</span>
+                    </div>
+                    <p style="color:#94A3B8; font-size: 0.9rem;">(İstenmeyen Durum)</p>
+                </div>
+
+                <div class="formula">
+                    <span id="fPos" style="color:var(--secondary)">%60</span> + 
+                    <span id="fNeg" style="color:var(--danger)">%40</span> = 
+                    <span style="color:white">%100 (1 Tam)</span>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        const cBar = document.getElementById('cBar');
+        const cVal = document.getElementById('cVal');
+        const vPos = document.getElementById('vPos');
+        const vNeg = document.getElementById('vNeg');
+        const fPos = document.getElementById('fPos');
+        const fNeg = document.getElementById('fNeg');
+
+        function updateVals(val) {
+            let p = parseInt(val);
+            let n = 100 - p;
+
+            cBar.style.setProperty('--pct', p + '%');
+            cVal.innerText = p;
+
+            vPos.innerText = '%' + p;
+            vNeg.innerText = '%' + n;
+
+            fPos.innerText = '%' + p;
+            fNeg.innerText = '%' + n;
+        }
+    </script>
+
+    <script>
+        // Global spam click prevention for Etkinlik files
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'BUTTON' && !e.target.hasAttribute('data-spam-locked')) {
+                e.target.setAttribute('data-spam-locked', 'true');
+                let originalOpacity = e.target.style.opacity || '1';
+                e.target.style.opacity = '0.7';
+                e.target.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    e.target.removeAttribute('data-spam-locked');
+                    e.target.style.opacity = originalOpacity;
+                    e.target.style.pointerEvents = 'auto';
+                }, 400);
+            }
+        });
+    </script>
+</body>
+</html>

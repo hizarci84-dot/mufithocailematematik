@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alan Dönüşüm Makinesi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A; --surface: #1E293B; --text: #F8FAFC;
+            --primary: #3B82F6; --secondary: #10B981;
+            --tertiary: #F59E0B; --danger: #F43F5E;
+            --purple: #8B5CF6; --cyan: #06B6D4;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, var(--surface) 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--tertiary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .container {
+            width: 100%; max-width: 900px; display: flex; flex-direction: column; gap: 20px;
+        }
+
+        .machine-panel {
+            background: rgba(255,255,255,0.03); border-radius: 20px; padding: 30px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center;
+        }
+
+        .machine-panel h2 { font-size: 2rem; color: var(--tertiary); margin-bottom: 10px; font-weight: 900;}
+
+        .input-row {
+            display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: 30px; flex-wrap: wrap;
+        }
+
+        .huge-input {
+            background: rgba(0,0,0,0.4); border: 2px solid var(--tertiary); color: white;
+            font-size: 2rem; font-weight: 900; text-align: center; padding: 15px; border-radius: 15px;
+            width: 200px; outline: none; transition: all 0.3s;
+        }
+        .huge-input:focus { box-shadow: 0 0 20px rgba(245, 158, 11, 0.4); }
+
+        select {
+            background: #0B1120; border: 2px solid var(--primary); color: white;
+            font-size: 1.5rem; font-weight: 800; padding: 15px; border-radius: 15px; cursor: pointer; outline: none;
+        }
+
+        .arrow-icon { font-size: 2.5rem; color: var(--secondary); font-weight: 900; }
+
+        .btn-convert {
+            background: var(--tertiary); color: white; border: none; padding: 15px 40px; border-radius: 50px;
+            font-size: 1.3rem; font-weight: 900; cursor: pointer; transition: all 0.3s; margin-top: 30px; width: 100%; max-width: 400px;
+            box-shadow: 0 10px 20px rgba(245, 158, 11, 0.4);
+        }
+        .btn-convert:hover { transform: translateY(-3px); }
+
+        .process-area {
+            margin-top: 40px; padding: 20px; background: rgba(0,0,0,0.3); border-radius: 15px;
+            display: flex; flex-direction: column; align-items: center; gap: 15px; opacity: 0; transition: opacity 0.5s;
+        }
+        .process-area.show { opacity: 1; }
+
+        .step-box {
+            background: rgba(59, 130, 246, 0.1); border: 1px solid var(--primary); padding: 15px 30px; border-radius: 10px;
+            font-size: 1.3rem; font-weight: 800; color: white; display: flex; align-items: center; gap: 20px;
+        }
+        .step-val { color: var(--primary); font-size: 1.5rem; }
+        .step-op { color: var(--danger); font-size: 1.2rem; background: rgba(244, 63, 94, 0.2); padding: 5px 15px; border-radius: 20px;}
+
+        .final-result {
+            margin-top: 20px; font-size: 2.5rem; font-weight: 900; color: var(--secondary);
+            text-shadow: 0 0 20px rgba(16, 185, 129, 0.5); border: 2px dashed var(--secondary); padding: 20px 40px; border-radius: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .header { flex-direction: column; gap: 10px; }
+            .input-row { flex-direction: column; }
+            .arrow-icon { transform: rotate(90deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=3B82F6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.6.4.1. Alan Dönüşüm Makinesi</div>
+    </div>
+
+    <div class="container">
+        
+        <div class="machine-panel">
+            <h2>🔁 Alan Dönüşüm Makinesi</h2>
+            <p style="color:#94A3B8;">Aşağı inerken her basamakta 100 ile çarp (2 sıfır ekle), yukarı çıkarken 100'e böl (2 sıfır sil).</p>
+            
+            <div class="input-row">
+                <input type="number" id="inpVal" class="huge-input" placeholder="Sayı" value="5">
+                
+                <select id="selFrom">
+                    <option value="6">km² (Kilometrekare)</option>
+                    <option value="5">hm² (Hektometrekare)</option>
+                    <option value="4">dam² (Dekametrekare)</option>
+                    <option value="3" selected>m² (Metrekare)</option>
+                    <option value="2">dm² (Desimetrekare)</option>
+                    <option value="1">cm² (Santimetrekare)</option>
+                    <option value="0">mm² (Milimetrekare)</option>
+                </select>
+
+                <div class="arrow-icon">➔</div>
+
+                <select id="selTo">
+                    <option value="6">km² (Kilometrekare)</option>
+                    <option value="5">hm² (Hektometrekare)</option>
+                    <option value="4">dam² (Dekametrekare)</option>
+                    <option value="3">m² (Metrekare)</option>
+                    <option value="2">dm² (Desimetrekare)</option>
+                    <option value="1" selected>cm² (Santimetrekare)</option>
+                    <option value="0">mm² (Milimetrekare)</option>
+                </select>
+            </div>
+
+            <button class="btn-convert" onclick="processConversion()">Dönüştür</button>
+
+            <div class="process-area" id="pArea">
+                <h3 style="color:#94A3B8; margin-bottom: 10px;">İşlem Adımları</h3>
+                <div id="stepsContainer" style="display:flex; flex-direction:column; gap:10px; width:100%;"></div>
+                
+                <div class="final-result" id="finalRes">50000 cm²</div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        const units = ["mm²", "cm²", "dm²", "m²", "dam²", "hm²", "km²"];
+
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+        function formatNum(num) {
+            // Remove scientific notation for reasonable bounds, add commas
+            return Number(num).toLocaleString('tr-TR', {maximumFractionDigits: 15, useGrouping: false});
+        }
+
+        async function processConversion() {
+            const btn = document.querySelector('.btn-convert');
+            btn.disabled = true;
+
+            const valStr = document.getElementById('inpVal').value.replace(',', '.');
+            if(!valStr) { alert("Lütfen bir sayı girin."); btn.disabled=false; return; }
+
+            const val = parseFloat(valStr);
+            const fromIdx = parseInt(document.getElementById('selFrom').value);
+            const toIdx = parseInt(document.getElementById('selTo').value);
+
+            const pArea = document.getElementById('pArea');
+            const sCont = document.getElementById('stepsContainer');
+            const fRes = document.getElementById('finalRes');
+            
+            pArea.classList.remove('show');
+            sCont.innerHTML = "";
+            fRes.style.display = "none";
+
+            await sleep(300);
+            pArea.classList.add('show');
+
+            if(fromIdx === toIdx) {
+                sCont.innerHTML = `<div class="step-box" style="justify-content:center;">Aynı basamaktasın, işlem gerekmiyor!</div>`;
+                fRes.style.display = "block";
+                fRes.innerText = `${formatNum(val)} ${units[toIdx]}`;
+                btn.disabled = false;
+                return;
+            }
+
+            let steps = Math.abs(fromIdx - toIdx);
+            let isDown = fromIdx > toIdx;
+            
+            let currentVal = val;
+            
+            let directionText = isDown ? `Aşağı iniliyor. Her basamakta x100 yapılır.` : `Yukarı çıkılıyor. Her basamakta ÷100 yapılır.`;
+            sCont.innerHTML += `<div style="color:var(--primary); font-weight:800; font-size:1.1rem; margin-bottom:10px;">Hedefe ${steps} basamak var. ${directionText}</div>`;
+
+            let currIdx = fromIdx;
+            for(let i=1; i<=steps; i++) {
+                let nextIdx = isDown ? currIdx - 1 : currIdx + 1;
+                let opText = isDown ? "x 100" : "÷ 100";
+                
+                let nextVal = isDown ? currentVal * 100 : currentVal / 100;
+                // JS float issue fix for simple powers of 10
+                nextVal = Number(nextVal.toPrecision(15)); 
+
+                let stepHTML = `
+                    <div class="step-box">
+                        <span class="step-val">${formatNum(currentVal)} ${units[currIdx]}</span>
+                        <span class="step-op">${opText}</span>
+                        <span>➔</span>
+                        <span class="step-val" style="color:white;">${formatNum(nextVal)} ${units[nextIdx]}</span>
+                    </div>
+                `;
+                
+                sCont.insertAdjacentHTML('beforeend', stepHTML);
+                currentVal = nextVal;
+                currIdx = nextIdx;
+                await sleep(800); // Wait between steps for animation effect
+            }
+
+            await sleep(500);
+            fRes.style.display = "block";
+            fRes.innerText = `${formatNum(currentVal)} ${units[toIdx]}`;
+
+            btn.disabled = false;
+        }
+    </script>
+</body>
+</html>

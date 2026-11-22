@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İşlem Önceliği Görevi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #F8FAFC;
+            --text: #0F172A;
+            --primary: #6366F1; /* Indigo */
+            --primary-hover: #4F46E5;
+            --success: #10B981;
+            --error: #EF4444;
+            --card: #FFFFFF;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, #E0E7FF 0%, #C7D2FE 100%);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 900px;
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--card); padding: 15px 25px; border-radius: 50px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 40px; margin-top: 10px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; color: var(--primary);}
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; }
+        .kazanim { background: #E0E7FF; color: var(--primary); padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .container {
+            width: 100%; max-width: 900px;
+            background: var(--card); border-radius: 24px; padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            display: flex; flex-direction: column; align-items: center; gap: 30px;
+        }
+
+        h1 { color: #312E81; font-size: 2.2rem; text-align: center; }
+        p.subtitle { color: #64748B; font-size: 1.2rem; text-align: center; max-width: 700px;}
+
+        /* Rules Box */
+        .rules-box {
+            display: flex; gap: 15px; background: #F1F5F9; padding: 15px 25px; border-radius: 16px; width: 100%; justify-content: center; flex-wrap: wrap;
+        }
+        .rule { display: flex; align-items: center; gap: 8px; font-weight: 800; color: #475569; }
+        .rule span.num { background: var(--primary); color: white; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 0.9rem; }
+
+        /* Story Problem Area */
+        .story-area {
+            background: #FEF3C7; border: 2px dashed #F59E0B; padding: 20px; border-radius: 16px;
+            width: 100%; font-size: 1.2rem; color: #92400E; font-weight: 600;
+        }
+
+        /* Interactive Equation */
+        .eq-display {
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
+            font-size: 3rem; font-weight: 800; margin: 30px 0;
+        }
+
+        .op-chunk {
+            padding: 5px 15px; border-radius: 12px; cursor: pointer; transition: all 0.3s;
+            border: 2px solid transparent; position: relative;
+        }
+        .op-chunk:hover { background: #EEF2FF; border-color: #A5B4FC; transform: translateY(-5px); }
+        .op-chunk.solved { background: #D1FAE5 !important; border-color: #34D399 !important; color: #065F46; transform: none; cursor: default; }
+        .op-chunk.wrong { animation: shake 0.5s; background: #FEE2E2; border-color: #FCA5A5; color: #991B1B;}
+
+        .plain-text { padding: 5px 0; color: #334155; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .feedback { font-size: 1.5rem; font-weight: 800; min-height: 2rem; text-align: center; }
+
+        .btn-next {
+            background: var(--primary); color: white; border: none; padding: 15px 30px; border-radius: 12px; font-size: 1.2rem; font-weight: 800; cursor: pointer; opacity: 0; pointer-events: none; transition: all 0.3s;
+        }
+        .btn-next.visible { opacity: 1; pointer-events: auto; }
+        .btn-next:hover { background: var(--primary-hover); transform: translateY(-3px);}
+
+        /* Confetti */
+        #confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 999; }
+
+        @media (max-width: 768px) {
+            .header { flex-direction: column; gap: 10px; padding: 15px;}
+            .container { padding: 20px; }
+            .eq-display { font-size: 2rem; }
+            h1 { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="confetti"></canvas>
+    
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.5.2.2. İşlem Önceliği</div>
+    </div>
+
+    <div class="container">
+        <h1>Adım Adım İşlem Önceliği</h1>
+        
+        <div class="rules-box">
+            <div class="rule"><span class="num">1</span> (Parantez İçi)</div>
+            <div class="rule"><span class="num">2</span> Üslü İfadeler (x², x³)</div>
+            <div class="rule"><span class="num">3</span> Çarpma / Bölme</div>
+            <div class="rule"><span class="num">4</span> Toplama / Çıkarma</div>
+        </div>
+
+        <p class="subtitle">Aşağıdaki problemin çözüm adımlarını, <strong>doğru sırada yapılması gereken işleme tıklayarak</strong> tamamla.</p>
+
+        <div class="story-area" id="storyArea">
+            <!-- Story injected by JS -->
+        </div>
+
+        <div class="eq-display" id="eqContainer">
+            <!-- Equation injected by JS -->
+        </div>
+
+        <div class="feedback" id="feedback"></div>
+
+        <button class="btn-next" id="nextBtn" onclick="loadLevel()">Sıradaki Problem</button>
+    </div>
+
+    <script>
+        // Levels definition covering all criteria (Parentheses, Exponents(2,3), Mult/Div, Add/Sub, Left-to-Right)
+        const levels = [
+            {
+                story: "Hikaye: Ayşe'nin cebinde 50 TL'si vardı. Kırtasiyeye gidip tanesi 4 TL olan kalemlerden 3 tane aldı. Ayşe'nin kaç TL'si kaldı?",
+                expression: [
+                    { type: 'text', val: '50 - ' },
+                    { type: 'chunk', val: '4 x 3', result: '12', order: 1, reason: 'Önce çarpma işlemi (kalemlerin toplam fiyatı) hesaplanır.' }
+                ],
+                final: '50 - 12 = 38'
+            },
+            {
+                story: "Hikaye: Bir kolide 3 kutu var. Her kutuda ise (15 - 5) tane oyuncak var. Kolide toplam kaç oyuncak var?",
+                expression: [
+                    { type: 'text', val: '3 x ' },
+                    { type: 'chunk', val: '(15 - 5)', result: '10', order: 1, reason: 'En büyük öncelik daima parantez içindedir.' }
+                ],
+                final: '3 x 10 = 30'
+            },
+            {
+                story: "Hikaye: Ali, kare şeklinde bir bahçenin alanını hesaplamak istiyor. Bahçenin bir kenarı 5 metredir. Daha sonra bu alana 10 metrekarelik bir kulübe ekleyecek. Toplam alan ne olur?",
+                expression: [
+                    { type: 'chunk', val: '5²', result: '25', order: 1, reason: 'Parantez yoksa, önce üslü ifadeler (kare/küp) hesaplanır.' },
+                    { type: 'text', val: ' + 10' }
+                ],
+                final: '25 + 10 = 35'
+            },
+            {
+                story: "Matematiksel Zorluk! Birden fazla işlem var, kuralları hatırla.",
+                expression: [
+                    { type: 'text', val: '20 + ' },
+                    { type: 'chunk', val: '2³', result: '8', order: 1, reason: 'İlk öncelik parantez, yoksa üslü ifadedir!' },
+                    { type: 'text', val: ' x ' },
+                    { type: 'chunk', val: '(9 - 6)', result: '3', order: 0, reason: 'Harika! İlk iş her zaman parantezin içini çözmektir.' }
+                ]
+            }
+        ];
+
+        let currentLevel = -1;
+        let currentStep = 0;
+
+        function loadLevel() {
+            currentLevel++;
+            if (currentLevel >= levels.length) currentLevel = 0; // Loop
+            
+            currentStep = 0;
+            const level = levels[currentLevel];
+            
+            document.getElementById('storyArea').innerHTML = level.story;
+            document.getElementById('feedback').innerText = "";
+            document.getElementById('nextBtn').classList.remove('visible');
+            
+            renderEquation();
+        }
+
+        function renderEquation() {
+            const eqContainer = document.getElementById('eqContainer');
+            eqContainer.innerHTML = '';
+            
+            const level = levels[currentLevel];
+            
+            // Check if all chunks are solved
+            let allSolved = true;
+            
+            level.expression.forEach((item, index) => {
+                if (item.type === 'text') {
+                    eqContainer.innerHTML += `<span class="plain-text">${item.val}</span>`;
+                } else {
+                    if (!item.solved) allSolved = false;
+                    
+                    let html = `<span class="op-chunk ${item.solved ? 'solved' : ''}" onclick="chunkClicked(${index})">${item.val}</span>`;
+                    eqContainer.innerHTML += html;
+                }
+            });
+
+            if (allSolved) {
+                // Show final calculation if available
+                if (level.final) {
+                    eqContainer.innerHTML = `<span class="op-chunk solved">${level.final}</span>`;
+                }
+                
+                document.getElementById('feedback').innerText = "Tebrikler! İşlem önceliği kuralını başarıyla uyguladın. 🎉";
+                document.getElementById('feedback').style.color = "var(--success)";
+                fireConfetti();
+                document.getElementById('nextBtn').classList.add('visible');
+            }
+        }
+
+        window.chunkClicked = function(index) {
+            const level = levels[currentLevel];
+            const item = level.expression[index];
+            
+            if (item.solved) return; // already solved
+
+            // Check if this is the correct next step
+            // Find the minimum unsolved order
+            let minOrder = 999;
+            level.expression.forEach(x => {
+                if (x.type === 'chunk' && !x.solved && x.order < minOrder) {
+                    minOrder = x.order;
+                }
+            });
+
+            const fb = document.getElementById('feedback');
+
+            if (item.order === minOrder) {
+                // Correct!
+                item.solved = true;
+                item.val = item.result;
+                
+                fb.innerText = "Doğru! " + item.reason;
+                fb.style.color = "var(--success)";
+                
+                renderEquation();
+            } else {
+                // Wrong order
+                const el = document.querySelectorAll('.op-chunk')[getChunkDOMIndex(index)];
+                el.classList.add('wrong');
+                setTimeout(() => el.classList.remove('wrong'), 500);
+                
+                fb.innerText = "Hata! Kuralları hatırla. Parantez > Üslü > Çarpma/Bölme > Toplama/Çıkarma.";
+                fb.style.color = "var(--error)";
+            }
+        }
+        
+        function getChunkDOMIndex(exprIndex) {
+            let chunkIdx = 0;
+            for(let i=0; i<exprIndex; i++) {
+                if (levels[currentLevel].expression[i].type === 'chunk') chunkIdx++;
+            }
+            return chunkIdx;
+        }
+
+        // Confetti
+        function fireConfetti() {
+            const canvas = document.getElementById('confetti');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const pieces = [];
+            const colors = ['#6366F1', '#10B981', '#3B82F6', '#F59E0B', '#EC4899'];
+            for (let i = 0; i < 80; i++) {
+                pieces.push({
+                    x: canvas.width / 2, y: canvas.height / 2,
+                    vx: (Math.random() - 0.5) * 20, vy: (Math.random() - 0.5) * 20 - 5,
+                    size: Math.random() * 10 + 5, color: colors[Math.floor(Math.random() * colors.length)],
+                    rot: Math.random() * 360, rotSpeed: (Math.random() - 0.5) * 10
+                });
+            }
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                let active = false;
+                pieces.forEach(p => {
+                    p.x += p.vx; p.y += p.vy; p.vy += 0.5; p.rot += p.rotSpeed;
+                    if (p.y < canvas.height) active = true;
+                    ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot * Math.PI / 180);
+                    ctx.fillStyle = p.color; ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+                    ctx.restore();
+                });
+                if (active) requestAnimationFrame(animate);
+                else ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+            animate();
+        }
+
+        // Start
+        window.onload = loadLevel;
+    </script>
+</body>
+</html>

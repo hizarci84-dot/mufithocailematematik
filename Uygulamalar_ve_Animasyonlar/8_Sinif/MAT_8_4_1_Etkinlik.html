@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Üçgende Alan Simülatörü</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F0E17; --surface: #1A1A24;
+            --primary: #8B5CF6; --secondary: #10B981;
+            --tertiary: #06B6D4; --danger: #F43F5E; --accent: #F59E0B;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Outfit',sans-serif; }
+        body { background:linear-gradient(135deg,var(--bg),#161625); color:#F8FAFC; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:20px; }
+        .header { width:100%; max-width:1000px; display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); padding:15px 25px; border-radius:20px; border:1px solid rgba(139,92,246,0.2); margin-bottom:20px; }
+        .header-left { display:flex; align-items:center; gap:15px; font-weight:600; font-size:1.2rem; }
+        .header-left img { width:50px; height:50px; border-radius:50%; background:white; padding:2px; }
+        .kazanim { background:var(--primary); color:white; padding:5px 15px; border-radius:20px; font-weight:800; font-size:0.9rem; }
+        .title-area { text-align:center; margin-bottom:20px; }
+        h1 { font-size:2.2rem; color:var(--tertiary); font-weight:900; }
+        .subtitle { color:#94A3B8; font-size:1.1rem; margin-top:5px; }
+        .panel { background:#11111A; border-radius:24px; border:1px solid rgba(255,255,255,0.05); box-shadow:inset 0 0 30px rgba(0,0,0,0.5),0 20px 40px rgba(0,0,0,0.4); padding:30px; display:flex; width:100%; max-width:1000px; gap:30px; align-items:center; justify-content:center; flex-wrap:wrap; }
+        .controls { display:flex; flex-direction:column; gap:15px; width:280px; }
+        .card { background:var(--surface); padding:15px; border-radius:15px; display:flex; flex-direction:column; gap:8px; }
+        .c-lbl { font-weight:800; color:white; font-size:1.1rem; }
+        .c-val { font-size:1.8rem; font-weight:900; }
+        input[type=range] { width:100%; cursor:pointer; accent-color:var(--primary); }
+        .canvas-area { position:relative; width:450px; height:380px; background:#161625; border:2px dashed #334155; border-radius:15px; display:flex; align-items:center; justify-content:center; }
+        svg { overflow:visible; }
+        .result-box { background:rgba(139,92,246,0.1); border:2px solid var(--primary); padding:20px; border-radius:15px; text-align:center; width:100%; }
+        .formula { font-size:1.5rem; font-weight:900; color:white; }
+        .big-result { font-size:2.5rem; font-weight:900; color:var(--accent); margin-top:5px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.8.4.1. Üçgende Alan (Etkinlik)</div>
+    </div>
+    <div class="title-area">
+        <h1>Taban × Yükseklik ÷ 2</h1>
+        <p class="subtitle">Tabanı ve yüksekliği değiştirerek üçgenin alanının nasıl değiştiğini gözlemleyin.</p>
+    </div>
+    <div class="panel">
+        <div class="controls">
+            <div class="card">
+                <span class="c-lbl">Taban (a)</span>
+                <span class="c-val" style="color:var(--secondary);" id="valA">8 cm</span>
+                <input type="range" id="sliderA" min="1" max="20" value="8" oninput="update()">
+            </div>
+            <div class="card">
+                <span class="c-lbl">Yükseklik (h)</span>
+                <span class="c-val" style="color:var(--danger);" id="valH">6 cm</span>
+                <input type="range" id="sliderH" min="1" max="16" value="6" oninput="update()">
+            </div>
+            <div class="result-box">
+                <div class="formula" id="fml">Alan = (8 × 6) ÷ 2</div>
+                <div class="big-result" id="result">= 24 cm²</div>
+            </div>
+            <div style="background:rgba(16,185,129,0.1);border:1px solid var(--secondary);padding:15px;border-radius:12px;color:white;font-size:1rem;font-weight:600;">
+                💡 Üçgenin alanı, içine tamamen sığan dikdörtgenin <span style="color:var(--secondary)">tam yarısıdır</span>.
+            </div>
+        </div>
+        <div class="canvas-area">
+            <svg width="400" height="340" viewBox="0 0 400 340" id="svgArea">
+                <!-- Rectangle (reference) -->
+                <rect id="rectRef" x="50" y="50" width="200" height="150" fill="rgba(139,92,246,0.1)" stroke="var(--primary)" stroke-width="2" stroke-dasharray="8,4"/>
+                <!-- Triangle -->
+                <polygon id="triPoly" points="50,200 250,200 150,50" fill="rgba(16,185,129,0.3)" stroke="var(--secondary)" stroke-width="3" stroke-linejoin="round"/>
+                <!-- Height line -->
+                <line id="hLine" x1="150" y1="50" x2="150" y2="200" stroke="var(--danger)" stroke-width="2" stroke-dasharray="6,4"/>
+                <!-- Labels -->
+                <text id="lblA" x="150" y="225" text-anchor="middle" fill="var(--secondary)" font-weight="900" font-family="Outfit" font-size="16">a = 8 cm</text>
+                <text id="lblH" x="165" y="130" fill="var(--danger)" font-weight="900" font-family="Outfit" font-size="16">h = 6 cm</text>
+                <!-- Area label -->
+                <text id="lblArea" x="150" y="140" text-anchor="middle" fill="white" font-weight="900" font-family="Outfit" font-size="22">24 cm²</text>
+            </svg>
+        </div>
+    </div>
+    <script>
+        const SCALE = 15;
+        const BASE_X = 50, BASE_Y = 260;
+        function update() {
+            let a = parseInt(document.getElementById('sliderA').value);
+            let h = parseInt(document.getElementById('sliderH').value);
+            document.getElementById('valA').textContent = a + ' cm';
+            document.getElementById('valH').textContent = h + ' cm';
+            let area = (a * h) / 2;
+            document.getElementById('fml').textContent = `Alan = (${a} × ${h}) ÷ 2`;
+            document.getElementById('result').textContent = `= ${area} cm²`;
+            // Draw
+            let pw = a * SCALE, ph = h * SCALE;
+            let x1 = 200 - pw/2, x2 = 200 + pw/2;
+            let yTop = BASE_Y - ph, yBot = BASE_Y;
+            document.getElementById('rectRef').setAttribute('x', x1);
+            document.getElementById('rectRef').setAttribute('y', yTop);
+            document.getElementById('rectRef').setAttribute('width', pw);
+            document.getElementById('rectRef').setAttribute('height', ph);
+            document.getElementById('triPoly').setAttribute('points', `${x1},${yBot} ${x2},${yBot} ${200},${yTop}`);
+            document.getElementById('hLine').setAttribute('x1', 200); document.getElementById('hLine').setAttribute('y1', yTop);
+            document.getElementById('hLine').setAttribute('x2', 200); document.getElementById('hLine').setAttribute('y2', yBot);
+            document.getElementById('lblA').setAttribute('x', 200); document.getElementById('lblA').setAttribute('y', yBot+22);
+            document.getElementById('lblA').textContent = `a = ${a} cm`;
+            document.getElementById('lblH').setAttribute('x', 210); document.getElementById('lblH').setAttribute('y', (yTop+yBot)/2+6);
+            document.getElementById('lblH').textContent = `h = ${h} cm`;
+            document.getElementById('lblArea').setAttribute('x', 200); document.getElementById('lblArea').setAttribute('y', (yTop+yBot)/2+8);
+            document.getElementById('lblArea').textContent = `${area} cm²`;
+        }
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'BUTTON' && !e.target.hasAttribute('data-spam-locked')) {
+                e.target.setAttribute('data-spam-locked','true'); e.target.style.opacity='0.7'; e.target.style.pointerEvents='none';
+                setTimeout(() => { e.target.removeAttribute('data-spam-locked'); e.target.style.opacity='1'; e.target.style.pointerEvents='auto'; }, 400);
+            }
+        });
+        update();
+    </script>
+</body>
+</html>

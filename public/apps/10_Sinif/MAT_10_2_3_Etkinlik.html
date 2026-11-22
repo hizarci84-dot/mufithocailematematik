@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10.2.3 - Parçalı Fonksiyon Laboratuvarı</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --panel-bg: #1e293b;
+            --part1: #f43f5e; /* Rose */
+            --part2: #3b82f6; /* Blue */
+            --border-line: #10b981; /* Emerald */
+            --text-main: #f8fafc;
+            --grid-color: rgba(255,255,255,0.1);
+            --axis-color: rgba(255,255,255,0.4);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        
+        body { background-color: var(--bg-color); color: var(--text-main); display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; }
+
+        .header { width: 100%; max-width: 1000px; display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background: var(--panel-bg); border-radius: 12px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1); }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 800; font-size: 1.2rem; }
+        .kazanim { background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 6px; font-weight: 600; }
+
+        h1 { font-size: 2.2rem; margin-bottom: 10px; text-align: center; }
+        .subtitle { color: #94a3b8; font-size: 1.05rem; margin-bottom: 30px; text-align: center; max-width: 800px; }
+
+        .workspace { display: flex; gap: 20px; width: 100%; max-width: 1000px; }
+        @media(max-width: 800px) { .workspace { flex-direction: column; } }
+
+        .controls { flex: 1; background: var(--panel-bg); padding: 25px; border-radius: 12px; display: flex; flex-direction: column; gap: 20px; border: 1px solid rgba(255,255,255,0.05); }
+
+        .slider-group label { display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 8px; font-size: 0.95rem; }
+        input[type=range] { width: 100%; accent-color: var(--border-line); }
+        .val-badge { font-weight: 800; background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 4px; }
+        
+        .part1-badge { color: var(--part1); }
+        .part2-badge { color: var(--part2); }
+        .border-badge { color: var(--border-line); }
+
+        .math-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; font-size: 1.2rem; display: flex; justify-content: center; }
+
+        .graph-container {
+            flex: 2; background: #0b1120; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);
+            position: relative; overflow: hidden; min-height: 400px;
+        }
+
+        svg { width: 100%; height: 100%; display: block; }
+        .grid-line { stroke: var(--grid-color); stroke-width: 1; }
+        .axis-line { stroke: var(--axis-color); stroke-width: 2; }
+        .axis-label { fill: var(--axis-color); font-size: 14px; font-weight: 600; }
+        
+        .path1 { stroke: var(--part1); stroke-width: 4; fill: none; filter: drop-shadow(0 0 5px var(--part1)); }
+        .path2 { stroke: var(--part2); stroke-width: 4; fill: none; filter: drop-shadow(0 0 5px var(--part2)); }
+        
+        .critical-line { stroke: var(--border-line); stroke-width: 2; stroke-dasharray: 6,6; opacity: 0.8; }
+        .critical-label { fill: var(--border-line); font-size: 14px; font-weight: 800; }
+        
+        .circle-open { fill: #0b1120; stroke: var(--part1); stroke-width: 3; }
+        .circle-closed { fill: var(--part2); stroke: var(--part2); stroke-width: 3; }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left"><span>@mufithocailematematik</span></div>
+        <div class="kazanim">MAT.10.2.3. Parçalı Fonksiyonlar</div>
+    </div>
+    
+    <h1>Kritik Nokta Deneyi</h1>
+    <p class="subtitle">Parçalı fonksiyonlar, tanım kümesinin farklı aralıklarında farklı kurallarla çalışan fonksiyonlardır. Kritik nokta (a) değiştiğinde fonksiyonun davranışının nasıl değiştiğini gözlemleyin.</p>
+    
+    <div class="workspace">
+        <div class="controls">
+            
+            <div class="math-box">
+                <div id="mathEq">
+                    \( f(x) = \begin{cases} -x^2 + 5, & x < a \\ 2x - 3, & x \ge a \end{cases} \)
+                </div>
+            </div>
+            
+            <div class="slider-group">
+                <label>Kritik Nokta (a) <span class="val-badge border-badge" id="valA">2</span></label>
+                <input type="range" id="slA" min="-5" max="5" step="1" value="2">
+            </div>
+            
+            <div style="font-size: 0.9rem; color: #94a3b8; line-height: 1.5; margin-top: 10px;">
+                <strong style="color:var(--part1)">1. Parça (Kırmızı):</strong> İkinci dereceden bir parabol eğrisi.<br>
+                <strong style="color:var(--part2)">2. Parça (Mavi):</strong> Birinci dereceden doğru grafiği.<br>
+                <strong style="color:var(--border-line)">Kesik Çizgi (Yeşil):</strong> Fonksiyonun kural değiştirdiği x=a kritik noktası.
+            </div>
+        </div>
+        
+        <div class="graph-container">
+            <!-- ViewBox: x from -10 to 10, y from -10 to 10 -->
+            <svg viewBox="-10 -10 20 20" preserveAspectRatio="xMidYMid meet" id="graphSvg">
+                <g transform="scale(1, -1)">
+                    <g id="gridGroup"></g>
+                    <line x1="-10" y1="0" x2="10" y2="0" class="axis-line" />
+                    <line x1="0" y1="-10" x2="0" y2="10" class="axis-line" />
+                    
+                    <path id="path1" class="path1" d="" />
+                    <path id="path2" class="path2" d="" />
+                    
+                    <line id="critLine" class="critical-line" x1="2" y1="-10" x2="2" y2="10" />
+                    
+                    <circle id="ptOpen" class="circle-open" cx="0" cy="0" r="0.3" />
+                    <circle id="ptClosed" class="circle-closed" cx="0" cy="0" r="0.3" />
+                </g>
+                <g id="labelsGroup"></g>
+                <text id="critLbl" class="critical-label" x="2.5" y="-9">x = 2</text>
+            </svg>
+        </div>
+    </div>
+
+    <script>
+        const slA = document.getElementById('slA');
+        const valA = document.getElementById('valA');
+        const path1 = document.getElementById('path1');
+        const path2 = document.getElementById('path2');
+        const critLine = document.getElementById('critLine');
+        const ptOpen = document.getElementById('ptOpen');
+        const ptClosed = document.getElementById('ptClosed');
+        const critLbl = document.getElementById('critLbl');
+        const mathEq = document.getElementById('mathEq');
+
+        let debounceTimer;
+
+        function drawGrid() {
+            let gridHtml = ''; let labelHtml = '';
+            for(let i = -10; i <= 10; i++) {
+                gridHtml += `<line x1="${i}" y1="-10" x2="${i}" y2="10" class="grid-line" />`;
+                gridHtml += `<line x1="-10" y1="${i}" x2="10" y2="${i}" class="grid-line" />`;
+                
+                if(i !== 0 && i % 2 === 0) {
+                    labelHtml += `<text x="${i}" y="0.8" class="axis-label" text-anchor="middle">${i}</text>`;
+                    labelHtml += `<text x="-0.3" y="${-i}" class="axis-label" text-anchor="end" dominant-baseline="middle">${i}</text>`;
+                }
+            }
+            document.getElementById('gridGroup').innerHTML = gridHtml;
+            document.getElementById('labelsGroup').innerHTML = labelHtml;
+        }
+
+        // f1(x) = -x^2 + 5
+        function f1(x) { return -1 * x * x + 5; }
+        
+        // f2(x) = 2x - 3
+        function f2(x) { return 2 * x - 3; }
+
+        function updateGraph() {
+            let a = parseInt(slA.value);
+            valA.innerText = a;
+            
+            // Draw Path 1 (x < a)
+            let d1 = '';
+            for(let x = -10; x <= a; x += 0.2) {
+                let y = f1(x);
+                if(y < -10) y = -10; if(y > 10) y = 10;
+                if(d1 === '') d1 += `M ${x} ${y} `;
+                else d1 += `L ${x} ${y} `;
+            }
+            path1.setAttribute('d', d1);
+            
+            // Draw Path 2 (x >= a)
+            let d2 = '';
+            for(let x = a; x <= 10; x += 0.2) {
+                let y = f2(x);
+                if(y < -10) y = -10; if(y > 10) y = 10;
+                if(d2 === '') d2 += `M ${x} ${y} `;
+                else d2 += `L ${x} ${y} `;
+            }
+            path2.setAttribute('d', d2);
+            
+            // Critical Line
+            critLine.setAttribute('x1', a);
+            critLine.setAttribute('x2', a);
+            
+            // Points at a
+            let y1_end = f1(a);
+            let y2_start = f2(a);
+            
+            // Cap points so they don't break svg if too huge
+            if(y1_end < -12) y1_end = -12;
+            if(y2_start < -12) y2_start = -12;
+            
+            ptOpen.setAttribute('cx', a); ptOpen.setAttribute('cy', y1_end);
+            ptClosed.setAttribute('cx', a); ptClosed.setAttribute('cy', y2_start);
+            
+            // Critical Label (Y is inverted for text)
+            critLbl.setAttribute('x', a + 0.3);
+            critLbl.textContent = `x = ${a}`;
+            
+            // MathJax
+            let eq = `\\( f(x) = \\begin{cases} -x^2 + 5, & x < ${a} \\\\ 2x - 3, & x \\ge ${a} \\end{cases} \\)`;
+            mathEq.innerHTML = eq;
+            
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => MathJax.typesetPromise([mathEq]), 100);
+        }
+
+        slA.addEventListener('input', updateGraph);
+
+        window.onload = () => { drawGrid(); updateGraph(); };
+    </script>
+</body>
+</html>

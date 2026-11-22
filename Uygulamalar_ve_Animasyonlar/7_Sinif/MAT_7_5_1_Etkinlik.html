@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İnteraktif Çizgi Grafiği Laboratuvarı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F0E17; --surface: #1A1A24; --text: #F8FAFC;
+            --primary: #8B5CF6; --secondary: #10B981;
+            --tertiary: #06B6D4; --danger: #F43F5E;
+            --accent: #F59E0B;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, #161625 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(139, 92, 246, 0.2); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; margin-bottom: 20px;}
+        h1 { font-size: 2.2rem; color: var(--tertiary); font-weight: 900;}
+        .subtitle { color: #94A3B8; font-size: 1.1rem; margin-top: 5px;}
+
+        .main-container {
+            display: flex; gap: 30px; width: 100%; max-width: 1000px; flex-wrap: wrap; justify-content: center;
+        }
+
+        .panel {
+            background: #11111A; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.4); 
+            padding: 30px; display: flex; width: 100%; gap: 30px;
+        }
+
+        .chart-area {
+            flex: 2; position: relative; height: 400px;
+            background: rgba(255,255,255,0.02); border-radius: 15px; border: 1px dashed rgba(255,255,255,0.2);
+        }
+        
+        svg { width: 100%; height: 100%; overflow: visible; }
+        .grid-line { stroke: rgba(255,255,255,0.1); stroke-width: 1; }
+        .axis-line { stroke: white; stroke-width: 3; stroke-linecap: round; }
+        .axis-text { fill: #94A3B8; font-weight: 800; font-size: 14px; }
+        
+        .line-path { stroke: var(--secondary); stroke-width: 4; fill: none; transition: d 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .data-point { fill: var(--bg); stroke: var(--secondary); stroke-width: 3; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        
+        .data-area {
+            flex: 1; display: flex; flex-direction: column; gap: 15px; background: rgba(0,0,0,0.3); padding: 20px; border-radius: 15px;
+        }
+
+        .data-row {
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        
+        .day-label { font-weight: 800; font-size: 1.1rem; color: var(--tertiary); width: 60px;}
+
+        input[type=range] { flex: 1; cursor: pointer; accent-color: var(--secondary); margin: 0 15px; }
+
+        .val-box {
+            background: var(--surface); border: 2px solid #334155; padding: 5px 10px; border-radius: 8px;
+            font-weight: 900; width: 50px; text-align: center;
+        }
+
+        @media (max-width: 800px) {
+            .panel { flex-direction: column; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.7.5.1. Çizgi Grafiği (Etkinlik)</div>
+    </div>
+
+    <div class="title-area">
+        <h1>Borsa Grafiği Çizici</h1>
+        <p class="subtitle">Sağdaki değerleri değiştirerek çizgi grafiğinin anlık değişimini gözlemleyin.</p>
+    </div>
+
+    <div class="main-container">
+        
+        <div class="panel">
+            
+            <div class="chart-area">
+                <svg viewBox="0 0 600 400" id="svgChart">
+                    <!-- Grid and axes generated via JS -->
+                </svg>
+            </div>
+
+            <div class="data-area">
+                <div style="font-weight:900; font-size:1.2rem; margin-bottom: 10px; color:white; text-align:center;">Hisse Değeri (TL)</div>
+                
+                <div class="data-row">
+                    <span class="day-label">Pzt</span>
+                    <input type="range" id="d1" min="0" max="100" value="20" oninput="updateChart()">
+                    <div class="val-box" id="v1">20</div>
+                </div>
+                <div class="data-row">
+                    <span class="day-label">Sal</span>
+                    <input type="range" id="d2" min="0" max="100" value="40" oninput="updateChart()">
+                    <div class="val-box" id="v2">40</div>
+                </div>
+                <div class="data-row">
+                    <span class="day-label">Çar</span>
+                    <input type="range" id="d3" min="0" max="100" value="30" oninput="updateChart()">
+                    <div class="val-box" id="v3">30</div>
+                </div>
+                <div class="data-row">
+                    <span class="day-label">Per</span>
+                    <input type="range" id="d4" min="0" max="100" value="70" oninput="updateChart()">
+                    <div class="val-box" id="v4">70</div>
+                </div>
+                <div class="data-row">
+                    <span class="day-label">Cum</span>
+                    <input type="range" id="d5" min="0" max="100" value="90" oninput="updateChart()">
+                    <div class="val-box" id="v5">90</div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        const svgChart = document.getElementById('svgChart');
+        const days = ["Pzt", "Sal", "Çar", "Per", "Cum"];
+        
+        // Settings
+        const w = 600, h = 400;
+        const padding = 50;
+        const graphW = w - padding * 2;
+        const graphH = h - padding * 2;
+        const maxVal = 100;
+
+        function initChart() {
+            // Y-axis grid & text
+            for(let i=0; i<=5; i++) {
+                let val = (i * 20);
+                let y = h - padding - (val / maxVal) * graphH;
+                
+                // grid
+                let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", padding); line.setAttribute("y1", y);
+                line.setAttribute("x2", w - padding); line.setAttribute("y2", y);
+                line.setAttribute("class", "grid-line");
+                svgChart.appendChild(line);
+
+                // text
+                let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", padding - 15); text.setAttribute("y", y + 5);
+                text.setAttribute("class", "axis-text"); text.setAttribute("text-anchor", "end");
+                text.textContent = val;
+                svgChart.appendChild(text);
+            }
+
+            // X-axis text
+            let xStep = graphW / (days.length - 1);
+            for(let i=0; i<days.length; i++) {
+                let x = padding + i * xStep;
+                let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", x); text.setAttribute("y", h - padding + 25);
+                text.setAttribute("class", "axis-text"); text.setAttribute("text-anchor", "middle");
+                text.textContent = days[i];
+                svgChart.appendChild(text);
+            }
+
+            // Axes lines
+            let xAxis = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            xAxis.setAttribute("x1", padding); xAxis.setAttribute("y1", h - padding);
+            xAxis.setAttribute("x2", w - padding); xAxis.setAttribute("y2", h - padding);
+            xAxis.setAttribute("class", "axis-line"); svgChart.appendChild(xAxis);
+
+            let yAxis = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            yAxis.setAttribute("x1", padding); yAxis.setAttribute("y1", padding);
+            yAxis.setAttribute("x2", padding); yAxis.setAttribute("y2", h - padding);
+            yAxis.setAttribute("class", "axis-line"); svgChart.appendChild(yAxis);
+
+            // Create Path
+            let path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            path.setAttribute("id", "mainLine"); path.setAttribute("class", "line-path");
+            svgChart.appendChild(path);
+
+            // Create Points
+            for(let i=0; i<days.length; i++) {
+                let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                circle.setAttribute("id", "p" + i); circle.setAttribute("class", "data-point");
+                circle.setAttribute("r", "6");
+                svgChart.appendChild(circle);
+            }
+        }
+
+        function updateChart() {
+            let pts = [];
+            let xStep = graphW / (days.length - 1);
+
+            for(let i=0; i<5; i++) {
+                let input = document.getElementById("d" + (i+1));
+                let valBox = document.getElementById("v" + (i+1));
+                let val = parseInt(input.value);
+                valBox.innerText = val;
+
+                let x = padding + i * xStep;
+                let y = h - padding - (val / maxVal) * graphH;
+                pts.push({x, y});
+
+                // Update point
+                let circle = document.getElementById("p" + i);
+                circle.setAttribute("cx", x); circle.setAttribute("cy", y);
+            }
+
+            // Update path
+            let d = "M " + pts[0].x + " " + pts[0].y;
+            for(let i=1; i<pts.length; i++) {
+                d += " L " + pts[i].x + " " + pts[i].y;
+            }
+            document.getElementById("mainLine").setAttribute("d", d);
+        }
+
+        initChart();
+        updateChart();
+    </script>
+
+    <script>
+        // Global spam click prevention for Etkinlik files
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'BUTTON' && !e.target.hasAttribute('data-spam-locked')) {
+                e.target.setAttribute('data-spam-locked', 'true');
+                let originalOpacity = e.target.style.opacity || '1';
+                e.target.style.opacity = '0.7';
+                e.target.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    e.target.removeAttribute('data-spam-locked');
+                    e.target.style.opacity = originalOpacity;
+                    e.target.style.pointerEvents = 'auto';
+                }, 400);
+            }
+        });
+    </script>
+</body>
+</html>

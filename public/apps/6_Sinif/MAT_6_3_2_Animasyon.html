@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paralellerin Arasındaki Şekiller - Animasyon</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A; --text: #F8FAFC;
+            --primary: #3B82F6; --secondary: #10B981;
+            --tertiary: #F59E0B; --danger: #F43F5E;
+            --purple: #8B5CF6; --cyan: #06B6D4;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 900px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--secondary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; width: 100%; max-width: 800px; margin-bottom: 20px; height: 110px;}
+        h1 { font-size: 2.2rem; color: var(--secondary); text-shadow: 0 5px 15px rgba(0,0,0,0.5); line-height: 1.3;}
+        .subtitle { font-size: 1.2rem; color: #94A3B8; margin-top: 10px; line-height: 1.5; min-height: 55px;}
+        .subtitle span { color: white; font-weight: 800; background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 5px;}
+
+        .canvas-area {
+            position: relative; width: 100%; max-width: 800px; height: 450px; 
+            background: #0B1120; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.3); 
+            overflow: hidden; display: flex; align-items: center; justify-content: center;
+        }
+
+        .line-h {
+            position: absolute; width: 100%; height: 6px; background: white; border-radius: 3px;
+            box-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+        .l1 { top: 100px; }
+        .l2 { top: 350px; }
+
+        /* SCENE 1: Kesişim İçeride (Üçgen) */
+        .scene { position: absolute; width: 100%; height: 100%; top:0; left:0; opacity: 0; pointer-events: none; transition: opacity 0.8s; }
+        .scene.active { opacity: 1; z-index: 10; }
+
+        .line-v { position: absolute; width: 6px; height: 120%; background: var(--tertiary); border-radius: 3px; box-shadow: 0 0 15px rgba(245, 158, 11, 0.5); transform-origin: center; transition: all 1s; }
+        
+        /* Triangle Case */
+        .t-l1 { left: 40%; top: -10%; transform: rotate(30deg); }
+        .t-l2 { left: 60%; top: -10%; transform: rotate(-30deg); }
+        .tri-shape {
+            position: absolute; border-left: 145px solid transparent; border-right: 145px solid transparent; border-bottom: 250px solid rgba(16, 185, 129, 0.3);
+            left: 50%; top: 100px; transform: translateX(-50%); opacity:0; transition: opacity 1s;
+        }
+
+        /* Yamuk/Paralelkenar Case */
+        .p-l1 { left: 30%; top: -10%; transform: rotate(20deg); opacity: 0;}
+        .p-l2 { left: 55%; top: -10%; transform: rotate(20deg); opacity: 0;}
+        .quad-shape {
+            position: absolute; width: 250px; height: 250px; background: rgba(59, 130, 246, 0.3);
+            left: 200px; top: 100px; transform: skewX(-20deg); opacity:0; transition: opacity 1s;
+        }
+
+        /* Floating texts */
+        .float-text {
+            position: absolute; font-size: 1.5rem; font-weight: 900; color: white; opacity: 0; transition: all 0.5s; text-align: center;
+        }
+
+        .btn-start {
+            margin-top: 30px; background: var(--secondary); color: white; border: none; padding: 15px 40px; border-radius: 50px;
+            font-size: 1.2rem; font-weight: 800; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 20px rgba(16, 185, 129, 0.4);
+        }
+        .btn-start:hover { transform: scale(1.05); }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=3B82F6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.6.3.2. Paralellerin Arasındaki Şekiller</div>
+    </div>
+
+    <div class="title-area">
+        <h1 id="mTitle">Kesişen Kesenlerin Dansı</h1>
+        <p class="subtitle" id="mSub">İki paralel doğruyu, <span>iki farklı kesen</span> kestiğinde neler olur? İzleyelim.</p>
+    </div>
+
+    <div class="canvas-area">
+        
+        <div class="line-h l1"></div>
+        <div class="line-h l2"></div>
+
+        <div class="scene active" id="sc1">
+            <div class="line-v t-l1" id="tl1"></div>
+            <div class="line-v t-l2" id="tl2"></div>
+            <div class="tri-shape" id="tri"></div>
+            <div class="float-text" id="f1" style="top: 250px; left: 50%; transform: translateX(-50%);">ÜÇGEN<br><span style="font-size:1.2rem; color:var(--secondary);">İç Açılar: 180°</span></div>
+        </div>
+
+        <div class="scene" id="sc2">
+            <div class="line-v p-l1" id="pl1"></div>
+            <div class="line-v p-l2" id="pl2"></div>
+            <div class="quad-shape" id="quad"></div>
+            <div class="float-text" id="f2" style="top: 210px; left: 320px; text-shadow: 0 0 10px black;">PARALELKENAR<br><span style="font-size:1.2rem; color:var(--primary);">İç Açılar: 360°</span></div>
+        </div>
+
+    </div>
+
+    <button class="btn-start" id="startBtn" onclick="runTimeline()">Animasyonu Başlat</button>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        const mTitle = document.getElementById('mTitle');
+        const mSub = document.getElementById('mSub');
+        const startBtn = document.getElementById('startBtn');
+        
+        async function runTimeline() {
+            startBtn.style.display = 'none';
+
+            // SCENE 1 (Üçgen)
+            document.getElementById('sc1').classList.add('active');
+            document.getElementById('sc2').classList.remove('active');
+            
+            document.getElementById('tri').style.opacity = 0;
+            document.getElementById('f1').style.opacity = 0;
+            document.getElementById('pl1').style.opacity = 0;
+            document.getElementById('pl2').style.opacity = 0;
+
+            mTitle.innerText = "İçeride Kesişen Doğrular";
+            mSub.innerHTML = "Eğer kesenler paralel doğrular arasında kesişirse, bir <span>Üçgen</span> meydana gelir.";
+            
+            await sleep(2000);
+            document.getElementById('tri').style.opacity = 1;
+            
+            await sleep(1000);
+            document.getElementById('f1').style.opacity = 1;
+            mSub.innerHTML = "Biliyoruz ki, bu kapalı şeklin iç açılar toplamı her zaman <span>180°</span>'dir.";
+
+            await sleep(4000);
+
+            // SCENE 2 (Paralelkenar / Dörtgen)
+            document.getElementById('sc1').classList.remove('active');
+            document.getElementById('sc2').classList.add('active');
+            
+            mTitle.innerText = "Kesişmeyen Kesenler";
+            mSub.innerHTML = "Eğer kesenler kendi aralarında da paralelse, ortaya bir <span>Paralelkenar</span> çıkar.";
+            
+            document.getElementById('pl1').style.opacity = 1;
+            await sleep(1000);
+            document.getElementById('pl2').style.opacity = 1;
+
+            await sleep(1500);
+            document.getElementById('quad').style.opacity = 1;
+
+            await sleep(1000);
+            document.getElementById('f2').style.opacity = 1;
+            mSub.innerHTML = "Üst ve alt sınırlar paralel, sağ ve sol sınırlar paralel! Dörtgenlerin iç açı toplamı <span>360°</span>'dir.";
+
+            setTimeout(() => {
+                startBtn.style.display = 'block';
+                startBtn.innerText = "Tekrar İzle";
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

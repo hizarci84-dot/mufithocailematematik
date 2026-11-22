@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kesirleri Karşılaştırma Oyunu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #F59E0B; /* Amber */
+            --primary-hover: #D97706;
+            --success: #10B981;
+            --error: #EF4444;
+            --bg: #FFF7ED;
+            --card-bg: #FFFFFF;
+            --text-main: #431407;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        /* Branding Header */
+        .brand-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            background: var(--card-bg);
+            padding: 10px 20px;
+            border-radius: 50px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            width: max-content;
+        }
+        .brand-header img {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: contain;
+        }
+        .brand-header a {
+            color: var(--primary-hover);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: color 0.3s ease;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            color: #9A3412;
+            margin-bottom: 1rem;
+        }
+        
+        .score-box {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--primary-hover);
+            margin-bottom: 2rem;
+            background: #FFEDD5;
+            padding: 10px 20px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        /* Game Area */
+        .game-area {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .value-card {
+            background: #FAFAF9;
+            border: 3px solid #E7E5E4;
+            border-radius: 16px;
+            width: 180px;
+            height: 180px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: 800;
+            color: #1C1917;
+            box-shadow: inset 0 4px 6px rgba(0,0,0,0.02);
+        }
+
+        .fraction-display {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .fraction-display .numerator {
+            border-bottom: 4px solid #1C1917;
+            padding: 0 10px;
+        }
+        .fraction-display .denominator {
+            padding: 0 10px;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+        }
+
+        .symbol-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            font-size: 2.5rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 8px 15px rgba(245, 158, 11, 0.3);
+        }
+
+        .symbol-btn:hover {
+            transform: translateY(-5px);
+            background: var(--primary-hover);
+        }
+
+        .feedback {
+            margin-top: 2rem;
+            font-size: 1.5rem;
+            font-weight: 600;
+            min-height: 2rem;
+        }
+
+        /* Kazanım */
+        .kazanim-box {
+            width: 100%;
+            margin-top: 3rem;
+            padding: 1.2rem;
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px dashed rgba(245, 158, 11, 0.4);
+            border-radius: 12px;
+            text-align: left;
+            position: relative;
+        }
+        .kazanim-badge {
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: var(--primary);
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 800;
+            padding: 3px 12px;
+            border-radius: 20px;
+            text-transform: uppercase;
+        }
+        .kazanim-box p {
+            color: #9A3412;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            margin: 0;
+            padding-top: 5px;
+        }
+        
+        #confetti {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 999;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="confetti"></canvas>
+
+    <div class="brand-header">
+        <img src="../../logom.png" alt="Müfit Hoca Logo">
+        <a href="https://www.instagram.com/mufithocailematematik" target="_blank">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+            @mufithocailematematik
+        </a>
+    </div>
+
+    <div class="container">
+        <h1>Büyük, Küçük veya Eşit?</h1>
+        <div class="score-box">Skor: <span id="scoreVal">0</span></div>
+
+        <div class="game-area">
+            <div class="value-card" id="val1Card"></div>
+            <div class="value-card" id="val2Card"></div>
+        </div>
+
+        <div class="controls">
+            <button class="symbol-btn" onclick="checkAnswer('<')">&lt;</button>
+            <button class="symbol-btn" onclick="checkAnswer('=')">=</button>
+            <button class="symbol-btn" onclick="checkAnswer('>')">&gt;</button>
+        </div>
+
+        <div class="feedback" id="feedback"></div>
+
+        <div class="kazanim-box">
+            <span class="kazanim-badge">Kazanım</span>
+            <p><strong>MAT.5.1.4.</strong> Farklı gösterimlerle ifade edilen kesirlerin karşılaştırılmasına yönelik çıkarım yapabilme.</p>
+        </div>
+    </div>
+
+    <script>
+        let score = 0;
+        let currentV1, currentV2; // Real numerical values (0 to 1)
+
+        // Database of fractions to compare (easy decimals, fractions, percentages)
+        const generateNumber = () => {
+            const types = ['fraction', 'decimal', 'percent'];
+            const type = types[Math.floor(Math.random() * types.length)];
+            
+            let val, html;
+            
+            if (type === 'fraction') {
+                const denoms = [2, 4, 5, 10, 20, 25, 50, 100];
+                const den = denoms[Math.floor(Math.random() * denoms.length)];
+                const num = Math.floor(Math.random() * (den + 1)); // 0 to denom
+                val = num / den;
+                html = `<div class="fraction-display"><span class="numerator">${num}</span><span class="denominator">${den}</span></div>`;
+            } else if (type === 'decimal') {
+                val = Math.floor(Math.random() * 101) / 100;
+                html = val.toFixed(2).replace('.', ',');
+            } else { // percent
+                val = Math.floor(Math.random() * 101) / 100;
+                html = `%${Math.round(val * 100)}`;
+            }
+
+            return { val, html };
+        };
+
+        function nextRound() {
+            const v1 = generateNumber();
+            let v2 = generateNumber();
+
+            // Occasionally force an "equal" case for fun
+            if (Math.random() < 0.2) {
+                v2.val = v1.val;
+                // Generate a random HTML for the SAME value to test equivalence
+                if (Math.random() < 0.5) {
+                    v2.html = `%${Math.round(v1.val * 100)}`;
+                } else {
+                    v2.html = v1.val.toFixed(2).replace('.', ',');
+                }
+            }
+
+            currentV1 = v1.val;
+            currentV2 = v2.val;
+
+            document.getElementById('val1Card').innerHTML = v1.html;
+            document.getElementById('val2Card').innerHTML = v2.html;
+            
+            // Add a small intro animation class
+            document.getElementById('val1Card').style.transform = 'scale(0.8)';
+            document.getElementById('val2Card').style.transform = 'scale(0.8)';
+            setTimeout(() => {
+                document.getElementById('val1Card').style.transform = 'scale(1)';
+                document.getElementById('val2Card').style.transform = 'scale(1)';
+            }, 50);
+        }
+
+        function checkAnswer(symbol) {
+            let correct = false;
+
+            // Handle floating point imprecision
+            const diff = currentV1 - currentV2;
+            const isEq = Math.abs(diff) < 0.0001;
+
+            if (symbol === '=' && isEq) correct = true;
+            else if (symbol === '<' && diff < -0.0001) correct = true;
+            else if (symbol === '>' && diff > 0.0001) correct = true;
+
+            const fb = document.getElementById('feedback');
+            
+            if (correct) {
+                fb.style.color = 'var(--success)';
+                fb.innerText = "Harika! Doğru cevap. 🎉";
+                score += 10;
+                document.getElementById('scoreVal').innerText = score;
+                fireConfetti();
+                setTimeout(() => {
+                    fb.innerText = "";
+                    nextRound();
+                }, 1500);
+            } else {
+                fb.style.color = 'var(--error)';
+                fb.innerText = "Tekrar düşün! 🧐 Sayıları ondalığa veya yüzdeye çevirerek düşünmeyi dene.";
+                score = Math.max(0, score - 5);
+                document.getElementById('scoreVal').innerText = score;
+            }
+        }
+
+        // Simple Confetti
+        function fireConfetti() {
+            const canvas = document.getElementById('confetti');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const pieces = [];
+            const colors = ['#F59E0B', '#10B981', '#3B82F6', '#EF4444', '#8B5CF6'];
+
+            for (let i = 0; i < 80; i++) {
+                pieces.push({
+                    x: canvas.width / 2,
+                    y: canvas.height / 2,
+                    vx: (Math.random() - 0.5) * 20,
+                    vy: (Math.random() - 0.5) * 20 - 5,
+                    size: Math.random() * 10 + 5,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    rot: Math.random() * 360,
+                    rotSpeed: (Math.random() - 0.5) * 10
+                });
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                let active = false;
+                pieces.forEach(p => {
+                    p.x += p.vx; p.y += p.vy; p.vy += 0.5; p.rot += p.rotSpeed;
+                    if (p.y < canvas.height) active = true;
+                    ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot * Math.PI / 180);
+                    ctx.fillStyle = p.color; ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+                    ctx.restore();
+                });
+                if (active) requestAnimationFrame(animate);
+                else ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+            animate();
+        }
+
+        // Start
+        window.onload = nextRound;
+    </script>
+</body>
+</html>

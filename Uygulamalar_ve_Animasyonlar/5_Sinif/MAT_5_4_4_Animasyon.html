@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bileşik Şekillerin Sırrı - Animasyon</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A;
+            --text: #F8FAFC;
+            --primary: #8B5CF6; /* Purple */
+            --secondary: #3B82F6; /* Blue */
+            --tertiary: #10B981; /* Green */
+            --danger: #F43F5E; /* Rose */
+            --amber: #F59E0B; /* Amber */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 900px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; width: 100%; max-width: 800px; margin-bottom: 20px; height: 120px;}
+        h1 { font-size: 2.2rem; color: var(--primary); text-shadow: 0 5px 15px rgba(0,0,0,0.5); line-height: 1.3;}
+        .subtitle { font-size: 1.2rem; color: #94A3B8; margin-top: 10px; line-height: 1.5; min-height: 55px;}
+        .subtitle span { color: white; font-weight: 800; background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 5px;}
+
+        .canvas-area {
+            position: relative; width: 100%; max-width: 800px; height: 450px; 
+            background: #0B1120; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.3); 
+            overflow: hidden; display: flex; align-items: center; justify-content: center;
+        }
+
+        svg { width: 100%; height: 100%; overflow: visible; }
+        
+        .grid-line { stroke: rgba(255, 255, 255, 0.03); stroke-width: 1; }
+
+        .shape-path { fill: rgba(139, 92, 246, 0.15); stroke: var(--primary); stroke-width: 5; stroke-linejoin: round; transition: all 1s; opacity: 0; }
+        
+        .cut-line { stroke: var(--danger); stroke-width: 4; stroke-dasharray: 10 10; opacity: 0; transition: opacity 0.5s; }
+        
+        .dim-text { font-size: 18px; font-weight: 900; fill: white; opacity: 0; transition: opacity 0.5s; text-anchor: middle; }
+        .dim-text.v { dominant-baseline: central; }
+        
+        .area-text { font-size: 26px; font-weight: 900; opacity: 0; transition: opacity 0.5s; text-anchor: middle; dominant-baseline: central;}
+        .a-top { fill: var(--tertiary); }
+        .a-bot { fill: var(--secondary); }
+        .a-total { font-size: 36px; fill: var(--amber); text-shadow: 0 5px 15px rgba(0,0,0,0.8);}
+
+        .perim-highlight { fill: none; stroke: var(--amber); stroke-width: 8; stroke-linejoin: round; opacity: 0; transition: opacity 1s; }
+
+        .btn-start {
+            margin-top: 30px; background: var(--secondary); color: white; border: none; padding: 15px 40px; border-radius: 50px;
+            font-size: 1.2rem; font-weight: 800; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4);
+        }
+        .btn-start:hover { transform: scale(1.05); }
+
+        .x-mark { stroke: var(--danger); stroke-width: 6; stroke-linecap: round; opacity: 0; transition: opacity 0.3s; }
+
+        @media (max-width: 768px) {
+            .header { flex-direction: column; gap: 10px; }
+            h1 { font-size: 1.5rem; }
+            .canvas-area { height: 300px; }
+            .title-area { height: 140px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.5.4.4. Bileşik Şekillerde Alan ve Çevre</div>
+    </div>
+
+    <div class="title-area">
+        <h1 id="mTitle">Bileşik Şekillerin Sırrı</h1>
+        <p class="subtitle" id="mSub">Bazen odalarımız veya bahçelerimiz tam bir dikdörtgen <span>olmayabilir.</span></p>
+    </div>
+
+    <div class="canvas-area">
+        <svg viewBox="0 0 800 450" id="svgView">
+            <g id="gridGroup"></g>
+            
+            <!-- T Shape -->
+            <!-- Top Rect: 8m x 3m (160px x 60px) -->
+            <!-- Bottom Rect: 4m x 5m (80px x 100px) centered -->
+            <polygon id="tShape" class="shape-path" points="320,120 480,120 480,180 440,180 440,280 360,280 360,180 320,180"></polygon>
+            
+            <polygon id="pHighlight" class="perim-highlight" points="320,120 480,120 480,180 440,180 440,280 360,280 360,180 320,180"></polygon>
+
+            <!-- Dimensions -->
+            <text class="dim-text d-all" x="400" y="105">8 m</text>
+            <text class="dim-text d-all v" x="300" y="150">3 m</text>
+            <text class="dim-text d-all v" x="500" y="150">3 m</text>
+            <text class="dim-text d-all v" x="340" y="230">5 m</text>
+            <text class="dim-text d-all v" x="460" y="230">5 m</text>
+            <text class="dim-text d-all" x="400" y="305">4 m</text>
+
+            <text class="dim-text d-top-bot" x="340" y="195">2 m</text>
+            <text class="dim-text d-top-bot" x="460" y="195">2 m</text>
+
+            <line id="cutLine" class="cut-line" x1="360" y1="180" x2="440" y2="180"></line>
+
+            <text id="area1" class="area-text a-top" x="400" y="150">8 x 3 = 24 m²</text>
+            <text id="area2" class="area-text a-bot" x="400" y="230">4 x 5 = 20 m²</text>
+            
+            <text id="totalArea" class="area-text a-total" x="400" y="370">Toplam Alan = 44 m²</text>
+
+            <g id="xMarkGroup" style="opacity: 0;">
+                <line class="x-mark" x1="390" y1="170" x2="410" y2="190"></line>
+                <line class="x-mark" x1="410" y1="170" x2="390" y2="190"></line>
+            </g>
+
+        </svg>
+    </div>
+
+    <button class="btn-start" id="startBtn" onclick="runTimeline()">Animasyonu Başlat</button>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        
+        const mTitle = document.getElementById('mTitle');
+        const mSub = document.getElementById('mSub');
+        const startBtn = document.getElementById('startBtn');
+        const tShape = document.getElementById('tShape');
+        const pHighlight = document.getElementById('pHighlight');
+        const cutLine = document.getElementById('cutLine');
+        const area1 = document.getElementById('area1');
+        const area2 = document.getElementById('area2');
+        const totalArea = document.getElementById('totalArea');
+        const xMarkGroup = document.getElementById('xMarkGroup');
+        const gridGroup = document.getElementById('gridGroup');
+
+        // Draw grid
+        for(let i=1; i<800/20; i++) {
+            let l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            l.setAttribute('x1', i*20); l.setAttribute('y1', 0); l.setAttribute('x2', i*20); l.setAttribute('y2', 450);
+            l.setAttribute('class', 'grid-line');
+            gridGroup.appendChild(l);
+        }
+        for(let i=1; i<450/20; i++) {
+            let l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            l.setAttribute('x1', 0); l.setAttribute('y1', i*20); l.setAttribute('x2', 800); l.setAttribute('y2', i*20);
+            l.setAttribute('class', 'grid-line');
+            gridGroup.appendChild(l);
+        }
+
+        async function clearScene() {
+            tShape.style.opacity = 0;
+            pHighlight.style.opacity = 0;
+            cutLine.style.opacity = 0;
+            area1.style.opacity = 0; area2.style.opacity = 0; totalArea.style.opacity = 0;
+            xMarkGroup.style.opacity = 0;
+            document.querySelectorAll('.dim-text').forEach(t => t.style.opacity = 0);
+            await sleep(500);
+        }
+
+        async function runTimeline() {
+            startBtn.style.display = 'none';
+            await clearScene();
+
+            // SCENE 1
+            mTitle.innerText = "Alanını Nasıl Buluruz?";
+            mSub.innerHTML = "T şeklindeki bu odanın alanını tek bir formülle <span>bulamayız.</span>";
+            tShape.style.opacity = 1;
+            document.querySelectorAll('.dim-text.d-all').forEach(t => t.style.opacity = 1);
+            document.querySelectorAll('.dim-text.d-top-bot').forEach(t => t.style.opacity = 1);
+            await sleep(4000);
+
+            // SCENE 2
+            mTitle.innerText = "Parçala ve Çöz!";
+            mSub.innerHTML = "Ama onu <span>bildiğimiz iki farklı dikdörtgene</span> ayırabiliriz!";
+            cutLine.style.opacity = 1;
+            await sleep(2500);
+
+            // SCENE 3
+            mTitle.innerText = "Adım Adım Alan";
+            mSub.innerHTML = "Üstteki dikdörtgen <span>8x3</span>, alttaki ise <span>4x5</span> boyutundadır.";
+            
+            tShape.style.fill = "rgba(16, 185, 129, 0.2)"; // Green split
+            area1.style.opacity = 1;
+            await sleep(2000);
+            area2.style.opacity = 1;
+            await sleep(2000);
+
+            // SCENE 4
+            mTitle.innerText = "Toplam Alan";
+            mSub.innerHTML = "Şimdi bu iki alanı toplayarak tüm odanın alanını bulmuş oluruz.";
+            totalArea.style.opacity = 1;
+            await sleep(4000);
+
+            // SCENE 5
+            mTitle.innerText = "Peki Ya Çevre Uzunluğu?";
+            mSub.innerHTML = "Çevre demek sadece <span>DIŞ</span> sınır çizgileri demektir.";
+            
+            area1.style.opacity = 0; area2.style.opacity = 0; totalArea.style.opacity = 0;
+            tShape.style.fill = "rgba(139, 92, 246, 0.15)";
+            await sleep(1000);
+
+            pHighlight.style.opacity = 1; // Show amber border
+            await sleep(2500);
+
+            mSub.innerHTML = "Dikkat! İçeriden kestiğimiz hayali çizgi, <span>asla çevreye dahil edilmez!</span>";
+            
+            // X mark over cutline
+            xMarkGroup.style.opacity = 1;
+            await sleep(1000);
+            xMarkGroup.querySelectorAll('.x-mark').forEach(x => {
+                x.style.transform = "scale(1.5)";
+                x.style.transformOrigin = "400px 180px";
+            });
+            await sleep(4000);
+
+            // END
+            mTitle.innerText = "Harika!";
+            mSub.innerHTML = "Bileşik şekillerin problemlerini çözerken bu kuralları sakın unutmayın. 🎓";
+            
+            setTimeout(() => {
+                startBtn.style.display = 'block';
+                startBtn.innerText = "Tekrar İzle";
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

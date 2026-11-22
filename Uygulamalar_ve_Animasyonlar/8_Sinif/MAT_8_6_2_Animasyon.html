@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Veri → Tablo → Grafik Animasyonu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg:#0F0E17; --primary:#8B5CF6; --secondary:#10B981; --tertiary:#06B6D4; --danger:#F43F5E; --accent:#F59E0B; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Outfit',sans-serif; }
+        body { background:linear-gradient(135deg,var(--bg),#161625); color:#F8FAFC; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:20px; }
+        .header { width:100%; max-width:1000px; display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); padding:15px 25px; border-radius:20px; border:1px solid rgba(139,92,246,0.2); margin-bottom:20px; }
+        .header-left { display:flex; align-items:center; gap:15px; font-weight:600; font-size:1.2rem; }
+        .header-left img { width:50px; height:50px; border-radius:50%; background:white; padding:2px; }
+        .kazanim { background:var(--primary); color:white; padding:5px 15px; border-radius:20px; font-weight:800; font-size:0.9rem; }
+        h1 { font-size:2.2rem; color:var(--tertiary); font-weight:900; text-align:center; }
+        .subtitle { color:#94A3B8; font-size:1.1rem; margin-top:5px; text-align:center; margin-bottom:20px; }
+        .scene-row { display:flex; gap:20px; width:100%; max-width:1000px; flex-wrap:wrap; justify-content:center; }
+        .scene-box { background:#11111A; border-radius:20px; border:1px solid rgba(255,255,255,0.05); padding:20px; flex:1; min-width:280px; max-width:320px; transition:all 0.5s; opacity:0.3; }
+        .scene-box.active { opacity:1; border-color:var(--tertiary); box-shadow:0 0 30px rgba(6,182,212,0.2); }
+        .scene-title { font-size:1.1rem; font-weight:900; color:var(--tertiary); margin-bottom:15px; display:flex; align-items:center; gap:8px; }
+        .data-chip { display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; border-radius:10px; background:rgba(139,92,246,0.2); border:2px solid var(--primary); color:white; font-weight:900; font-size:1.1rem; margin:4px; transition:all 0.3s; }
+        .data-chip.highlight { background:var(--primary); transform:scale(1.2); }
+        table { width:100%; border-collapse:collapse; }
+        th,td { border:1px solid #334155; padding:8px 12px; text-align:center; font-size:0.95rem; }
+        th { background:rgba(6,182,212,0.15); color:var(--tertiary); font-weight:800; }
+        td { color:white; font-weight:600; }
+        canvas { display:block; width:100%; }
+        .step-row { display:flex; gap:15px; margin-top:20px; width:100%; max-width:1000px; justify-content:center; flex-wrap:wrap; }
+        .step-btn { background:var(--primary); color:white; border:none; padding:12px 25px; border-radius:50px; font-size:1rem; font-weight:900; cursor:pointer; transition:all 0.3s; box-shadow:0 6px 15px rgba(139,92,246,0.4); }
+        .step-btn:hover { transform:translateY(-2px); }
+        .step-btn:disabled { opacity:0.4; cursor:not-allowed; transform:none; }
+        .expl { font-size:1.1rem; font-weight:800; text-align:center; color:white; margin-top:15px; min-height:30px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.8.6.2. Veri → Grafik (Animasyon)</div>
+    </div>
+    <h1>Ham Veri → Tablo → Grafik</h1>
+    <p class="subtitle">İstatistiksel araştırmanın 3 aşamasını adım adım gözlemleyin.</p>
+    <div class="scene-row">
+        <div class="scene-box" id="s1">
+            <div class="scene-title">📋 Adım 1: Ham Veri</div>
+            <div id="rawData"></div>
+        </div>
+        <div class="scene-box" id="s2">
+            <div class="scene-title">📊 Adım 2: Frekans Tablosu</div>
+            <table id="freqTable"><thead><tr><th>Değer</th><th>Frekans (f)</th><th>f/n (%)</th></tr></thead><tbody></tbody></table>
+        </div>
+        <div class="scene-box" id="s3">
+            <div class="scene-title">📈 Adım 3: Grafik</div>
+            <canvas id="cvs" height="200"></canvas>
+        </div>
+    </div>
+    <div class="expl" id="expl">Başlamak için butona basın.</div>
+    <div class="step-row">
+        <button class="step-btn" id="btn1" onclick="step1()">1. Ham Veriyi Göster</button>
+        <button class="step-btn" id="btn2" onclick="step2()" disabled>2. Tabloyu Oluştur</button>
+        <button class="step-btn" id="btn3" onclick="step3()" disabled>3. Grafiği Çiz</button>
+        <button class="step-btn" style="background:var(--secondary);" onclick="reset()">↩ Sıfırla</button>
+    </div>
+    <script>
+        const rawVals=[4,7,5,7,6,8,7,5,9,6,7,4,8,6,7,5,8,7,6,9];
+        const COLORS=['#8B5CF6','#10B981','#06B6D4','#F43F5E','#F59E0B'];
+        const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+        function reset(){
+            ['s1','s2','s3'].forEach(id=>document.getElementById(id).classList.remove('active'));
+            document.getElementById('expl').textContent='Başlamak için butona basın.';
+            document.getElementById('btn1').disabled=false;
+            document.getElementById('btn2').disabled=true;
+            document.getElementById('btn3').disabled=true;
+            document.getElementById('rawData').innerHTML='';
+            document.querySelector('#freqTable tbody').innerHTML='';
+            let c=document.getElementById('cvs');
+            c.getContext('2d').clearRect(0,0,c.width,c.height);
+        }
+
+        async function step1(){
+            document.getElementById('btn1').disabled=true;
+            document.getElementById('s1').classList.add('active');
+            document.getElementById('expl').textContent='Ham veriler toplanıyor... Her değer ayrı bir gözlem birimini temsil eder.';
+            const div=document.getElementById('rawData');
+            div.innerHTML='';
+            for(let v of rawVals){
+                let chip=document.createElement('span');
+                chip.className='data-chip';chip.textContent=v;div.appendChild(chip);
+                await sleep(80);
+                chip.classList.add('highlight');
+                await sleep(60);
+                chip.classList.remove('highlight');
+            }
+            document.getElementById('btn2').disabled=false;
+        }
+
+        async function step2(){
+            document.getElementById('btn2').disabled=true;
+            document.getElementById('s2').classList.add('active');
+            document.getElementById('expl').textContent='Veriler sayılarak frekans tablosuna dönüştürülüyor...';
+            let freq={};rawVals.forEach(v=>freq[v]=(freq[v]||0)+1);
+            let sorted=Object.keys(freq).sort((a,b)=>a-b);
+            let tbody=document.querySelector('#freqTable tbody');
+            tbody.innerHTML='';
+            let ci=0;
+            for(let k of sorted){
+                await sleep(300);
+                let row=tbody.insertRow();
+                row.style.cssText='opacity:0;transition:opacity 0.4s;';
+                row.insertCell().textContent=k;
+                row.insertCell().textContent=freq[k];
+                row.insertCell().textContent=Math.round(freq[k]/rawVals.length*100)+'%';
+                row.cells[0].style.color=COLORS[ci%COLORS.length];
+                await sleep(50);row.style.opacity='1';ci++;
+            }
+            document.getElementById('btn3').disabled=false;
+        }
+
+        async function step3(){
+            document.getElementById('btn3').disabled=true;
+            document.getElementById('s3').classList.add('active');
+            document.getElementById('expl').style.color='var(--secondary)';
+            document.getElementById('expl').textContent='Tablo grafiğe dönüştürüldü! Artık dağılımı çok daha kolay görüyoruz.';
+            let freq={};rawVals.forEach(v=>freq[v]=(freq[v]||0)+1);
+            let sorted=Object.keys(freq).sort((a,b)=>a-b);
+            let maxF=Math.max(...Object.values(freq));
+            const cvs=document.getElementById('cvs');
+            cvs.width=cvs.offsetWidth;
+            const ctx=cvs.getContext('2d');
+            let W=cvs.width,H=200;
+            let padL=35,padT=20,padB=35,bw=(W-padL-10)/sorted.length;
+            let chartH=H-padT-padB;
+            ctx.clearRect(0,0,W,H);ctx.fillStyle='#161625';ctx.fillRect(0,0,W,H);
+            for(let i=0;i<sorted.length;i++){
+                let f=freq[sorted[i]];
+                let targetH=(f/maxF)*chartH;
+                let x=padL+i*bw+bw*0.1;
+                let bWidth=bw*0.8;
+                // Animate bar growing
+                let start=performance.now();
+                await new Promise(res=>{
+                    function fr(now){
+                        let t=Math.min((now-start)/500,1);
+                        let bH=targetH*t;
+                        ctx.clearRect(x,padT,bWidth,chartH+5);
+                        ctx.fillStyle='#161625';ctx.fillRect(x,padT,bWidth,chartH+5);
+                        let grd=ctx.createLinearGradient(x,padT+chartH-bH,x,padT+chartH);
+                        grd.addColorStop(0,COLORS[i%COLORS.length]);grd.addColorStop(1,COLORS[i%COLORS.length]+'44');
+                        ctx.fillStyle=grd;ctx.beginPath();ctx.roundRect(x,padT+chartH-bH,bWidth,bH,4);ctx.fill();
+                        if(t>=1){
+                            ctx.fillStyle='white';ctx.font='700 11px Outfit';ctx.textAlign='center';
+                            ctx.fillText(f,x+bWidth/2,padT+chartH-bH-5);
+                            ctx.fillStyle='#94A3B8';ctx.fillText(sorted[i],x+bWidth/2,H-10);
+                        }
+                        if(t<1)requestAnimationFrame(fr);else res();
+                    }requestAnimationFrame(fr);
+                });
+            }
+        }
+
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'BUTTON' && !e.target.hasAttribute('data-spam-locked')) {
+                e.target.setAttribute('data-spam-locked','true'); e.target.style.opacity='0.7'; e.target.style.pointerEvents='none';
+                setTimeout(() => { e.target.removeAttribute('data-spam-locked'); e.target.style.opacity='1'; e.target.style.pointerEvents='auto'; }, 400);
+            }
+        });
+    </script>
+</body>
+</html>

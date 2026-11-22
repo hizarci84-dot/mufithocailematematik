@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cebirsel Özdeşliklerin Geometrisi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    
+    <!-- MATHJAX -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root { --bg:#0F0E17; --primary:#8B5CF6; --secondary:#10B981; --tertiary:#06B6D4; --danger:#F43F5E; --accent:#F59E0B; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Outfit',sans-serif; }
+        body { background:linear-gradient(135deg,var(--bg),#161625); color:#F8FAFC; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:20px; overflow-x:hidden; }
+        
+        .header { width:100%; max-width:1100px; display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); padding:15px 25px; border-radius:20px; border:1px solid rgba(139,92,246,0.2); margin-bottom:20px; backdrop-filter:blur(10px); }
+        .header-left { display:flex; align-items:center; gap:15px; font-weight:600; font-size:1.2rem; }
+        .header-left img { width:50px; height:50px; border-radius:50%; background:white; padding:2px; }
+        .kazanim { background:var(--primary); color:white; padding:8px 20px; border-radius:20px; font-weight:800; font-size:1rem; box-shadow: 0 0 20px rgba(139,92,246,0.4); }
+        
+        h1 { font-size:2.5rem; color:var(--tertiary); font-weight:900; text-align:center; margin-bottom:5px; }
+        .subtitle { color:#94A3B8; font-size:1.15rem; text-align:center; margin-bottom:25px; font-weight:600; max-width:800px; }
+        
+        .workspace { width:100%; max-width:1100px; background:#11111A; border:1px solid rgba(255,255,255,0.1); border-radius:24px; padding:30px; box-shadow:inset 0 0 50px rgba(0,0,0,0.5); display:flex; flex-direction:column; align-items:center; min-height:600px; position:relative; overflow:hidden; }
+        
+        .expl-text { background:rgba(139,92,246,0.15); border:1px solid rgba(139,92,246,0.4); padding:15px 25px; border-radius:15px; font-size:1.3rem; color:white; font-weight:800; text-align:center; width:100%; margin-bottom:40px; transition:all 0.5s; box-shadow:0 8px 32px rgba(0,0,0,0.3); min-height:65px; display:flex; align-items:center; justify-content:center; }
+        
+        /* Geometry Area */
+        .geo-stage { position:relative; width:400px; height:400px; display:flex; align-items:center; justify-content:center; }
+        
+        .shape { position:absolute; display:flex; align-items:center; justify-content:center; border:2px solid rgba(255,255,255,0.2); transition:all 1.5s cubic-bezier(0.4, 0, 0.2, 1); font-weight:900; font-size:1.5rem; color:white; box-shadow:0 10px 30px rgba(0,0,0,0.3); }
+        
+        /* The shapes for (a+b)^2 where a=200px, b=100px */
+        .sq-a { width:200px; height:200px; background:rgba(139,92,246,0.8); } /* a^2 */
+        .sq-b { width:100px; height:100px; background:rgba(16,185,129,0.8); } /* b^2 */
+        .rect-ab1 { width:100px; height:200px; background:rgba(245,158,11,0.8); } /* ab */
+        .rect-ab2 { width:200px; height:100px; background:rgba(245,158,11,0.8); } /* ab */
+        
+        /* Math Rule Box - Absolute bottom */
+        .math-rule-box { position:absolute; bottom:20px; left:50%; transform:translateX(-50%); background:rgba(15,14,23,0.95); border:2px solid var(--tertiary); padding:15px 30px; border-radius:15px; font-size:1.8rem; font-weight:900; color:white; display:flex; align-items:center; justify-content:center; opacity:0; transition:0.5s; min-width:400px; box-shadow:0 10px 30px rgba(6,182,212,0.3); }
+        
+        .btn-action { background:var(--primary); color:white; border:none; padding:15px 40px; border-radius:50px; font-size:1.2rem; font-weight:900; cursor:pointer; box-shadow:0 10px 20px rgba(139,92,246,0.4); transition:0.3s; position:absolute; bottom:120px; z-index:20; }
+        .btn-action:hover { transform:translateY(-3px); box-shadow:0 15px 25px rgba(139,92,246,0.6); }
+        
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.9.1.4. Özdeşliklerin Geometrik İspatı (Animasyon)</div>
+    </div>
+    
+    <h1>Tam Kare Özdeşliği: \( (a+b)^2 \)</h1>
+    <p class="subtitle">Cebirsel formüller aslında geometrik alanların matematikçesidir. Bu ispatı izlediğinizde ezberlemeye gerek kalmayacak!</p>
+    
+    <div class="workspace">
+        <div class="expl-text" id="explText">Ekranda 4 farklı geometrik parça var. Alanlarını hesaplayalım.</div>
+        
+        <div class="geo-stage">
+            <!-- Initial exploded positions -->
+            <div class="shape sq-a" id="shA" style="top:20px; left:-120px;">\( a^2 \)</div>
+            <div class="shape sq-b" id="shB" style="top:200px; left:250px;">\( b^2 \)</div>
+            <div class="shape rect-ab1" id="shAB1" style="top:20px; left:120px;">\( ab \)</div>
+            <div class="shape rect-ab2" id="shAB2" style="top:250px; left:-120px;">\( ab \)</div>
+        </div>
+        
+        <div class="math-rule-box" id="ruleBox">
+            <span id="mathOutput"></span>
+        </div>
+        
+        <button class="btn-action" id="btnPlay" onclick="runSequence()" style="display:none">Parçaları Birleştir</button>
+    </div>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        const explText = document.getElementById('explText');
+        const ruleBox = document.getElementById('ruleBox');
+        const mathOutput = document.getElementById('mathOutput');
+        
+        const shA = document.getElementById('shA');
+        const shB = document.getElementById('shB');
+        const shAB1 = document.getElementById('shAB1');
+        const shAB2 = document.getElementById('shAB2');
+        
+        function updateMath(texString) {
+            mathOutput.innerHTML = texString;
+            MathJax.typesetPromise([mathOutput]);
+        }
+
+        async function runSequence() {
+            document.getElementById('btnPlay').style.display = 'none';
+            
+            explText.innerHTML = "Parçalar bir araya gelerek büyük bir kare oluşturuyor...";
+            
+            // Move pieces into a 300x300 square (a=200, b=100)
+            // Center of stage is 200,200. Let's make the 300x300 square centered.
+            // Square bounds: top 50, left 50, right 350, bottom 350
+            
+            shA.style.top = "50px"; 
+            shA.style.left = "50px"; 
+            
+            shAB1.style.top = "50px"; // right of a^2
+            shAB1.style.left = "250px"; 
+            
+            shAB2.style.top = "250px"; // below a^2
+            shAB2.style.left = "50px";
+            
+            shB.style.top = "250px"; // below ab1, right of ab2
+            shB.style.left = "250px";
+            
+            await sleep(1500);
+            
+            explText.innerHTML = "Oluşan yeni BÜYÜK karenin bir kenarı <b>(a+b)</b> oldu. Dolayısıyla alanı <b>(a+b)²</b> dir.";
+            
+            updateMath(`\\( (a+b)^2 \\) = \\( a^2 + ab + ab + b^2 \\)`);
+            ruleBox.style.opacity = '1';
+            
+            await sleep(3000);
+            
+            explText.innerHTML = "Aynı alanları toplayarak formülün son hâlini elde ederiz.";
+            
+            updateMath(`\\( (a+b)^2 \\) = \\( a^2 + 2ab + b^2 \\)`);
+            ruleBox.style.borderColor = "var(--secondary)";
+            
+            await sleep(3000);
+            explText.innerHTML = "İşte <b>Tam Kare Özdeşliği</b>, bu dört geometrik parçanın toplamından ibarettir!";
+            
+            // Add a glow to the whole structure
+            shA.style.boxShadow = "-10px -10px 30px rgba(16,185,129,0.5)";
+            shB.style.boxShadow = "10px 10px 30px rgba(16,185,129,0.5)";
+        }
+        window.onload = () => { runSequence(); };
+    </script>
+</body>
+</html>

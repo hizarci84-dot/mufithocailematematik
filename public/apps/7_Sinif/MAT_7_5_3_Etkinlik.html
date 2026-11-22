@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aritmetik Ortalama Laboratuvarı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F0E17; --surface: #1A1A24; --text: #F8FAFC;
+            --primary: #8B5CF6; --secondary: #10B981;
+            --tertiary: #06B6D4; --danger: #F43F5E;
+            --accent: #F59E0B;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, #161625 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(139, 92, 246, 0.2); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; margin-bottom: 20px;}
+        h1 { font-size: 2.2rem; color: var(--tertiary); font-weight: 900;}
+        .subtitle { color: #94A3B8; font-size: 1.1rem; margin-top: 5px;}
+
+        .main-container {
+            display: flex; gap: 30px; width: 100%; max-width: 1000px; flex-wrap: wrap; justify-content: center;
+        }
+
+        .panel {
+            background: #11111A; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.4); 
+            padding: 30px; display: flex; flex-direction: column; align-items: center; width: 100%;
+        }
+
+        .lab-area {
+            width: 100%; max-width: 600px; height: 350px; position: relative;
+            display: flex; justify-content: space-around; align-items: flex-end;
+            border-bottom: 5px solid #334155; padding-bottom: 50px;
+        }
+
+        /* Connecting pipe at the bottom */
+        .base-pipe {
+            position: absolute; bottom: 30px; left: 10%; width: 80%; height: 20px;
+            background: rgba(255,255,255,0.1); border: 2px solid #334155; border-radius: 10px;
+        }
+        
+        .pipe-liquid {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 100%;
+            background: var(--tertiary); border-radius: 8px; transition: opacity 1s; opacity: 0;
+        }
+
+        .tube {
+            width: 60px; height: 250px; border: 3px solid rgba(255,255,255,0.3); border-top: none;
+            border-radius: 0 0 10px 10px; position: relative; z-index: 5;
+            background: rgba(0,0,0,0.5); display: flex; flex-direction: column; justify-content: flex-end;
+        }
+
+        .liquid {
+            width: 100%; background: var(--tertiary); border-radius: 0 0 5px 5px;
+            transition: height 2s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: inset 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        .tube-val {
+            position: absolute; top: -35px; width: 100%; text-align: center; font-weight: 900; font-size: 1.5rem; color: white;
+        }
+
+        .valve-btn {
+            background: var(--primary); color: white; border: none; padding: 15px 40px; border-radius: 50px;
+            font-size: 1.2rem; font-weight: 900; cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(139, 92, 246, 0.4); margin-top: 20px;
+        }
+        .valve-btn:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 15px 25px rgba(139, 92, 246, 0.6); }
+
+        .formula-box {
+            background: rgba(16, 185, 129, 0.1); border: 2px solid var(--secondary); padding: 15px 30px; border-radius: 15px;
+            font-size: 1.5rem; font-weight: 900; color: white; margin-top: 20px; opacity: 0; transition: 1s; text-align: center;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.7.5.3. Aritmetik Ortalama (Etkinlik)</div>
+    </div>
+
+    <div class="title-area">
+        <h1>Sıvı Dengeleme Laboratuvarı</h1>
+        <p class="subtitle">Aritmetik ortalama, aslında verilerin kendi arasında dengelenerek "eşitlendiği" değerdir.</p>
+    </div>
+
+    <div class="main-container">
+        
+        <div class="panel">
+            
+            <div class="lab-area">
+                
+                <div class="base-pipe">
+                    <div class="pipe-liquid" id="pipeLiquid"></div>
+                </div>
+
+                <div class="tube">
+                    <div class="tube-val">80</div>
+                    <div class="liquid" id="l1" style="height: 80%;"></div>
+                </div>
+
+                <div class="tube">
+                    <div class="tube-val">20</div>
+                    <div class="liquid" id="l2" style="height: 20%;"></div>
+                </div>
+
+                <div class="tube">
+                    <div class="tube-val">50</div>
+                    <div class="liquid" id="l3" style="height: 50%;"></div>
+                </div>
+
+                <div class="tube">
+                    <div class="tube-val">90</div>
+                    <div class="liquid" id="l4" style="height: 90%;"></div>
+                </div>
+
+            </div>
+
+            <button class="valve-btn" id="btnAction" onclick="openValve()">Vanalari Aç ve Dengele</button>
+
+            <div class="formula-box" id="formulaBox">
+                Toplam Sıvı = 80 + 20 + 50 + 90 = 240<br>
+                <span style="color:var(--accent);">Ortalama = 240 / 4 Tüp = 60</span>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        const btnAction = document.getElementById('btnAction');
+        const l1 = document.getElementById('l1');
+        const l2 = document.getElementById('l2');
+        const l3 = document.getElementById('l3');
+        const l4 = document.getElementById('l4');
+        const pipeLiquid = document.getElementById('pipeLiquid');
+        const formulaBox = document.getElementById('formulaBox');
+
+        let isBalanced = false;
+
+        function openValve() {
+            if(isBalanced) {
+                // Reset
+                pipeLiquid.style.opacity = 0;
+                l1.style.height = "80%";
+                l2.style.height = "20%";
+                l3.style.height = "50%";
+                l4.style.height = "90%";
+                formulaBox.style.opacity = 0;
+                
+                document.querySelectorAll('.tube-val')[0].innerText = "80";
+                document.querySelectorAll('.tube-val')[1].innerText = "20";
+                document.querySelectorAll('.tube-val')[2].innerText = "50";
+                document.querySelectorAll('.tube-val')[3].innerText = "90";
+
+                btnAction.innerText = "Vanalari Aç ve Dengele";
+                btnAction.style.background = "var(--primary)";
+                isBalanced = false;
+                return;
+            }
+
+            // Balance
+            pipeLiquid.style.opacity = 1;
+            
+            // Average = (80+20+50+90) / 4 = 60
+            setTimeout(() => {
+                l1.style.height = "60%";
+                l2.style.height = "60%";
+                l3.style.height = "60%";
+                l4.style.height = "60%";
+
+                document.querySelectorAll('.tube-val').forEach(t => t.innerText = "60");
+
+                formulaBox.style.opacity = 1;
+
+                btnAction.innerText = "Tekrarla";
+                btnAction.style.background = "#334155";
+                isBalanced = true;
+            }, 500);
+
+        }
+    </script>
+
+    <script>
+        // Global spam click prevention for Etkinlik files
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'BUTTON' && !e.target.hasAttribute('data-spam-locked')) {
+                e.target.setAttribute('data-spam-locked', 'true');
+                let originalOpacity = e.target.style.opacity || '1';
+                e.target.style.opacity = '0.7';
+                e.target.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    e.target.removeAttribute('data-spam-locked');
+                    e.target.style.opacity = originalOpacity;
+                    e.target.style.pointerEvents = 'auto';
+                }, 400);
+            }
+        });
+    </script>
+</body>
+</html>

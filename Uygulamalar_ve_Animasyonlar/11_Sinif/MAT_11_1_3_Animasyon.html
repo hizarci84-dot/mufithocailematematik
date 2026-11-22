@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>11.1.3 - Üstel Büyüme ve Logaritma Animasyonu</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0A0A12;
+            --panel-bg: #151522;
+            --primary: #00F0FF; 
+            --secondary: #FF00E4; 
+            --accent: #FFE600; 
+            --bacteria: #00FF66; /* Neon Green */
+            --text-main: #FFFFFF;
+            --text-muted: #8A8A9E;
+            --grid-line: rgba(0, 240, 255, 0.12);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background-color: var(--bg-color); color: var(--text-main);
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; padding: 20px; overflow-x: hidden;
+            background-image: 
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        .header {
+            width: 100%; max-width: 1200px; display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 25px; background: rgba(21, 21, 34, 0.85); backdrop-filter: blur(10px);
+            border-radius: 16px; border: 1px solid rgba(0, 240, 255, 0.3);
+            margin-bottom: 20px; box-shadow: 0 0 20px rgba(0, 240, 255, 0.15);
+        }
+        
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 800; color: var(--primary); font-size: 1.1rem; }
+        .header-left img { width: 45px; height: 45px; border-radius: 10px; border: 1px solid var(--primary); }
+        .kazanim { background: rgba(0, 240, 255, 0.1); padding: 8px 15px; border-radius: 8px; color: var(--primary); font-weight: 600; font-size: 0.85rem; border: 1px solid rgba(0, 240, 255, 0.3); }
+
+        h1 { font-size: 2rem; font-weight: 900; margin-bottom: 8px; text-align: center; text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 0 10px rgba(0, 240, 255, 0.5); }
+        .subtitle { color: var(--text-muted); font-size: 1rem; margin-bottom: 25px; text-align: center; max-width: 900px; }
+
+        .workspace { display: flex; flex-direction: row; gap: 20px; width: 100%; max-width: 1200px; align-items: stretch; }
+
+        .petri-container {
+            flex: 1; display: flex; flex-direction: column; background: var(--panel-bg);
+            border-radius: 16px; border: 1px solid rgba(0, 255, 102, 0.3); padding: 20px;
+            align-items: center; justify-content: center; position: relative;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.5); min-height: 400px;
+        }
+
+        .petri-dish {
+            width: 250px; height: 250px; border-radius: 50%; border: 4px solid rgba(0, 255, 102, 0.5);
+            background: rgba(0, 255, 102, 0.05); position: relative; box-shadow: 0 0 20px rgba(0, 255, 102, 0.2);
+        }
+
+        .bacterium {
+            width: 10px; height: 10px; background: var(--bacteria); border-radius: 50%;
+            position: absolute; box-shadow: 0 0 8px var(--bacteria);
+            transform: translate(-50%, -50%); transition: 0.3s;
+        }
+
+        .anim-container {
+            flex: 1.5; display: flex; position: relative; background: #0A0A12; 
+            border-radius: 16px; border: 2px solid var(--primary); overflow: hidden; 
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.15) inset;
+        }
+
+        svg { width: 100%; height: 100%; display: block; }
+        .svg-grid { stroke: rgba(255,255,255,0.06); stroke-width: 0.5; }
+        .svg-axis { stroke: var(--axis-line); stroke-width: 1.5; }
+        .path-exp { fill: none; stroke: var(--primary); stroke-width: 2.5; filter: drop-shadow(0 0 5px var(--primary)); stroke-linecap: round;}
+        
+        .scan-line-h { stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 4, 4; display: none; }
+        .scan-line-v { stroke: var(--secondary); stroke-width: 1.5; stroke-dasharray: 4, 4; display: none; }
+        .intersect-point { fill: var(--text-main); r: 4; display: none; filter: drop-shadow(0 0 10px white); }
+
+        .svg-label { fill: var(--text-muted); font-size: 12px; font-weight: 600; }
+        
+        .controls-row {
+            width: 100%; max-width: 1200px; display: flex; gap: 20px; align-items: center;
+            margin-top: 20px;
+        }
+
+        .btn-play {
+            background: var(--primary); color: #0A0A12; border: none; padding: 14px 40px; border-radius: 12px;
+            font-size: 1.2rem; font-weight: 900; cursor: pointer; transition: 0.3s; box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+        }
+        .btn-play:hover { transform: scale(1.05); box-shadow: 0 0 25px rgba(0, 240, 255, 0.7); }
+        .btn-play:disabled { background: #333; color: #666; cursor: not-allowed; box-shadow: none; transform: none; }
+
+        .status-box {
+            background: rgba(0,0,0,0.6); border: 1px dashed var(--accent); padding: 15px 30px;
+            border-radius: 12px; font-size: 1.3rem; text-align: center; color: var(--accent); flex: 1;
+            min-height: 70px; display: flex; align-items: center; justify-content: center; font-weight: 700;
+        }
+
+        .time-counter {
+            position: absolute; top: 20px; left: 20px; font-size: 1.5rem; font-weight: bold; color: var(--primary);
+        }
+        .bact-counter {
+            position: absolute; top: 20px; right: 20px; font-size: 1.5rem; font-weight: bold; color: var(--bacteria);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=00F0FF&color=000'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.11.1.3. Üstel Büyüme ve Logaritma Modeli</div>
+    </div>
+    
+    <h1>Bakteri Çoğalması ve Logaritma</h1>
+    <p class="subtitle">Her saat başı ikiye katlanan bakterilerin çoğalması <strong>N(t) = 2ᵗ</strong> (üstel fonksiyon) ile modellenir.<br>Bakteri sayısının hedeflenen sayıya ulaşması için gereken süre ise <strong>t = log₂(N)</strong> (logaritma) ile hesaplanır.</p>
+    
+    <div class="workspace">
+        <div class="petri-container">
+            <div class="time-counter">t: <span id="tVal">0</span> saat</div>
+            <div class="bact-counter">N: <span id="nVal">1</span></div>
+            <div class="petri-dish" id="petriDish"></div>
+        </div>
+
+        <div class="anim-container">
+            <svg id="graphSvg" viewBox="0 0 500 400" preserveAspectRatio="xMidYMid meet">
+                <g id="gridGroup"></g>
+                <line x1="40" y1="360" x2="480" y2="360" class="svg-axis" />
+                <line x1="40" y1="40" x2="40" y2="360" class="svg-axis" />
+                <g id="labelsGroup"></g>
+                
+                <path id="pathExp" class="path-exp" d="" />
+                
+                <line id="scanLineH" class="scan-line-h" x1="40" y1="0" x2="40" y2="0" />
+                <line id="scanLineV" class="scan-line-v" x1="0" y1="360" x2="0" y2="360" />
+                <circle id="intersectPoint" class="intersect-point" cx="0" cy="0" />
+            </svg>
+        </div>
+    </div>
+
+    <div class="controls-row">
+        <button class="btn-play" id="btnPlay" onclick="startSimulation()">SİMÜLASYONU BAŞLAT</button>
+        <div class="status-box" id="mathOutput">
+            <!-- Math Output -->
+        </div>
+    </div>
+
+    <script>
+        const btnPlay = document.getElementById('btnPlay');
+        const petriDish = document.getElementById('petriDish');
+        const tVal = document.getElementById('tVal');
+        const nVal = document.getElementById('nVal');
+        const pathExp = document.getElementById('pathExp');
+        
+        const scanLineH = document.getElementById('scanLineH');
+        const scanLineV = document.getElementById('scanLineV');
+        const intersectPoint = document.getElementById('intersectPoint');
+        const mathOutput = document.getElementById('mathOutput');
+        
+        let isTypesetting = false;
+        let pendingTex = null;
+        let animTime = 0; // up to 5 hours
+        let currentBact = 1;
+        let bacteriaNodes = [];
+        let animInterval;
+        
+        // Coordinates: 
+        // Origin at (40, 360).
+        // X axis: 40 to 480 (width 440). Range t = 0 to 6. => scaleX = 440 / 6 = 73.33
+        // Y axis: 360 to 40 (height 320). Range N = 0 to 64. => scaleY = 320 / 64 = 5
+        const originX = 40;
+        const originY = 360;
+        const scaleX = 440 / 6;
+        const scaleY = 320 / 64;
+
+        function getSVGPos(t, N) {
+            return {
+                x: originX + (t * scaleX),
+                y: originY - (N * scaleY)
+            };
+        }
+
+        function drawGrid() {
+            let gridHtml = '';
+            let labelHtml = '';
+            
+            // X labels (Time 0 to 6)
+            for(let t = 0; t <= 6; t++) {
+                let px = originX + (t * scaleX);
+                gridHtml += `<line x1="${px}" y1="40" x2="${px}" y2="360" class="svg-grid" />`;
+                labelHtml += `<text x="${px}" y="380" class="svg-label" text-anchor="middle">${t}</text>`;
+            }
+            labelHtml += `<text x="470" y="390" class="svg-label" fill="var(--primary)" font-weight="800">t (saat)</text>`;
+            
+            // Y labels (N 0, 10, 20... 60)
+            for(let N = 0; N <= 60; N += 10) {
+                let py = originY - (N * scaleY);
+                gridHtml += `<line x1="40" y1="${py}" x2="480" y2="${py}" class="svg-grid" />`;
+                labelHtml += `<text x="30" y="${py + 4}" class="svg-label" text-anchor="end">${N}</text>`;
+            }
+            labelHtml += `<text x="25" y="25" class="svg-label" fill="var(--bacteria)" font-weight="800">N</text>`;
+
+            document.getElementById('gridGroup').innerHTML = gridHtml;
+            document.getElementById('labelsGroup').innerHTML = labelHtml;
+        }
+
+        function renderMathClean(texString) {
+            if (isTypesetting) {
+                pendingTex = texString;
+                return;
+            }
+            isTypesetting = true;
+            
+            let temp = document.createElement('div');
+            temp.style.position = 'absolute';
+            temp.style.top = '-9999px';
+            temp.style.left = '-9999px';
+            temp.style.visibility = 'hidden';
+            temp.innerHTML = texString;
+            document.body.appendChild(temp);
+            
+            MathJax.typesetPromise([temp]).then(() => {
+                mathOutput.innerHTML = temp.innerHTML;
+                if (temp.parentNode) document.body.removeChild(temp);
+                isTypesetting = false;
+                
+                if (pendingTex) {
+                    let next = pendingTex;
+                    pendingTex = null;
+                    renderMathClean(next);
+                }
+            }).catch(err => {
+                if (temp.parentNode) document.body.removeChild(temp);
+                isTypesetting = false;
+            });
+        }
+
+        function initBacteria() {
+            petriDish.innerHTML = '';
+            bacteriaNodes = [];
+            currentBact = 1;
+            addBacterium(125, 125); // center
+        }
+
+        function addBacterium(x, y) {
+            let el = document.createElement('div');
+            el.className = 'bacterium';
+            el.style.left = x + 'px';
+            el.style.top = y + 'px';
+            petriDish.appendChild(el);
+            bacteriaNodes.push(el);
+        }
+
+        function doubleBacteria() {
+            let count = bacteriaNodes.length;
+            for(let i = 0; i < count; i++) {
+                // Generate a random nearby position within dish (radius ~ 115)
+                let angle = Math.random() * 2 * Math.PI;
+                let r = Math.random() * 100;
+                let nx = 125 + r * Math.cos(angle);
+                let ny = 125 + r * Math.sin(angle);
+                addBacterium(nx, ny);
+            }
+            currentBact = bacteriaNodes.length;
+            nVal.innerText = currentBact;
+        }
+
+        function drawCurve(currentTime) {
+            let d = "";
+            let step = 0.05;
+            for(let t = 0; t <= currentTime; t += step) {
+                let N = Math.pow(2, t);
+                let pos = getSVGPos(t, N);
+                d += (t === 0 ? "M" : "L") + ` ${pos.x.toFixed(1)} ${pos.y.toFixed(1)}`;
+            }
+            // Ensure exact tip is drawn
+            let finalN = Math.pow(2, currentTime);
+            let finalPos = getSVGPos(currentTime, finalN);
+            d += ` L ${finalPos.x.toFixed(1)} ${finalPos.y.toFixed(1)}`;
+            
+            pathExp.setAttribute("d", d);
+        }
+
+        function startSimulation() {
+            btnPlay.disabled = true;
+            animTime = 0;
+            initBacteria();
+            tVal.innerText = "0";
+            scanLineH.style.display = "none";
+            scanLineV.style.display = "none";
+            intersectPoint.style.display = "none";
+            pathExp.setAttribute("d", "");
+            
+            renderMathClean(`\\( \\text{Başlangıç: } N(0) = 2^0 = 1 \\text{ bakteri} \\)`);
+            
+            // Time loop
+            let targetTime = 5; // Go up to t=5 (N=32)
+            
+            let frameRate = 60;
+            let durationSec = 5; // 5 real seconds for 5 simulation hours
+            let frames = frameRate * durationSec;
+            let currentFrame = 0;
+            
+            let lastTick = 0;
+            
+            animInterval = setInterval(() => {
+                currentFrame++;
+                animTime = (currentFrame / frames) * targetTime;
+                
+                // Check if crossed an hour integer
+                let tick = Math.floor(animTime);
+                if(tick > lastTick && tick <= targetTime) {
+                    doubleBacteria();
+                    lastTick = tick;
+                    renderMathClean(`\\( t = ${tick} \\text{ saat } \\Rightarrow N = 2^{${tick}} = ${Math.pow(2, tick)} \\)`);
+                }
+                
+                tVal.innerText = animTime.toFixed(1);
+                drawCurve(animTime);
+                
+                if(currentFrame >= frames) {
+                    clearInterval(animInterval);
+                    finishSimulation();
+                }
+            }, 1000 / frameRate);
+        }
+        
+        function finishSimulation() {
+            renderMathClean(`\\( \\text{Soru: } 32 \\text{ bakteriye ulaşmak ne kadar sürdü? } \\Rightarrow N(t) = 32 \\)`);
+            
+            setTimeout(() => {
+                // Start log sequence
+                let targetN = 32;
+                let targetY = originY - (targetN * scaleY);
+                let targetX = originX + (5 * scaleX);
+                
+                // Show H line scanning from left to curve
+                scanLineH.setAttribute("y1", targetY);
+                scanLineH.setAttribute("y2", targetY);
+                scanLineH.setAttribute("x2", originX);
+                scanLineH.style.display = "block";
+                
+                let scanW = originX;
+                let animH = setInterval(() => {
+                    scanW += 5;
+                    scanLineH.setAttribute("x2", scanW);
+                    if(scanW >= targetX) {
+                        clearInterval(animH);
+                        intersectPoint.setAttribute("cx", targetX);
+                        intersectPoint.setAttribute("cy", targetY);
+                        intersectPoint.style.display = "block";
+                        
+                        setTimeout(() => {
+                            // Drop V line
+                            scanLineV.setAttribute("x1", targetX);
+                            scanLineV.setAttribute("x2", targetX);
+                            scanLineV.setAttribute("y1", targetY);
+                            scanLineV.setAttribute("y2", targetY);
+                            scanLineV.style.display = "block";
+                            
+                            let scanH = targetY;
+                            let animV = setInterval(() => {
+                                scanH += 5;
+                                scanLineV.setAttribute("y2", scanH);
+                                if(scanH >= originY) {
+                                    clearInterval(animV);
+                                    scanLineV.setAttribute("y2", originY);
+                                    
+                                    renderMathClean(`\\( 2^t = 32 \\quad \\Leftrightarrow \\quad \\mathbf{t = \\log_2(32) = 5 \\text{ saat}} \\)`);
+                                    btnPlay.innerText = "TEKRAR OYNAT";
+                                    btnPlay.disabled = false;
+                                }
+                            }, 30);
+                            
+                        }, 500);
+                    }
+                }, 30);
+                
+            }, 2000);
+        }
+
+        window.onload = () => {
+            drawGrid();
+            renderMathClean(`\\( N(t) = 2^t \\text{ modeli hazır. Simülasyonu başlatın.} \\)`);
+            initBacteria();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10.3.1 - Izgarada Yol Bulma Animasyonu</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0B1120; /* Very dark blue */
+            --panel-bg: #151D2F; 
+            --primary: #10B981; /* Hacker green / Emerald 500 */
+            --secondary: #3B82F6; /* Light Blue */
+            --accent: #F59E0B; /* Amber */
+            --grid-line: rgba(16, 185, 129, 0.2);
+            --grid-glow: rgba(16, 185, 129, 0.6);
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background-color: var(--bg-color); color: var(--text-main);
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 25px; background: rgba(21, 29, 47, 0.8);
+            backdrop-filter: blur(10px); border-radius: 20px; border: 1px solid rgba(16, 185, 129, 0.2);
+            margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 800; color: var(--primary); }
+        .header-left img { width: 40px; height: 40px; border-radius: 10px; }
+        .kazanim { background: rgba(16, 185, 129, 0.1); padding: 8px 15px; border-radius: 12px; color: var(--primary); font-weight: 600; font-size: 0.9rem; border: 1px solid rgba(16, 185, 129, 0.3); }
+
+        h1 { font-size: 2.5rem; font-weight: 900; margin-bottom: 10px; text-align: center; 
+             color: var(--primary); text-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+             
+        .subtitle { color: var(--text-muted); font-size: 1.1rem; margin-bottom: 30px; text-align: center; max-width: 800px; }
+
+        .workspace { display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 1000px; align-items: center; }
+
+        .controls {
+            display: flex; gap: 20px; align-items: center; justify-content: center; background: var(--panel-bg);
+            padding: 15px 25px; border-radius: 15px; border: 1px solid rgba(16, 185, 129, 0.2);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5); flex-wrap: wrap; width: 100%;
+        }
+
+        .input-group { display: flex; align-items: center; gap: 10px; }
+        .input-group label { font-weight: 600; color: var(--primary); }
+        .input-group input { 
+            width: 70px; background: rgba(0,0,0,0.5); border: 2px solid var(--grid-glow); 
+            color: var(--primary); font-size: 1.2rem; font-weight: 800; padding: 8px; border-radius: 10px; text-align: center;
+        }
+
+        .btn-action {
+            background: transparent; border: 2px solid var(--primary);
+            color: var(--primary); padding: 10px 25px; border-radius: 10px; font-weight: 800; font-size: 1.1rem;
+            cursor: pointer; transition: all 0.3s; text-transform: uppercase; letter-spacing: 1px;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.2) inset;
+        }
+        .btn-action:hover, .btn-action.active { 
+            background: var(--primary); color: var(--bg-color); 
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.6); transform: translateY(-2px); 
+        }
+
+        .graph-container {
+            width: 100%; height: 500px; position: relative; background: #070A10;
+            border-radius: 20px; border: 2px solid rgba(16, 185, 129, 0.3);
+            overflow: hidden; box-shadow: 0 0 40px rgba(16, 185, 129, 0.1) inset;
+        }
+
+        /* SVG Graph Styling */
+        svg { width: 100%; height: 100%; display: block; }
+        .grid-path { fill: none; stroke: var(--grid-line); stroke-width: 2; }
+        .node-circle { fill: var(--bg-color); stroke: rgba(16, 185, 129, 0.3); stroke-width: 2; transition: all 0.5s; }
+        .node-text { fill: rgba(255,255,255,0.2); font-size: 16px; font-weight: 800; text-anchor: middle; dominant-baseline: middle; transition: all 0.5s; }
+        
+        .node-circle.active { stroke: var(--primary); fill: rgba(16, 185, 129, 0.2); filter: drop-shadow(0 0 5px var(--primary)); }
+        .node-text.active { fill: white; filter: drop-shadow(0 0 3px white); }
+        
+        .anim-line { fill: none; stroke: var(--accent); stroke-width: 4; stroke-linecap: round; filter: drop-shadow(0 0 5px var(--accent)); stroke-dasharray: 1000; stroke-dashoffset: 1000; transition: stroke-dashoffset 0.5s linear; }
+
+        .math-rule-box {
+            background: rgba(0,0,0,0.6); border: 1px solid var(--primary);
+            padding: 15px 25px; border-radius: 15px; font-size: 1.4rem; font-weight: 600; color: var(--primary);
+            display: flex; gap: 40px; justify-content: center; width: 100%; min-height: 80px; align-items: center;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.2) inset;
+        }
+
+        /* City Markers */
+        .city-marker { font-size: 24px; font-weight: 900; fill: var(--accent); filter: drop-shadow(0 0 8px var(--accent)); }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=10B981&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.10.3.1. Sayma Stratejileri (Animasyon)</div>
+    </div>
+    
+    <h1>Izgarada Yol Bulma Simülasyonu</h1>
+    <p class="subtitle">A noktasından B noktasına sadece sağa ve aşağıya giderek kaç farklı yoldan ulaşılabileceğini köşe noktalarındaki sayıları toplayarak hesaplayalım.</p>
+    
+    <div class="workspace">
+        <div class="controls">
+            <div class="input-group">
+                <label>Genişlik (X):</label>
+                <input type="number" id="inpW" min="2" max="8" value="4">
+            </div>
+            <div class="input-group">
+                <label>Yükseklik (Y):</label>
+                <input type="number" id="inpH" min="2" max="8" value="3">
+            </div>
+            <button class="btn-action" id="btnAnim" onclick="startSimulation()">Simülasyonu Başlat</button>
+        </div>
+        
+        <div class="graph-container">
+            <svg viewBox="0 0 800 500" preserveAspectRatio="xMidYMid meet" id="graphSvg">
+                <!-- Group to center the grid -->
+                <g id="mainGroup">
+                    <g id="gridLines"></g>
+                    <g id="animLines"></g>
+                    <g id="nodesGroup"></g>
+                </g>
+            </svg>
+        </div>
+        
+        <div class="math-rule-box">
+            <span id="mathOutput" style="color:white;">Matematiksel ispat için simülasyonu başlatın.</span>
+        </div>
+    </div>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        
+        const gridLines = document.getElementById('gridLines');
+        const nodesGroup = document.getElementById('nodesGroup');
+        const animLines = document.getElementById('animLines');
+        const mainGroup = document.getElementById('mainGroup');
+        const mathOutput = document.getElementById('mathOutput');
+        const btnAnim = document.getElementById('btnAnim');
+        
+        let debounceTimer;
+
+        function updateMathjax(texString) {
+            mathOutput.innerHTML = texString;
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                MathJax.typesetPromise([mathOutput]);
+            }, 50);
+        }
+
+        // Data structure for grid
+        let nodes = [];
+        let w = 4;
+        let h = 3;
+
+        function initGrid() {
+            w = parseInt(document.getElementById('inpW').value);
+            h = parseInt(document.getElementById('inpH').value);
+            if(isNaN(w) || w < 1) w = 4;
+            if(isNaN(h) || h < 1) h = 3;
+            if(w > 10) w = 10;
+            if(h > 10) h = 10;
+            
+            gridLines.innerHTML = '';
+            nodesGroup.innerHTML = '';
+            animLines.innerHTML = '';
+            nodes = [];
+            
+            // Layout calculations
+            let cellSize = Math.min(600 / w, 400 / h);
+            let totalW = w * cellSize;
+            let totalH = h * cellSize;
+            
+            let startX = (800 - totalW) / 2;
+            let startY = (500 - totalH) / 2;
+            
+            // Draw grid lines
+            for(let i=0; i<=w; i++) {
+                let x = startX + i * cellSize;
+                gridLines.innerHTML += `<line x1="${x}" y1="${startY}" x2="${x}" y2="${startY + totalH}" class="grid-path" />`;
+            }
+            for(let j=0; i=0, j<=h; j++) {
+                let y = startY + j * cellSize;
+                gridLines.innerHTML += `<line x1="${startX}" y1="${y}" x2="${startX + totalW}" y2="${y}" class="grid-path" />`;
+            }
+            
+            // Create nodes
+            for(let j=0; j<=h; j++) {
+                nodes[j] = [];
+                for(let i=0; i<=w; i++) {
+                    let cx = startX + i * cellSize;
+                    let cy = startY + j * cellSize;
+                    let id = `n_${i}_${j}`;
+                    
+                    let html = `
+                        <g id="g_${id}">
+                            <circle cx="${cx}" cy="${cy}" r="16" class="node-circle" id="c_${id}" />
+                            <text x="${cx}" y="${cy}" class="node-text" id="t_${id}">0</text>
+                        </g>
+                    `;
+                    
+                    if(i===0 && j===0) html += `<text x="${cx-25}" y="${cy-25}" class="city-marker">A</text>`;
+                    if(i===w && j===h) html += `<text x="${cx+25}" y="${cy+25}" class="city-marker" style="fill:var(--primary);">B</text>`;
+                    
+                    nodesGroup.innerHTML += html;
+                    
+                    nodes[j][i] = { x: cx, y: cy, val: 0, id: id };
+                }
+            }
+            
+            btnAnim.classList.remove('active');
+            btnAnim.innerText = "Simülasyonu Başlat";
+            updateMathjax(`A'dan B'ye kaç farklı yoldan gidilebilir?`);
+        }
+
+        // Draw animated line between two points
+        function drawAnimLine(x1, y1, x2, y2) {
+            let path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('class', 'anim-line');
+            path.setAttribute('d', `M ${x1} ${y1} L ${x2} ${y2}`);
+            animLines.appendChild(path);
+            
+            // force reflow
+            void path.offsetWidth;
+            path.style.strokeDashoffset = '0';
+            
+            // remove after anim
+            setTimeout(() => {
+                path.style.opacity = '0';
+                setTimeout(() => { if(animLines.contains(path)) animLines.removeChild(path); }, 500);
+            }, 600);
+        }
+
+        function activateNode(i, j, val) {
+            let c = document.getElementById(`c_n_${i}_${j}`);
+            let t = document.getElementById(`t_n_${i}_${j}`);
+            t.textContent = val;
+            c.classList.add('active');
+            t.classList.add('active');
+        }
+
+        async function startSimulation() {
+            btnAnim.disabled = true;
+            btnAnim.classList.add('active');
+            btnAnim.innerText = "Hesaplanıyor...";
+            
+            initGrid(); // reset
+            await sleep(500);
+            
+            // Node A
+            nodes[0][0].val = 1;
+            activateNode(0, 0, 1);
+            await sleep(300);
+            
+            // Delay depends on grid size
+            let delay = (w*h) > 20 ? 100 : 200;
+            
+            // Dynamic programming loop visually
+            // To make it look cool, we calculate diagonals (i+j = k)
+            for(let k = 1; k <= w + h; k++) {
+                let updates = [];
+                for(let i = 0; i <= w; i++) {
+                    for(let j = 0; j <= h; j++) {
+                        if(i + j === k) updates.push({i:i, j:j});
+                    }
+                }
+                
+                for(let u of updates) {
+                    let {i, j} = u;
+                    let val = 0;
+                    
+                    if(i > 0) {
+                        val += nodes[j][i-1].val;
+                        drawAnimLine(nodes[j][i-1].x, nodes[j][i-1].y, nodes[j][i].x, nodes[j][i].y);
+                    }
+                    if(j > 0) {
+                        val += nodes[j-1][i].val;
+                        drawAnimLine(nodes[j-1][i].x, nodes[j-1][i].y, nodes[j][i].x, nodes[j][i].y);
+                    }
+                    
+                    nodes[j][i].val = val;
+                }
+                
+                await sleep(delay); // Wait for lines to draw
+                
+                for(let u of updates) {
+                    activateNode(u.i, u.j, nodes[u.j][u.i].val);
+                }
+                
+                await sleep(delay);
+            }
+            
+            let finalVal = nodes[h][w].val;
+            
+            // Math Formula
+            updateMathjax(`
+                \\text{Tekrarlı Permütasyon ile:} \\\\
+                \\frac{(${w} + ${h})!}{${w}! \\cdot ${h}!} = \\frac{${w+h}!}{${w}! \\cdot ${h}!} = ${finalVal}
+            `);
+            
+            // Highlight final node
+            let finalCircle = document.getElementById(`c_n_${w}_${h}`);
+            finalCircle.style.stroke = "var(--accent)";
+            finalCircle.style.fill = "rgba(245, 158, 11, 0.3)";
+            finalCircle.style.transform = "scale(1.5)";
+            
+            btnAnim.innerText = "Tekrar Oynat";
+            btnAnim.disabled = false;
+        }
+
+        // Event listeners for inputs
+        document.getElementById('inpW').addEventListener('change', initGrid);
+        document.getElementById('inpH').addEventListener('change', initGrid);
+
+        window.onload = initGrid;
+    </script>
+</body>
+</html>

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Problem Çözme Fabrikası</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A; --surface: #1E293B; --text: #F8FAFC;
+            --primary: #3B82F6; --secondary: #10B981;
+            --tertiary: #F59E0B; --danger: #F43F5E;
+            --purple: #8B5CF6; --cyan: #06B6D4;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, var(--surface) 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--cyan); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .container {
+            width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 20px;
+        }
+
+        .input-panel {
+            background: rgba(255,255,255,0.03); border-radius: 20px; padding: 30px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center;
+        }
+
+        .input-panel h2 { font-size: 1.8rem; color: var(--cyan); margin-bottom: 20px; font-weight: 900;}
+
+        .form-row {
+            display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;
+        }
+        
+        .f-group { display: flex; flex-direction: column; align-items: flex-start; gap: 5px;}
+        .f-group label { color: #94A3B8; font-weight: 800; margin-left: 5px;}
+
+        input[type="number"] {
+            background: #0B1120; border: 2px solid var(--cyan); color: white;
+            font-size: 1.5rem; font-weight: 800; text-align: center; padding: 10px; border-radius: 15px;
+            outline: none; transition: all 0.3s; width: 150px;
+        }
+        input:focus { box-shadow: 0 0 15px rgba(6, 182, 212, 0.3);}
+        
+        .btn-calc {
+            background: var(--cyan); color: white; border: none; padding: 15px 40px; border-radius: 15px;
+            font-size: 1.2rem; font-weight: 900; cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(6, 182, 212, 0.4); margin-top: 10px;
+        }
+        .btn-calc:hover { transform: translateY(-2px); box-shadow: 0 15px 25px rgba(6, 182, 212, 0.6); }
+
+        /* Resolution Area */
+        .result-area {
+            background: rgba(255,255,255,0.02); border-radius: 20px; padding: 30px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 20px;
+            opacity: 0; transform: translateY(20px); transition: all 0.5s; pointer-events: none;
+        }
+        .result-area.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+        .step-box {
+            background: rgba(0,0,0,0.3); padding: 20px; border-radius: 15px;
+            border-left: 5px solid var(--cyan);
+        }
+        .step-title { font-size: 1.2rem; color: #94A3B8; font-weight: 800; margin-bottom: 10px;}
+        .step-math { font-size: 2rem; font-weight: 900; color: white; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;}
+        
+        .fraction { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; font-size: 1.5rem;}
+        .frac-top { border-bottom: 2px solid white; padding: 0 5px; color: var(--tertiary);}
+        .frac-bot { padding: 0 5px; color: var(--primary);}
+        
+        .final-price-box {
+            background: rgba(16, 185, 129, 0.1); border: 2px dashed var(--secondary); padding: 20px; border-radius: 15px; text-align: center;
+        }
+        .fp-title { font-size: 1.2rem; color: var(--secondary); font-weight: 800;}
+        .fp-val { font-size: 4rem; font-weight: 900; color: white;}
+
+        @media (max-width: 768px) {
+            .header { flex-direction: column; gap: 10px; }
+            .step-math { font-size: 1.5rem;}
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=3B82F6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.6.1.8. Problem Çözme Fabrikası</div>
+    </div>
+
+    <div class="container">
+        
+        <div class="input-panel">
+            <h2>🛒 Mağaza İndirimi Simülatörü</h2>
+            <p style="color:#94A3B8; margin-bottom: 20px;">Günlük hayatta karşılaştığımız yüzde ve kesir problemlerini çözelim.</p>
+            
+            <div class="form-row">
+                <div class="f-group">
+                    <label>Ürün Fiyatı (TL)</label>
+                    <input type="number" id="inpPrice" value="200" min="1">
+                </div>
+                <div class="f-group">
+                    <label>İndirim Oranı (%)</label>
+                    <input type="number" id="inpPct" value="15" min="1" max="100">
+                </div>
+            </div>
+            
+            <button class="btn-calc" onclick="calculate()">Problemi Çöz ➔</button>
+        </div>
+
+        <div class="result-area" id="rArea">
+            
+            <div class="step-box">
+                <div class="step-title">Adım 1: Yüzdeyi Kesre Çevir (Anlamlandırma)</div>
+                <div class="step-math">
+                    <div>% <span id="rPct">15</span></div>
+                    <div>=</div>
+                    <div class="fraction">
+                        <div class="frac-top" id="rFracTop">15</div>
+                        <div class="frac-bot">100</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-box" style="border-left-color: var(--tertiary);">
+                <div class="step-title">Adım 2: İndirim Miktarını Hesapla (Dört İşlem)</div>
+                <div class="step-math">
+                    <div id="rPrice">200</div>
+                    <div>x</div>
+                    <div class="fraction">
+                        <div class="frac-top" id="rFracTop2">15</div>
+                        <div class="frac-bot">100</div>
+                    </div>
+                    <div>=</div>
+                    <div style="color:var(--tertiary);" id="rDiscount">30 TL</div>
+                </div>
+                <div style="color:#94A3B8; font-size:1rem; margin-top:5px;">(Fiyatı pay ile çarpıp, paydaya böldük)</div>
+            </div>
+
+            <div class="final-price-box">
+                <div class="fp-title">Ödenecek İndirimli Tutar</div>
+                <div style="font-size:1.5rem; color:#94A3B8; margin: 10px 0;">
+                    <span id="rP2">200</span> - <span id="rD2">30</span> = 
+                </div>
+                <div class="fp-val" id="rFinal">170 TL</div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        function calculate() {
+            let price = parseFloat(document.getElementById('inpPrice').value.replace(',', '.'));
+            let pct = parseFloat(document.getElementById('inpPct').value.replace(',', '.'));
+            
+            if(isNaN(price) || isNaN(pct) || price < 1 || pct < 0 || pct > 100) {
+                alert("Lütfen geçerli fiyat ve yüzde oranı giriniz.");
+                return;
+            }
+
+            let rArea = document.getElementById('rArea');
+            rArea.classList.remove('show');
+            
+            setTimeout(() => {
+                document.getElementById('rPct').innerText = pct;
+                document.getElementById('rFracTop').innerText = pct;
+                
+                document.getElementById('rPrice').innerText = price;
+                document.getElementById('rFracTop2').innerText = pct;
+                
+                let discount = (price * pct) / 100;
+                document.getElementById('rDiscount').innerText = discount + " TL";
+
+                document.getElementById('rP2').innerText = price;
+                document.getElementById('rD2').innerText = discount;
+                
+                let finalPrice = price - discount;
+                document.getElementById('rFinal').innerText = finalPrice + " TL";
+
+                rArea.classList.add('show');
+            }, 300);
+        }
+
+        // Enter key handling
+        document.querySelectorAll('input').forEach(inp => {
+            inp.addEventListener('keypress', e => { if(e.key==='Enter') calculate(); });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eşitliğin Korunumu - Terazi Oyunu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #8B5CF6; 
+            --primary-hover: #7C3AED;
+            --success: #10B981;
+            --bg: #F8FAFC;
+            --text-main: #1E293B;
+            --wood: #B45309;
+            --wood-dark: #78350F;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #E0E7FF 0%, #C7D2FE 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            user-select: none;
+        }
+
+        /* Branding Header */
+        .brand-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 50px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            width: max-content;
+        }
+        .brand-header img {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: contain;
+        }
+        .brand-header a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: white;
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            color: #312E81;
+            margin-bottom: 1rem;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #64748B;
+            margin-bottom: 2rem;
+        }
+
+        /* Scale / Terazi */
+        .scale-container {
+            position: relative;
+            height: 350px;
+            margin: 0 auto 2rem;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .scale-base {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 150px;
+            background: var(--wood-dark);
+            clip-path: polygon(20% 0, 80% 0, 100% 100%, 0 100%);
+        }
+
+        .scale-beam {
+            position: absolute;
+            bottom: 140px;
+            left: 50%;
+            width: 400px;
+            height: 15px;
+            background: var(--wood);
+            border-radius: 10px;
+            transform-origin: center center;
+            transform: translateX(-50%) rotate(0deg);
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 2;
+        }
+
+        .plate-string {
+            position: absolute;
+            width: 2px;
+            height: 100px;
+            background: #94A3B8;
+        }
+        
+        .plate-string.left { left: 10%; top: 100%; transform-origin: top; }
+        .plate-string.right { right: 10%; top: 100%; transform-origin: top; }
+
+        .plate {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 20px;
+            background: #cbd5e1;
+            border-radius: 5px 5px 20px 20px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 5px;
+            padding-bottom: 20px;
+        }
+
+        /* Blocks */
+        .block {
+            width: 40px;
+            height: 40px;
+            background: #3B82F6;
+            color: white;
+            font-weight: 800;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            box-shadow: 0 4px 0 #2563EB, 0 5px 5px rgba(0,0,0,0.2);
+            cursor: grab;
+        }
+        
+        .block.draggable { background: #F59E0B; box-shadow: 0 4px 0 #D97706; }
+        .block.draggable:active { cursor: grabbing; }
+
+        /* Equation Display */
+        .equation {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #1E293B;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .eq-side {
+            background: #F1F5F9;
+            padding: 10px 20px;
+            border-radius: 12px;
+            min-width: 120px;
+        }
+
+        .eq-sign {
+            color: #94A3B8;
+        }
+
+        /* Inventory */
+        .inventory {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            background: #F8FAFC;
+            padding: 20px;
+            border-radius: 16px;
+            border: 2px dashed #CBD5E1;
+            min-height: 80px;
+            align-items: center;
+        }
+
+        .feedback {
+            margin-top: 1.5rem;
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--success);
+            min-height: 2rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        /* Kazanım */
+        .kazanim-box {
+            margin-top: 3rem;
+            padding: 1.2rem;
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px dashed rgba(139, 92, 246, 0.4);
+            border-radius: 12px;
+            text-align: left;
+            position: relative;
+        }
+        .kazanim-badge {
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: var(--primary);
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 800;
+            padding: 3px 12px;
+            border-radius: 20px;
+            text-transform: uppercase;
+        }
+        .kazanim-box p {
+            color: #4C1D95;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            margin: 0;
+            padding-top: 5px;
+        }
+
+        #confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 999; }
+    </style>
+</head>
+<body>
+    <canvas id="confetti"></canvas>
+
+    <div class="brand-header">
+        <img src="../../logom.png" alt="Müfit Hoca Logo">
+        <a href="https://www.instagram.com/mufithocailematematik" target="_blank">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+            @mufithocailematematik
+        </a>
+    </div>
+
+    <div class="container">
+        <h1>Eşitlik Terazisi</h1>
+        <p class="subtitle">Aşağıdaki ağırlıklardan uygun olanına tıklayarak teraziyi dengeye getir!</p>
+
+        <div class="equation">
+            <div class="eq-side" id="eqLeft">8 + 4</div>
+            <div class="eq-sign" id="eqSign">≠</div>
+            <div class="eq-side" id="eqRight">5 + ?</div>
+        </div>
+
+        <div class="scale-container">
+            <div class="scale-base"></div>
+            <div class="scale-beam" id="beam">
+                <div class="plate-string left" id="stringL">
+                    <div class="plate" id="plateL">
+                        <!-- Static blocks -->
+                    </div>
+                </div>
+                <div class="plate-string right" id="stringR">
+                    <div class="plate" id="plateR">
+                        <!-- Target plate -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="inventory" id="inventory">
+            <div class="block draggable" onclick="tryBlock(3)">3</div>
+            <div class="block draggable" onclick="tryBlock(5)">5</div>
+            <div class="block draggable" onclick="tryBlock(7)">7</div>
+            <div class="block draggable" onclick="tryBlock(9)">9</div>
+        </div>
+
+        <div class="feedback" id="feedback">Denge Sağlandı! 🎉</div>
+
+        <div class="kazanim-box">
+            <span class="kazanim-badge">Kazanım</span>
+            <p><strong>MAT.5.2.1.</strong> Eşitliğin korunumuna ve işlem özelliklerine yönelik çıkarım yapabilme.</p>
+        </div>
+    </div>
+
+    <script>
+        let currentLevel = {
+            leftBlocks: [8, 4],
+            rightBlocks: [5],
+            targetMissing: 7, // 12 - 5
+            options: [3, 5, 7, 9]
+        };
+
+        let leftSum = 0;
+        let rightSum = 0;
+
+        function initLevel() {
+            const plateL = document.getElementById('plateL');
+            const plateR = document.getElementById('plateR');
+            const inv = document.getElementById('inventory');
+            
+            plateL.innerHTML = '';
+            plateR.innerHTML = '';
+            inv.innerHTML = '';
+
+            leftSum = 0;
+            currentLevel.leftBlocks.forEach(val => {
+                leftSum += val;
+                plateL.innerHTML += `<div class="block">${val}</div>`;
+            });
+
+            rightSum = 0;
+            currentLevel.rightBlocks.forEach(val => {
+                rightSum += val;
+                plateR.innerHTML += `<div class="block">${val}</div>`;
+            });
+
+            currentLevel.options.forEach(val => {
+                inv.innerHTML += `<div class="block draggable" onclick="tryBlock(${val}, this)">${val}</div>`;
+            });
+
+            document.getElementById('eqLeft').innerText = currentLevel.leftBlocks.join(' + ');
+            document.getElementById('eqRight').innerText = currentLevel.rightBlocks.join(' + ') + ' + ?';
+            document.getElementById('eqSign').innerText = '≠';
+            document.getElementById('eqSign').style.color = '#EF4444';
+            document.getElementById('feedback').style.opacity = '0';
+
+            updateBalance();
+        }
+
+        function tryBlock(val, element) {
+            // Move visually to plateR
+            const plateR = document.getElementById('plateR');
+            plateR.appendChild(element);
+            element.onclick = null; // disable clicking again
+            
+            rightSum += val;
+            
+            document.getElementById('eqRight').innerText = currentLevel.rightBlocks.join(' + ') + ' + ' + val;
+
+            updateBalance();
+
+            if (leftSum === rightSum) {
+                document.getElementById('eqSign').innerText = '=';
+                document.getElementById('eqSign').style.color = '#10B981';
+                document.getElementById('feedback').innerText = "Denge Sağlandı! Eşitlik Korundu 🎉";
+                document.getElementById('feedback').style.color = "var(--success)";
+                document.getElementById('feedback').style.opacity = '1';
+                fireConfetti();
+                
+                // Load next level after delay
+                setTimeout(nextLevel, 3000);
+            } else {
+                document.getElementById('feedback').innerText = "Denge kurulamadı! Tekrar dene.";
+                document.getElementById('feedback').style.color = "#EF4444";
+                document.getElementById('feedback').style.opacity = '1';
+                setTimeout(initLevel, 1500);
+            }
+        }
+
+        function updateBalance() {
+            const beam = document.getElementById('beam');
+            const stringL = document.getElementById('stringL');
+            const stringR = document.getElementById('stringR');
+
+            // Calculate rotation angle based on weight difference
+            let diff = rightSum - leftSum;
+            // Cap diff
+            if(diff > 10) diff = 10;
+            if(diff < -10) diff = -10;
+            
+            const angle = diff * 2; // max 20 degrees
+
+            beam.style.transform = `translateX(-50%) rotate(${angle}deg)`;
+            
+            // Keep strings vertical
+            stringL.style.transform = `rotate(${-angle}deg)`;
+            stringR.style.transform = `rotate(${-angle}deg)`;
+        }
+
+        function nextLevel() {
+            // Generate a random simple equation
+            const a = Math.floor(Math.random() * 10) + 5;
+            const b = Math.floor(Math.random() * 10) + 5;
+            const leftTot = a + b;
+            
+            const c = Math.floor(Math.random() * leftTot);
+            const target = leftTot - c;
+
+            // Generate options
+            let opts = [target];
+            while(opts.length < 4) {
+                let r = Math.floor(Math.random() * 20) + 1;
+                if(!opts.includes(r)) opts.push(r);
+            }
+            opts.sort(() => 0.5 - Math.random());
+
+            currentLevel = {
+                leftBlocks: [a, b],
+                rightBlocks: [c],
+                targetMissing: target,
+                options: opts
+            };
+            initLevel();
+        }
+
+        // Confetti
+        function fireConfetti() {
+            const canvas = document.getElementById('confetti');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const pieces = [];
+            const colors = ['#8B5CF6', '#10B981', '#3B82F6', '#F59E0B'];
+            for (let i = 0; i < 100; i++) {
+                pieces.push({
+                    x: canvas.width / 2, y: canvas.height / 2,
+                    vx: (Math.random() - 0.5) * 20, vy: (Math.random() - 0.5) * 20 - 5,
+                    size: Math.random() * 10 + 5, color: colors[Math.floor(Math.random() * colors.length)],
+                    rot: Math.random() * 360, rotSpeed: (Math.random() - 0.5) * 10
+                });
+            }
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                let active = false;
+                pieces.forEach(p => {
+                    p.x += p.vx; p.y += p.vy; p.vy += 0.5; p.rot += p.rotSpeed;
+                    if (p.y < canvas.height) active = true;
+                    ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot * Math.PI / 180);
+                    ctx.fillStyle = p.color; ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+                    ctx.restore();
+                });
+                if (active) requestAnimationFrame(animate);
+                else ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+            animate();
+        }
+
+        window.onload = initLevel;
+    </script>
+</body>
+</html>

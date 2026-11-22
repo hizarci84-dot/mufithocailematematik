@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geometrik Çıkarımlar Keşfi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #F8FAFC;
+            --text: #0F172A;
+            --primary: #3B82F6; /* Blue */
+            --primary-hover: #2563EB;
+            --success: #10B981;
+            --error: #EF4444;
+            --card: #FFFFFF;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 900px;
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--card); padding: 15px 25px; border-radius: 50px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 30px; margin-top: 10px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; color: #1E3A8A;}
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; }
+        .kazanim { background: #DBEAFE; color: #1E3A8A; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .container {
+            width: 100%; max-width: 900px;
+            background: var(--card); border-radius: 24px; padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            display: flex; flex-direction: column; align-items: center; gap: 30px;
+        }
+
+        .question-text {
+            font-size: 1.8rem; font-weight: 800; color: #1E40AF; text-align: center;
+        }
+
+        /* Static Visual Area */
+        .visual-area {
+            width: 100%; height: 300px; background: #F1F5F9; border-radius: 16px;
+            display: flex; align-items: center; justify-content: center; position: relative;
+            border: 2px solid #E2E8F0; overflow: hidden;
+        }
+
+        .svg-canvas { width: 100%; height: 100%; position: absolute; top:0; left:0; }
+        
+        .static-point { fill: #EF4444; stroke: white; stroke-width: 3; }
+        .static-line { stroke: #3B82F6; stroke-width: 6; stroke-linecap: round; }
+        .dashed-line { stroke: #94A3B8; stroke-width: 4; stroke-dasharray: 8 8; }
+        .success-line { stroke: #10B981; stroke-width: 6; stroke-linecap: round; opacity: 0; transition: opacity 0.5s; }
+
+        /* Options */
+        .options {
+            display: flex; gap: 20px; width: 100%; justify-content: center; flex-wrap: wrap;
+        }
+        .opt-btn {
+            background: white; border: 3px solid #CBD5E1; color: #475569;
+            padding: 15px 40px; border-radius: 16px; font-size: 1.5rem; font-weight: 800;
+            cursor: pointer; transition: all 0.3s; flex: 1; min-width: 150px; max-width: 250px;
+        }
+        .opt-btn:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-3px); }
+        .opt-btn.correct { background: #D1FAE5; border-color: var(--success); color: #065F46; }
+        .opt-btn.wrong { background: #FEE2E2; border-color: var(--error); color: #991B1B; animation: shake 0.5s; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .inference-box {
+            background: #ECFDF5; border: 2px dashed #10B981; padding: 20px; border-radius: 16px;
+            font-size: 1.4rem; color: #065F46; font-weight: 800; text-align: center; width: 100%;
+            display: none; opacity: 0; transition: opacity 0.5s;
+        }
+
+        .btn-next {
+            background: var(--primary); color: white; border: none; padding: 15px 40px; border-radius: 16px; font-size: 1.2rem; font-weight: 800; cursor: pointer; display: none; transition: all 0.3s;
+        }
+        .btn-next:hover { background: var(--primary-hover); transform: translateY(-2px);}
+
+        @media (max-width: 768px) {
+            .header { flex-direction: column; gap: 10px; padding: 15px;}
+            .container { padding: 20px; }
+            .question-text { font-size: 1.4rem; }
+            .opt-btn { font-size: 1.2rem; padding: 12px 20px;}
+            .inference-box { font-size: 1.2rem; }
+            .visual-area { height: 200px; }
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.5.3.2. Geometrik Çıkarımlar</div>
+    </div>
+
+    <div class="container">
+        
+        <div class="question-text" id="qText">Soru Yükleniyor...</div>
+
+        <div class="visual-area" id="visualArea">
+            <svg class="svg-canvas" id="svgCanvas"></svg>
+        </div>
+
+        <div class="options" id="optionsArea">
+            <!-- Buttons injected by JS -->
+        </div>
+
+        <div class="inference-box" id="inferenceBox"></div>
+
+        <button class="btn-next" id="nextBtn" onclick="nextLevel()">Sıradaki Çıkarım ➔</button>
+
+    </div>
+
+    <script>
+        const levels = [
+            {
+                q: "A ve B gibi iki noktadan geçecek şekilde tam olarak KAÇ TANE doğru çizebiliriz?",
+                svg: `<circle class="static-point" cx="30%" cy="50%" r="8"/> <text x="30%" y="40%" fill="#475569" font-weight="800" font-size="20">A</text>
+                      <circle class="static-point" cx="70%" cy="50%" r="8"/> <text x="70%" y="40%" fill="#475569" font-weight="800" font-size="20">B</text>
+                      <line id="ansLine" class="success-line" x1="10%" y1="50%" x2="90%" y2="50%" />`,
+                opts: ["Sonsuz", "Sadece 1", "2"],
+                ans: 1, // index 1 is "Sadece 1"
+                inference: "💡 ÇIKARIM 1: İki noktadan yalnız ve yalnız BİR doğru geçer."
+            },
+            {
+                q: "Dışarıdaki C noktasından, aşağıdaki d doğrusuna tam dik (90°) inecek şekilde KAÇ TANE dikme çizebiliriz?",
+                svg: `<line class="static-line" x1="10%" y1="70%" x2="90%" y2="70%" /> <text x="90%" y="60%" fill="#3B82F6" font-weight="800" font-size="20">d</text>
+                      <circle class="static-point" cx="50%" cy="20%" r="8"/> <text x="50%" y="12%" fill="#EF4444" font-weight="800" font-size="20">C</text>
+                      <line id="ansLine" class="success-line" x1="50%" y1="20%" x2="50%" y2="70%" />
+                      <rect id="ansRect" x="50%" y="55%" width="15" height="15" fill="none" stroke="#10B981" stroke-width="3" style="opacity:0; transition: opacity 0.5s;"/>`,
+                opts: ["Sadece 1", "3", "Sonsuz"],
+                ans: 0,
+                inference: "💡 ÇIKARIM 2: Bir doğruya dışındaki bir noktadan yalnız BİR dikme çizilebilir."
+            },
+            {
+                q: "Tren raylarının tekerleklerden çıkmaması için iki ray arasındaki uzaklığın nasıl olması gerekir?",
+                svg: `<line class="static-line" x1="10%" y1="30%" x2="90%" y2="30%" />
+                      <line class="static-line" x1="10%" y1="70%" x2="90%" y2="70%" />
+                      <g id="ansLine" style="opacity:0; transition: opacity 0.5s;">
+                          <line class="dashed-line" stroke="#10B981" x1="30%" y1="30%" x2="30%" y2="70%" />
+                          <line class="dashed-line" stroke="#10B981" x1="50%" y1="30%" x2="50%" y2="70%" />
+                          <line class="dashed-line" stroke="#10B981" x1="70%" y1="30%" x2="70%" y2="70%" />
+                          <text x="50%" y="55%" fill="#10B981" font-weight="800" font-size="20" text-anchor="middle">Hep Eşit</text>
+                      </g>`,
+                opts: ["Baştan Dar, Sondan Geniş", "Hep Eşit (Paralel)", "Fark Etmez"],
+                ans: 1,
+                inference: "💡 ÇIKARIM 3: Aralarındaki uzaklık her yerde eşit olan ve kesişmeyen doğrular PARALEL doğrulardır."
+            }
+        ];
+
+        let currentLevel = 0;
+        const qText = document.getElementById('qText');
+        const svgCanvas = document.getElementById('svgCanvas');
+        const optionsArea = document.getElementById('optionsArea');
+        const inferenceBox = document.getElementById('inferenceBox');
+        const nextBtn = document.getElementById('nextBtn');
+
+        function loadLevel() {
+            if (currentLevel >= levels.length) {
+                qText.innerText = "Tebrikler! Geometrik çıkarımları başarıyla tamamladın! 🎉";
+                svgCanvas.innerHTML = `<text x="50%" y="50%" fill="#10B981" font-weight="800" font-size="60" text-anchor="middle">MÜKEMMEL!</text>`;
+                optionsArea.innerHTML = '';
+                inferenceBox.style.display = 'none';
+                nextBtn.style.display = 'none';
+                return;
+            }
+
+            const level = levels[currentLevel];
+            qText.innerText = level.q;
+            svgCanvas.innerHTML = level.svg;
+            
+            optionsArea.innerHTML = '';
+            inferenceBox.style.display = 'none';
+            inferenceBox.style.opacity = '0';
+            nextBtn.style.display = 'none';
+
+            level.opts.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'opt-btn';
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(index, btn);
+                optionsArea.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedIndex, btnElement) {
+            const level = levels[currentLevel];
+            
+            // Disable all buttons
+            document.querySelectorAll('.opt-btn').forEach(b => b.style.pointerEvents = 'none');
+
+            if (selectedIndex === level.ans) {
+                btnElement.classList.add('correct');
+                
+                // Show Answer Visual
+                const ansVisual = document.getElementById('ansLine');
+                if(ansVisual) ansVisual.style.opacity = '1';
+                const ansRect = document.getElementById('ansRect');
+                if(ansRect) ansRect.style.opacity = '1';
+
+                // Show Inference
+                inferenceBox.innerText = level.inference;
+                inferenceBox.style.display = 'block';
+                setTimeout(() => inferenceBox.style.opacity = '1', 50);
+
+                nextBtn.style.display = 'block';
+            } else {
+                btnElement.classList.add('wrong');
+                // Re-enable after a short delay so they can try again
+                setTimeout(() => {
+                    btnElement.classList.remove('wrong');
+                    document.querySelectorAll('.opt-btn').forEach(b => b.style.pointerEvents = 'auto');
+                }, 1000);
+            }
+        }
+
+        window.nextLevel = function() {
+            currentLevel++;
+            loadLevel();
+        }
+
+        // Start
+        window.onload = loadLevel;
+    </script>
+</body>
+</html>

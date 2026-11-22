@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Havacılık Radarı - Geometrik Çizimler</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A;
+            --text: #F8FAFC;
+            --radar-bg: #064E3B; /* Dark Green */
+            --radar-grid: #047857;
+            --primary: #10B981;
+            --card: rgba(255, 255, 255, 0.1);
+            --highlight: #FDE047;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: var(--bg); color: var(--text);
+            min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px;
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--card); padding: 15px 25px; border-radius: 20px;
+            margin-bottom: 20px; border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: #0F172A; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .container {
+            width: 100%; max-width: 1000px; display: flex; flex-direction: column; gap: 20px;
+        }
+
+        /* Task Panel */
+        .task-panel {
+            background: rgba(16, 185, 129, 0.1); border: 2px solid var(--primary);
+            padding: 20px; border-radius: 16px; text-align: center; font-size: 1.3rem;
+            display: flex; flex-direction: column; gap: 10px; align-items: center;
+        }
+        .task-text { font-weight: 600; color: #D1FAE5; }
+        .task-tools { display: flex; gap: 15px; margin-top: 10px;}
+        .tool-btn {
+            background: var(--card); color: white; border: 1px solid rgba(255,255,255,0.2);
+            padding: 8px 20px; border-radius: 8px; font-weight: 800; cursor: pointer; transition: all 0.3s;
+        }
+        .tool-btn:hover { background: rgba(255,255,255,0.2); }
+        .tool-btn.active { background: var(--primary); color: #0F172A; border-color: var(--primary); transform: scale(1.05);}
+        .tool-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Radar Canvas */
+        .radar-container {
+            width: 100%; height: 500px; background: var(--radar-bg);
+            border-radius: 20px; position: relative; overflow: hidden;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5); border: 4px solid #022C22;
+            background-image: 
+                linear-gradient(var(--radar-grid) 1px, transparent 1px),
+                linear-gradient(90deg, var(--radar-grid) 1px, transparent 1px);
+            background-size: 40px 40px;
+            background-position: center center;
+            cursor: crosshair;
+        }
+
+        /* Radar Scanner Animation */
+        .scanner {
+            position: absolute; top: 50%; left: 50%;
+            width: 1000px; height: 1000px;
+            background: conic-gradient(from 0deg, transparent 70%, rgba(16, 185, 129, 0.3) 100%);
+            transform-origin: 0 0;
+            animation: scan 4s linear infinite;
+            pointer-events: none;
+        }
+        @keyframes scan { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* SVG for drawing */
+        #radarSvg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10;
+        }
+        
+        .point { fill: var(--highlight); stroke: white; stroke-width: 2; }
+        .line { stroke: var(--highlight); stroke-width: 4; stroke-linecap: round; }
+        .dashed { stroke-dasharray: 8 8; }
+        .circle { fill: rgba(253, 224, 71, 0.2); stroke: var(--highlight); stroke-width: 3; }
+        .arrow { fill: var(--highlight); }
+
+        .btn-next {
+            background: #F59E0B; color: #0F172A; border: none; padding: 10px 25px; border-radius: 8px; font-weight: 800; cursor: pointer; display: none; margin-top: 10px; font-size: 1.1rem;
+        }
+
+        @media (max-width: 768px) {
+            .header { flex-direction: column; gap: 10px; }
+            .radar-container { height: 400px; }
+            .task-panel { font-size: 1.1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.5.3.1. Temel Geometrik Çizimler</div>
+    </div>
+
+    <div class="container">
+        
+        <div class="task-panel">
+            <div class="task-text" id="taskText">Görev 1: Radarda uçuş yapacak uçakların konumlarını belirlemek için 2 adet NOKTA işaretle.</div>
+            <div class="task-tools" id="toolsArea">
+                <button class="tool-btn active" id="btnNokta">Nokta İşaretleyici</button>
+            </div>
+            <button class="btn-next" id="nextBtn" onclick="nextLevel()">Sıradaki Görev ➔</button>
+        </div>
+
+        <div class="radar-container" id="radar">
+            <div class="scanner"></div>
+            <svg id="radarSvg">
+                <!-- Marker for ray -->
+                <defs>
+                    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" class="arrow" />
+                    </marker>
+                    <marker id="arrowhead-both" markerWidth="10" markerHeight="7" refX="5" refY="3.5" orient="auto-start-reverse">
+                        <polygon points="0 0, 10 3.5, 0 7" class="arrow" />
+                    </marker>
+                </defs>
+                <g id="drawLayer"></g>
+            </svg>
+        </div>
+
+    </div>
+
+    <script>
+        const tasks = [
+            {
+                text: "Görev 1: Radarda uçakların konumlarını belirlemek için ekrana 2 adet NOKTA işaretle.",
+                tools: [{ id: 'btnNokta', label: 'Nokta İşaretleyici', active: true }],
+                action: 'point', targetClicks: 2
+            },
+            {
+                text: "Görev 2: Uçakların başlangıç ve bitiş noktası belli olan uçuş rotasını çizmek için ÇİZGEÇ ile DOĞRU PARÇASI çiz.",
+                tools: [{ id: 'btnCizgec', label: 'Çizgeç (Cetvel)', active: true }],
+                action: 'line_segment', targetClicks: 2
+            },
+            {
+                text: "Görev 3: Bir uçağın başlangıç noktası belli ama sonsuza kadar dümdüz gideceği lazer sinyalini (IŞIN) çiz.",
+                tools: [{ id: 'btnCizgec', label: 'Çizgeç', active: true }],
+                action: 'ray', targetClicks: 2
+            },
+            {
+                text: "Görev 4: Uçaklardan birinin etrafındaki 360 derecelik radar tarama alanını çizmek için PERGEL kullanarak ÇEMBER çiz.",
+                tools: [{ id: 'btnPergel', label: 'Pergel', active: true }],
+                action: 'circle', targetClicks: 2
+            },
+            {
+                text: "Görev 5: Radar merkezinden geçen ve sonsuza kadar uzayan bir sınır hattı (DOĞRU) çiz.",
+                tools: [{ id: 'btnCizgec', label: 'Çizgeç', active: true }],
+                action: 'line', targetClicks: 2
+            }
+        ];
+
+        let currentLevel = 0;
+        let clickCount = 0;
+        let tempPoint = null;
+
+        const radar = document.getElementById('radar');
+        const drawLayer = document.getElementById('drawLayer');
+        const taskText = document.getElementById('taskText');
+        const toolsArea = document.getElementById('toolsArea');
+        const nextBtn = document.getElementById('nextBtn');
+
+        radar.addEventListener('click', (e) => {
+            if (currentLevel >= tasks.length) return;
+            const task = tasks[currentLevel];
+            
+            // Get coordinates relative to SVG
+            const rect = radar.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            if (task.action === 'point') {
+                drawPoint(x, y);
+                clickCount++;
+                if (clickCount >= task.targetClicks) showNextBtn();
+            } 
+            else if (['line_segment', 'ray', 'line', 'circle'].includes(task.action)) {
+                if (clickCount === 0) {
+                    tempPoint = {x, y};
+                    drawPoint(x, y);
+                    clickCount++;
+                } else if (clickCount === 1) {
+                    // draw shape
+                    if (task.action === 'line_segment') drawLine(tempPoint.x, tempPoint.y, x, y, false, false);
+                    if (task.action === 'ray') drawLine(tempPoint.x, tempPoint.y, x, y, false, true);
+                    if (task.action === 'line') drawLine(tempPoint.x, tempPoint.y, x, y, true, true);
+                    if (task.action === 'circle') drawCircle(tempPoint.x, tempPoint.y, x, y);
+                    
+                    drawPoint(x, y); // end point marker
+                    clickCount++;
+                    showNextBtn();
+                }
+            }
+        });
+
+        function drawPoint(x, y) {
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('cx', x);
+            circle.setAttribute('cy', y);
+            circle.setAttribute('r', 8);
+            circle.setAttribute('class', 'point');
+            drawLayer.appendChild(circle);
+        }
+
+        function drawLine(x1, y1, x2, y2, isLine, isRay) {
+            // Calculate extended points if line or ray
+            let extX1 = x1, extY1 = y1, extX2 = x2, extY2 = y2;
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            
+            if (isRay || isLine) {
+                // Extend end point
+                extX2 = x2 + dx * 10;
+                extY2 = y2 + dy * 10;
+            }
+            if (isLine) {
+                // Extend start point backwards
+                extX1 = x1 - dx * 10;
+                extY1 = y1 - dy * 10;
+            }
+
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', extX1);
+            line.setAttribute('y1', extY1);
+            line.setAttribute('x2', extX2);
+            line.setAttribute('y2', extY2);
+            line.setAttribute('class', 'line');
+            
+            if (isRay && !isLine) line.setAttribute('marker-end', 'url(#arrowhead)');
+            if (isLine) {
+                line.setAttribute('marker-end', 'url(#arrowhead)');
+                line.setAttribute('marker-start', 'url(#arrowhead-both)');
+            }
+            
+            drawLayer.appendChild(line);
+        }
+
+        function drawCircle(x1, y1, x2, y2) {
+            const r = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('cx', x1);
+            circle.setAttribute('cy', y1);
+            circle.setAttribute('r', r);
+            circle.setAttribute('class', 'circle');
+            drawLayer.appendChild(circle);
+        }
+
+        function showNextBtn() {
+            nextBtn.style.display = 'block';
+        }
+
+        window.nextLevel = function() {
+            currentLevel++;
+            if (currentLevel >= tasks.length) {
+                taskText.innerHTML = "Tebrikler! Uçuş radarı üzerindeki tüm geometrik (Nokta, Doğru, Işın, Çember) görevleri başarıyla tamamladın! 🎉";
+                toolsArea.innerHTML = '';
+                nextBtn.style.display = 'none';
+                return;
+            }
+
+            const task = tasks[currentLevel];
+            taskText.innerHTML = task.text;
+            
+            toolsArea.innerHTML = '';
+            task.tools.forEach(t => {
+                const b = document.createElement('button');
+                b.className = `tool-btn ${t.active ? 'active' : ''}`;
+                b.innerText = t.label;
+                toolsArea.appendChild(b);
+            });
+
+            clickCount = 0;
+            tempPoint = null;
+            nextBtn.style.display = 'none';
+            // drawLayer.innerHTML = ''; // Keep previous drawings for a cool radar buildup!
+        }
+    </script>
+</body>
+</html>

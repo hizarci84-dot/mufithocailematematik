@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Devirli Ondalık Sayı Makinesi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F0E17; --surface: #1A1A24; --text: #F8FAFC;
+            --primary: #8B5CF6; --secondary: #10B981;
+            --tertiary: #06B6D4; --danger: #F43F5E;
+            --accent: #F59E0B;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, #161625 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(139, 92, 246, 0.2); margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(139, 92, 246, 0.1);
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .container {
+            width: 100%; max-width: 1000px; display: grid; grid-template-columns: 350px 1fr; gap: 20px;
+        }
+
+        /* Control Panel */
+        .control-panel {
+            background: rgba(255,255,255,0.03); border-radius: 20px; padding: 25px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 20px;
+        }
+
+        .control-panel h2 { font-size: 1.5rem; color: var(--tertiary); font-weight: 900;}
+
+        .fraction-input-area {
+            display: flex; align-items: center; justify-content: center; gap: 15px;
+            background: rgba(0,0,0,0.3); padding: 20px; border-radius: 15px;
+        }
+
+        .fraction-col {
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+        }
+        
+        .fraction-col input {
+            width: 80px; height: 60px; background: #11111A; border: 2px solid #334155;
+            color: white; font-size: 2rem; font-weight: 900; text-align: center; border-radius: 10px; outline: none;
+            transition: all 0.3s;
+        }
+        .fraction-col input:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);}
+        .fraction-col hr { width: 100px; border: 2px solid white;}
+
+        .btn-sim {
+            background: var(--primary); color: white; border: none; padding: 15px; border-radius: 12px;
+            font-size: 1.2rem; font-weight: 900; cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(139, 92, 246, 0.4); text-align: center;
+        }
+        .btn-sim:hover { transform: translateY(-2px); box-shadow: 0 15px 25px rgba(139, 92, 246, 0.6); }
+
+        .info-box {
+            background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1);
+            font-size: 0.95rem; color: #94A3B8; line-height: 1.5;
+        }
+
+        /* Results Panel */
+        .results-panel {
+            background: rgba(255,255,255,0.02); border-radius: 20px; padding: 30px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2); display: flex; flex-direction: column; align-items: center;
+            position: relative; min-height: 400px;
+        }
+
+        .rp-title { font-size: 1.8rem; color: white; font-weight: 900; margin-bottom: 5px; align-self: flex-start;}
+        .rp-sub { color: #94A3B8; font-weight: 600; margin-bottom: 20px; align-self: flex-start;}
+
+        .division-container {
+            display: flex; font-size: 2.5rem; font-weight: 900; color: white; margin-top: 20px;
+            font-family: monospace; position: relative;
+        }
+        
+        .dividend { padding-right: 15px; border-right: 3px solid white; text-align: right;}
+        .divisor { padding-left: 15px; border-bottom: 3px solid white; text-align: left; padding-bottom: 5px;}
+        
+        .quotient-area { position: absolute; top: 40px; left: 100%; margin-left: 15px; color: var(--tertiary); display: flex; align-items: center;}
+        
+        /* The overline for repeating decimals */
+        .repeating-bar {
+            position: absolute; top: -5px; height: 3px; background: var(--danger); left: 0; width: 0;
+            transition: width 0.5s;
+        }
+
+        .steps-area {
+            margin-top: 10px; width: 100%; display: flex; flex-direction: column; align-items: flex-end; padding-right: 150px;
+            font-size: 1.8rem; color: #94A3B8; font-family: monospace;
+        }
+        .step-row {
+            display: flex; gap: 15px; opacity: 0; transform: translateY(10px); transition: all 0.5s;
+        }
+        .step-minus { color: var(--danger); }
+        
+        .status-badge {
+            position: absolute; top: 30px; right: 30px; padding: 10px 20px; border-radius: 20px;
+            font-weight: 900; font-size: 1.2rem; opacity: 0; transform: scale(0.8); transition: all 0.5s;
+        }
+        .sb-sonlu { background: rgba(16, 185, 129, 0.2); color: var(--secondary); border: 2px solid var(--secondary); }
+        .sb-devirli { background: rgba(244, 63, 94, 0.2); color: var(--danger); border: 2px solid var(--danger); }
+
+        @media (max-width: 768px) {
+            .container { grid-template-columns: 1fr; }
+            .steps-area { padding-right: 50px; font-size: 1.5rem;}
+            .division-container { font-size: 2rem; margin-top: 50px;}
+            .quotient-area { top: 35px; }
+            .status-badge { top: 10px; right: 10px; font-size: 1rem; padding: 5px 10px;}
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.7.1.2. Devirli Ondalık Gösterim Makinesi</div>
+    </div>
+
+    <div class="container">
+        
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <h2>⚙️ Makine Ayarları</h2>
+            
+            <div class="fraction-input-area">
+                <div class="fraction-col">
+                    <input type="number" id="inpNum" value="10" placeholder="Pay">
+                    <hr>
+                    <input type="number" id="inpDen" value="3" placeholder="Payda">
+                </div>
+            </div>
+
+            <button class="btn-sim" onclick="startDivision()">Bölmeyi Başlat</button>
+
+            <div class="info-box">
+                Payı paydaya böldüğümüzde, kalan sıfır olana kadar işleme devam ederiz. 
+                Eğer kalan sıfır olmuyorsa ve <b>sürekli aynı sayıları tekrar ediyorsa</b>, bu bir <b>Devirli Ondalık Sayıdır</b>.
+            </div>
+        </div>
+
+        <!-- Results Panel -->
+        <div class="results-panel">
+            <h2 class="rp-title">🧮 Canlı Bölme İşlemi</h2>
+            <div class="rp-sub">Makine çalışıyor...</div>
+
+            <div class="status-badge" id="statusBadge">SONLU ONDALIK</div>
+
+            <div class="division-container" id="divContainer" style="opacity: 0;">
+                <div class="dividend" id="dispNum">10</div>
+                <div class="divisor" id="dispDen">3</div>
+                
+                <div class="quotient-area">
+                    <span id="dispQuot"></span>
+                    <div class="repeating-bar" id="repBar"></div>
+                </div>
+            </div>
+
+            <div class="steps-area" id="stepsArea">
+                <!-- Steps injected here -->
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        const inpNum = document.getElementById('inpNum');
+        const inpDen = document.getElementById('inpDen');
+        const dispNum = document.getElementById('dispNum');
+        const dispDen = document.getElementById('dispDen');
+        const dispQuot = document.getElementById('dispQuot');
+        const repBar = document.getElementById('repBar');
+        const stepsArea = document.getElementById('stepsArea');
+        const divContainer = document.getElementById('divContainer');
+        const statusBadge = document.getElementById('statusBadge');
+
+        async function startDivision() {
+            let num = parseInt(inpNum.value);
+            let den = parseInt(inpDen.value);
+
+            if(isNaN(num) || isNaN(den) || den === 0) {
+                alert("Lütfen geçerli sayılar girin (Payda 0 olamaz).");
+                return;
+            }
+
+            // Reset UI
+            dispNum.innerText = num;
+            dispDen.innerText = den;
+            dispQuot.innerText = "";
+            repBar.style.width = "0";
+            stepsArea.innerHTML = "";
+            statusBadge.style.opacity = 0;
+            statusBadge.style.transform = "scale(0.8)";
+            divContainer.style.opacity = 1;
+
+            let quotientStr = "";
+            let remainders = {};
+            let isRepeating = false;
+            let repeatStartIndex = -1;
+            
+            let currentDividend = num;
+            let stepDelay = 800;
+
+            let integerPart = Math.floor(currentDividend / den);
+            let remainder = currentDividend % den;
+            
+            quotientStr += integerPart;
+            dispQuot.innerText = quotientStr;
+            
+            // Show first subtraction step if integer > 0
+            if(integerPart > 0) {
+                let subVal = integerPart * den;
+                await createStep(subVal, remainder);
+            }
+
+            if(remainder === 0) {
+                showStatus("SONLU", "sb-sonlu");
+                return; // finished exactly
+            }
+
+            // Start decimal part
+            quotientStr += ",";
+            dispQuot.innerText = quotientStr;
+            await sleep(stepDelay);
+
+            let decimalPos = quotientStr.length; // track where decimals start
+
+            while (remainder !== 0) {
+                // If remainder has been seen before, we found a repeat
+                if(remainders.hasOwnProperty(remainder)) {
+                    isRepeating = true;
+                    repeatStartIndex = remainders[remainder];
+                    break;
+                }
+
+                // Record remainder position
+                remainders[remainder] = quotientStr.length;
+
+                // Bring down a zero
+                currentDividend = remainder * 10;
+                
+                // Show bringing zero
+                let lastStep = stepsArea.lastElementChild;
+                if(lastStep) {
+                    let lastRem = lastStep.querySelector('.rem-val');
+                    if(lastRem) {
+                        lastRem.innerText = currentDividend;
+                        lastRem.style.color = "var(--accent)";
+                    }
+                } else {
+                    // if it was 0 integer part (like 2/5)
+                    await createStep(0, currentDividend, true);
+                }
+                
+                await sleep(stepDelay);
+
+                let nextDigit = Math.floor(currentDividend / den);
+                quotientStr += nextDigit;
+                dispQuot.innerText = quotientStr;
+                await sleep(stepDelay);
+
+                let subVal = nextDigit * den;
+                remainder = currentDividend % den;
+
+                await createStep(subVal, remainder);
+                await sleep(stepDelay);
+                
+                // Safety limit for UI
+                if(quotientStr.length > 15) {
+                    break;
+                }
+            }
+
+            if(isRepeating) {
+                showStatus("DEVİRLİ ONDALIK", "sb-devirli");
+                // Animate bar
+                // calculate width based on digits
+                let totalLength = quotientStr.length;
+                let repeatLength = totalLength - repeatStartIndex;
+                
+                // Roughly 1.5rem per char (approx 24px)
+                // Just use JS exact measurements
+                setTimeout(() => {
+                    let qText = dispQuot.innerText;
+                    // We need to just underline the repeating part
+                    // A hack is to replace the text with spans to measure
+                    let beforeRepeat = qText.substring(0, repeatStartIndex);
+                    let repeatingPart = qText.substring(repeatStartIndex);
+                    
+                    dispQuot.innerHTML = `<span>${beforeRepeat}</span><span id="repTarget">${repeatingPart}</span>`;
+                    
+                    let rTarget = document.getElementById('repTarget');
+                    let rWidth = rTarget.offsetWidth;
+                    let rLeft = rTarget.offsetLeft;
+                    
+                    repBar.style.left = rLeft + "px";
+                    repBar.style.width = rWidth + "px";
+                }, 100);
+
+            } else {
+                showStatus("SONLU ONDALIK", "sb-sonlu");
+            }
+        }
+
+        async function createStep(subVal, remVal, isVirtual = false) {
+            let row = document.createElement('div');
+            row.className = "step-row";
+            
+            if(isVirtual) {
+                row.innerHTML = `<span style="opacity:0;">-</span><span class="rem-val" style="border-top:2px solid; min-width:50px; text-align:right;">${remVal}</span>`;
+            } else {
+                row.innerHTML = `<span class="step-minus">-</span> <span>${subVal}</span> <span class="rem-val" style="border-top:2px solid; min-width:50px; text-align:right; display:block;">${remVal}</span>`;
+            }
+
+            stepsArea.appendChild(row);
+            
+            // tiny reflow delay
+            await sleep(50);
+            row.style.opacity = 1;
+            row.style.transform = "translateY(0)";
+        }
+
+        function showStatus(text, className) {
+            statusBadge.className = "status-badge " + className;
+            statusBadge.innerText = text;
+            statusBadge.style.opacity = 1;
+            statusBadge.style.transform = "scale(1)";
+        }
+
+    </script>
+
+    <script>
+        // Global spam click prevention for Etkinlik files
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'BUTTON' && !e.target.hasAttribute('data-spam-locked')) {
+                e.target.setAttribute('data-spam-locked', 'true');
+                let originalOpacity = e.target.style.opacity || '1';
+                e.target.style.opacity = '0.7';
+                e.target.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    e.target.removeAttribute('data-spam-locked');
+                    e.target.style.opacity = originalOpacity;
+                    e.target.style.pointerEvents = 'auto';
+                }, 400);
+            }
+        });
+    </script>
+</body>
+</html>

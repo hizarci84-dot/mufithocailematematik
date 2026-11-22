@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İnteraktif Simetri Çizimi Laboratuvarı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F0E17; --surface: #1A1A24; --text: #F8FAFC;
+            --primary: #8B5CF6; --secondary: #10B981;
+            --tertiary: #06B6D4; --danger: #F43F5E;
+            --accent: #F59E0B;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, #161625 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(139, 92, 246, 0.2); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; margin-bottom: 20px;}
+        h1 { font-size: 2.2rem; color: var(--tertiary); font-weight: 900;}
+        .subtitle { color: #94A3B8; font-size: 1.1rem; margin-top: 5px;}
+
+        .canvas-area {
+            position: relative; width: 100%; max-width: 800px; 
+            background: #11111A; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.4); 
+            display: flex; flex-direction: column; align-items: center; padding: 30px;
+        }
+
+        .grid-container {
+            display: grid; grid-template-columns: repeat(12, 40px); grid-template-rows: repeat(8, 40px);
+            gap: 2px; position: relative; padding: 20px; background: rgba(0,0,0,0.3); border-radius: 10px;
+        }
+
+        .grid-cell {
+            width: 40px; height: 40px; background: rgba(255,255,255,0.05); border-radius: 4px;
+            transition: all 0.2s; position: relative;
+        }
+
+        .grid-cell.clickable { cursor: pointer; }
+        .grid-cell.clickable:hover { background: rgba(255,255,255,0.1); transform: scale(1.05); }
+
+        .cell-target { background: var(--tertiary); box-shadow: 0 0 10px var(--tertiary); border: 1px solid rgba(255,255,255,0.5);}
+        .cell-user { background: var(--secondary); box-shadow: 0 0 10px var(--secondary); border: 1px solid rgba(255,255,255,0.5);}
+        .cell-error { background: var(--danger); box-shadow: 0 0 10px var(--danger); animation: shake 0.5s; }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+
+        /* Symmetry Line */
+        .symmetry-line {
+            position: absolute; width: 4px; height: 100%; background: var(--primary);
+            left: calc(50% - 2px); top: 0; box-shadow: 0 0 15px var(--primary); z-index: 10;
+        }
+        .symmetry-line::before {
+            content: 'Ayna (Simetri Ekseni)'; position: absolute; top: -25px; left: 50%; transform: translateX(-50%);
+            color: var(--primary); font-weight: 800; font-size: 0.9rem; white-space: nowrap;
+        }
+
+        .btn-check {
+            background: var(--primary); color: white; border: none; padding: 15px 40px; border-radius: 50px;
+            font-size: 1.2rem; font-weight: 900; cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(139, 92, 246, 0.4); margin-top: 30px;
+        }
+        .btn-check:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 15px 25px rgba(139, 92, 246, 0.6); }
+
+        .alert-box {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
+            background: rgba(16, 185, 129, 0.95); border: 2px solid white; color: white;
+            padding: 30px 50px; border-radius: 20px; font-weight: 900; font-size: 2rem;
+            opacity: 0; transition: all 0.5s; text-align: center; z-index: 100;
+            backdrop-filter: blur(10px); box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        @media (max-width: 768px) {
+            .grid-container { grid-template-columns: repeat(12, 25px); grid-template-rows: repeat(8, 25px); padding: 10px;}
+            .grid-cell { width: 25px; height: 25px; }
+            .canvas-area { padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.7.3.1. Şekillerin Yansıma Dönüşümü (Etkinlik)</div>
+    </div>
+
+    <div class="title-area">
+        <h1>Aynadaki Görüntüyü Çiz</h1>
+        <p class="subtitle">Simetri eksenine (Ayna) olan uzaklıkları sayarak, sol taraftaki mavi şeklin yansımasını sağ taraftaki boşluğa (tıklayarak) çizin.</p>
+    </div>
+
+    <div class="canvas-area">
+        
+        <div class="grid-container" id="grid">
+            <div class="symmetry-line"></div>
+            <!-- Cells injected via JS -->
+        </div>
+
+        <button class="btn-check" onclick="checkReflection()">Kontrol Et</button>
+
+    </div>
+
+    <div class="alert-box" id="alertBox">TEBRİKLER! Simetri Kusursuz.</div>
+
+    <script>
+        const grid = document.getElementById('grid');
+        const alertBox = document.getElementById('alertBox');
+
+        const rows = 8;
+        const cols = 12;
+
+        // Shape on the left (col index 0 to 5)
+        // Let's make an 'L' shape: 
+        // row 2, col 2
+        // row 3, col 2
+        // row 4, col 2
+        // row 4, col 3
+        // row 4, col 4
+        
+        // Let's store target shape cells by "row_col"
+        const targetCells = ["2_2", "3_2", "4_2", "4_3", "4_4"];
+
+        // The expected reflection on the right (col index 6 to 11)
+        // Col 5 and 6 are next to symmetry line (axis is exactly between col 5 and 6)
+        // distance from col 4 to axis (col 5) is 1 unit. Reflection should be col 6 + (5-4) = col 7.
+        // Actually, distance:
+        // Col 5 is 1 unit from axis. Reflection is Col 6 (1 unit from axis).
+        // Col 4 is 2 units from axis. Reflection is Col 7 (2 units from axis).
+        // Col 3 is 3 units from axis. Reflection is Col 8 (3 units from axis).
+        // Col 2 is 4 units from axis. Reflection is Col 9 (4 units from axis).
+        
+        const expectedReflection = ["2_9", "3_9", "4_9", "4_8", "4_7"];
+
+        let userCells = new Set();
+
+        for(let r = 0; r < rows; r++) {
+            for(let c = 0; c < cols; c++) {
+                let cell = document.createElement('div');
+                cell.className = 'grid-cell';
+                let id = r + "_" + c;
+                cell.id = id;
+
+                if(targetCells.includes(id)) {
+                    cell.classList.add('cell-target');
+                } else if(c >= 6) {
+                    // Right side, clickable
+                    cell.classList.add('clickable');
+                    cell.onclick = function() {
+                        if(userCells.has(id)) {
+                            userCells.delete(id);
+                            cell.classList.remove('cell-user');
+                        } else {
+                            userCells.add(id);
+                            cell.classList.add('cell-user');
+                            cell.classList.remove('cell-error');
+                        }
+                    }
+                }
+
+                grid.appendChild(cell);
+            }
+        }
+
+        function checkReflection() {
+            // Check if userCells exactly matches expectedReflection
+            let correctCount = 0;
+            let hasError = false;
+
+            // Clear previous errors
+            document.querySelectorAll('.cell-error').forEach(el => el.classList.remove('cell-error'));
+
+            userCells.forEach(id => {
+                if(expectedReflection.includes(id)) {
+                    correctCount++;
+                } else {
+                    // wrong cell colored
+                    document.getElementById(id).classList.add('cell-error');
+                    hasError = true;
+                }
+            });
+
+            if(correctCount === expectedReflection.length && !hasError && userCells.size === expectedReflection.length) {
+                // Success
+                alertBox.style.opacity = 1;
+                alertBox.style.transform = "translate(-50%, -50%) scale(1)";
+                setTimeout(() => {
+                    alertBox.style.opacity = 0;
+                    alertBox.style.transform = "translate(-50%, -50%) scale(0)";
+                }, 3000);
+            } else {
+                // Missing cells
+                expectedReflection.forEach(id => {
+                    if(!userCells.has(id)) {
+                        // Flash missing ones? Maybe just tell them to keep trying.
+                        let cell = document.getElementById(id);
+                        cell.classList.add('cell-error');
+                        setTimeout(() => cell.classList.remove('cell-error'), 1000);
+                    }
+                });
+            }
+        }
+
+    </script>
+
+    <script>
+        // Global spam click prevention for Etkinlik files
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'BUTTON' && !e.target.hasAttribute('data-spam-locked')) {
+                e.target.setAttribute('data-spam-locked', 'true');
+                let originalOpacity = e.target.style.opacity || '1';
+                e.target.style.opacity = '0.7';
+                e.target.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    e.target.removeAttribute('data-spam-locked');
+                    e.target.style.opacity = originalOpacity;
+                    e.target.style.pointerEvents = 'auto';
+                }, 400);
+            }
+        });
+    </script>
+</body>
+</html>

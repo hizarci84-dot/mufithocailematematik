@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Üçgen İnşa Laboratuvarı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F0E17; --surface: #1A1A24; --text: #F8FAFC;
+            --primary: #8B5CF6; --secondary: #10B981;
+            --tertiary: #06B6D4; --danger: #F43F5E;
+            --accent: #F59E0B;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, #161625 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(139, 92, 246, 0.2); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; margin-bottom: 20px;}
+        h1 { font-size: 2.2rem; color: var(--tertiary); font-weight: 900;}
+        .subtitle { color: #94A3B8; font-size: 1.1rem; margin-top: 5px;}
+
+        .main-container {
+            display: flex; gap: 30px; width: 100%; max-width: 1000px; flex-wrap: wrap; justify-content: center;
+        }
+
+        .panel {
+            background: #11111A; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.4); 
+            padding: 30px; display: flex; width: 100%; gap: 30px; align-items: center; justify-content: center; flex-wrap: wrap;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex; flex-direction: column; gap: 15px; width: 300px;
+        }
+
+        .card {
+            background: var(--surface); padding: 15px; border-radius: 15px;
+            display: flex; flex-direction: column; gap: 5px; border-left: 5px solid white;
+        }
+        #cA { border-color: var(--secondary); }
+        #cB { border-color: var(--danger); }
+        #cC { border-color: var(--tertiary); }
+        
+        .c-val { font-size: 1.5rem; font-weight: 900; color: white;}
+        input[type=range] { width: 100%; cursor: pointer; accent-color: var(--primary); margin-top: 5px;}
+
+        /* Canvas */
+        .canvas-area {
+            position: relative; width: 500px; height: 350px; background: #161625;
+            border: 2px dashed #334155; border-radius: 15px; overflow: hidden;
+            display: flex; align-items: flex-end; justify-content: center; padding-bottom: 50px;
+        }
+
+        .ground {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 50px; background: rgba(255,255,255,0.05);
+            border-top: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .stick {
+            position: absolute; height: 10px; border-radius: 5px; transform-origin: left center;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex; align-items: center; justify-content: center; color: black; font-weight: 900;
+        }
+        #stickC { background: var(--tertiary); bottom: 50px; left: 50%; transform: translateX(-50%); box-shadow: 0 0 10px var(--tertiary);}
+        #stickA { background: var(--secondary); bottom: 50px; box-shadow: 0 0 10px var(--secondary);}
+        #stickB { background: var(--danger); bottom: 50px; transform-origin: right center; box-shadow: 0 0 10px var(--danger);}
+
+        .status-box {
+            background: rgba(0,0,0,0.5); padding: 20px; border-radius: 15px; border: 2px solid #334155;
+            font-size: 1.2rem; font-weight: 900; color: white; text-align: center; width: 100%; margin-top: 10px;
+            transition: 0.3s;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.8.3.2. Üçgen Eşitsizliği (Etkinlik)</div>
+    </div>
+
+    <div class="title-area">
+        <h1>Üçgen İnşa Oyunu</h1>
+        <p class="subtitle">Herhangi iki kenarın toplamı, daima üçüncü kenardan büyük olmalıdır!</p>
+    </div>
+
+    <div class="main-container">
+        
+        <div class="panel">
+            
+            <div class="controls">
+                <div class="card" id="cA">
+                    <span style="font-weight:800; color:var(--secondary);">Kenar a</span>
+                    <span class="c-val" id="valA">5 cm</span>
+                    <input type="range" id="sliderA" min="1" max="15" step="1" value="5" oninput="updateSystem()">
+                </div>
+                <div class="card" id="cB">
+                    <span style="font-weight:800; color:var(--danger);">Kenar b</span>
+                    <span class="c-val" id="valB">6 cm</span>
+                    <input type="range" id="sliderB" min="1" max="15" step="1" value="6" oninput="updateSystem()">
+                </div>
+                <div class="card" id="cC">
+                    <span style="font-weight:800; color:var(--tertiary);">Kenar c (Taban)</span>
+                    <span class="c-val" id="valC">7 cm</span>
+                    <input type="range" id="sliderC" min="1" max="20" step="1" value="7" oninput="updateSystem()">
+                </div>
+            </div>
+
+            <div class="canvas-area">
+                <div class="ground"></div>
+                <div class="stick" id="stickC">c</div>
+                <div class="stick" id="stickA">a</div>
+                <div class="stick" id="stickB">b</div>
+            </div>
+            
+            <div class="status-box" id="statusBox">
+                Hesaplanıyor...
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        const sliderA = document.getElementById('sliderA');
+        const sliderB = document.getElementById('sliderB');
+        const sliderC = document.getElementById('sliderC');
+        
+        const valA = document.getElementById('valA');
+        const valB = document.getElementById('valB');
+        const valC = document.getElementById('valC');
+        
+        const stickA = document.getElementById('stickA');
+        const stickB = document.getElementById('stickB');
+        const stickC = document.getElementById('stickC');
+        const statusBox = document.getElementById('statusBox');
+
+        // Scale: 1 cm = 20px
+        const SCALE = 20;
+
+        function updateSystem() {
+            let a = parseInt(sliderA.value);
+            let b = parseInt(sliderB.value);
+            let c = parseInt(sliderC.value);
+
+            valA.innerText = a + " cm";
+            valB.innerText = b + " cm";
+            valC.innerText = c + " cm";
+
+            let pxA = a * SCALE;
+            let pxB = b * SCALE;
+            let pxC = c * SCALE;
+
+            stickA.style.width = pxA + 'px';
+            stickB.style.width = pxB + 'px';
+            stickC.style.width = pxC + 'px';
+
+            // Positioning stick C in the middle
+            // stickA is attached to left of stickC
+            // stickB is attached to right of stickC
+            let centerOffsetX = 250; // canvas is 500px wide
+            let cLeft = centerOffsetX - (pxC / 2);
+            let cRight = centerOffsetX + (pxC / 2);
+
+            stickA.style.left = cLeft + 'px';
+            stickB.style.left = (cRight - pxB) + 'px';
+
+            // Triangle Inequality Check
+            if (a + b > c && a + c > b && b + c > a) {
+                // Forms a triangle. Calculate angles using Law of Cosines
+                // To find angle for A (at left vertex): cos(C) = (a^2 + c^2 - b^2) / 2ac
+                // Wait, sides: base is c. Left side is a, Right side is b.
+                // In standard notation: opposite of C is c, opposite of B is b, opposite of A is a.
+                // Left vertex is B (angle B). Right vertex is A (angle A).
+                let cosAngleLeft = (a*a + c*c - b*b) / (2 * a * c);
+                let angleLeft = Math.acos(cosAngleLeft) * (180 / Math.PI);
+
+                let cosAngleRight = (b*b + c*c - a*a) / (2 * b * c);
+                let angleRight = Math.acos(cosAngleRight) * (180 / Math.PI);
+
+                // Rotate A up by angleLeft
+                stickA.style.transform = `rotate(${-angleLeft}deg)`;
+                // Rotate B up by -angleRight (because its origin is right)
+                stickB.style.transform = `rotate(${angleRight}deg)`;
+
+                statusBox.innerHTML = `✅ ÜÇGEN OLUŞTU!<br><span style="font-size:1rem; font-weight:600; color:#94A3B8;">(|${a}-${b}| < ${c} < ${a}+${b}) şartı sağlandı.</span>`;
+                statusBox.style.borderColor = "var(--secondary)";
+                statusBox.style.background = "rgba(16, 185, 129, 0.2)";
+            } else {
+                // Cannot form triangle. Fall flat.
+                stickA.style.transform = `rotate(0deg)`;
+                stickB.style.transform = `rotate(0deg)`;
+
+                statusBox.innerHTML = `❌ ÜÇGEN KAPANMADI!<br><span style="font-size:1rem; font-weight:600; color:var(--danger);">Çünkü kısa kenarların toplamı (${a}+${b}=${a+b}), tabandan (${c}) büyük değil!</span>`;
+                statusBox.style.borderColor = "var(--danger)";
+                statusBox.style.background = "rgba(244, 63, 94, 0.2)";
+            }
+        }
+
+        // Global spam click prevention for Etkinlik files
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'BUTTON' && !e.target.hasAttribute('data-spam-locked')) {
+                e.target.setAttribute('data-spam-locked', 'true');
+                let originalOpacity = e.target.style.opacity || '1';
+                e.target.style.opacity = '0.7';
+                e.target.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    e.target.removeAttribute('data-spam-locked');
+                    e.target.style.opacity = originalOpacity;
+                    e.target.style.pointerEvents = 'auto';
+                }, 400);
+            }
+        });
+
+        // Init
+        setTimeout(updateSystem, 100);
+        
+    </script>
+</body>
+</html>

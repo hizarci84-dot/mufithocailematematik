@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Büyük Tasarım Görevi (Problem Çözme)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A;
+            --surface: #1E293B;
+            --text: #F8FAFC;
+            --primary: #8B5CF6; /* Purple */
+            --secondary: #3B82F6; /* Blue */
+            --tertiary: #10B981; /* Green */
+            --danger: #F43F5E; /* Rose */
+            --amber: #F59E0B; /* Amber */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, var(--surface) 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .container {
+            width: 100%; max-width: 1000px; display: grid; grid-template-columns: 1fr 350px; gap: 20px;
+        }
+
+        .canvas-area {
+            background: #0B1120; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            position: relative; height: 550px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5); overflow: hidden;
+        }
+
+        svg { width: 100%; height: 100%; }
+
+        .grid-line { stroke: rgba(255, 255, 255, 0.05); stroke-width: 1; }
+        .wall { fill: rgba(139, 92, 246, 0.15); stroke: var(--primary); stroke-width: 5; transition: all 0.5s; }
+        .cut-line { stroke: var(--danger); stroke-width: 4; stroke-dasharray: 10 10; opacity: 0; transition: opacity 0.3s; }
+        .dim-text { font-size: 18px; font-weight: 900; fill: white; text-anchor: middle; transition: all 0.3s; }
+        
+        .area-label { font-size: 24px; font-weight: 900; fill: var(--tertiary); text-anchor: middle; opacity: 0; transition: opacity 0.5s; }
+
+        .tools-area { display: flex; flex-direction: column; gap: 15px; }
+
+        .panel {
+            background: rgba(255,255,255,0.03); border-radius: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .level-badge {
+            background: var(--primary); color: white; padding: 5px 12px; border-radius: 10px;
+            font-weight: 900; font-size: 0.9rem; display: inline-block; margin-bottom: 10px;
+        }
+
+        .question-text { font-size: 1.1rem; line-height: 1.5; font-weight: 600; color: #E2E8F0; margin-bottom: 15px; }
+        .question-text span { color: var(--amber); font-weight: 800; }
+
+        .input-group { display: flex; gap: 10px; margin-bottom: 15px; }
+        .answer-input {
+            flex: 1; background: rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.2); color: white;
+            padding: 12px; border-radius: 12px; font-size: 1.2rem; font-weight: 800; text-align: center; outline: none;
+            transition: all 0.3s;
+        }
+        .answer-input:focus { border-color: var(--primary); }
+        
+        .btn {
+            background: var(--secondary); color: white; border: none; padding: 12px 20px; border-radius: 12px;
+            font-size: 1.1rem; font-weight: 800; cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(59, 130, 246, 0.6); }
+        .btn-success { background: var(--tertiary); box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4); }
+
+        .feedback {
+            padding: 12px; border-radius: 10px; font-weight: 800; text-align: center; margin-top: 10px;
+            opacity: 0; transform: translateY(-10px); transition: all 0.3s; display: none;
+        }
+        .feedback.show { opacity: 1; transform: translateY(0); display: block; }
+        .feedback.success { background: rgba(16, 185, 129, 0.2); color: var(--tertiary); border: 1px solid var(--tertiary); }
+        .feedback.error { background: rgba(244, 63, 94, 0.2); color: var(--danger); border: 1px solid var(--danger); }
+
+        .next-btn {
+            width: 100%; background: var(--amber); color: #0F172A; border: none; padding: 15px; border-radius: 12px;
+            font-size: 1.2rem; font-weight: 900; cursor: pointer; transition: all 0.3s; margin-top: 15px; display: none;
+        }
+        .next-btn:hover { transform: scale(1.02); }
+
+        /* Confetti */
+        .confetti { position: absolute; width: 10px; height: 10px; background: red; animation: fall 3s linear forwards; }
+        @keyframes fall { to { transform: translateY(600px) rotate(720deg); opacity: 0; } }
+
+        @media (max-width: 768px) {
+            .container { grid-template-columns: 1fr; }
+            .canvas-area { height: 350px; }
+            .header { flex-direction: column; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.5.4.4. Çevre ve Alan Problemleri</div>
+    </div>
+
+    <div class="container">
+        
+        <div class="canvas-area" id="canvasArea">
+            <svg id="svgCanvas">
+                <g id="gridGroup"></g>
+                <g id="shapeGroup"></g>
+                <g id="dimGroup"></g>
+            </svg>
+        </div>
+
+        <div class="tools-area">
+            <div class="panel">
+                <div class="level-badge" id="lvlBadge">GÖREV 1</div>
+                <div class="question-text" id="qText">Yükleniyor...</div>
+                
+                <div class="input-group">
+                    <input type="number" class="answer-input" id="ansInput" placeholder="Cevabınız...">
+                    <button class="btn" onclick="checkAnswer()">Kontrol Et</button>
+                </div>
+
+                <div class="feedback" id="feedbackBox">Harika! Doğru bildin.</div>
+                
+                <button class="next-btn" id="nextBtn" onclick="nextLevel()">Sıradaki Göreve Geç ➔</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const svg = document.getElementById('svgCanvas');
+        const gridGroup = document.getElementById('gridGroup');
+        const shapeGroup = document.getElementById('shapeGroup');
+        const dimGroup = document.getElementById('dimGroup');
+        
+        const lvlBadge = document.getElementById('lvlBadge');
+        const qText = document.getElementById('qText');
+        const ansInput = document.getElementById('ansInput');
+        const feedbackBox = document.getElementById('feedbackBox');
+        const nextBtn = document.getElementById('nextBtn');
+        const canvasArea = document.getElementById('canvasArea');
+
+        let UNIT = 20; 
+        let W = 0, H = 0, CX = 0, CY = 0;
+        let currentLevel = 0;
+
+        const levels = [
+            {
+                type: 'rect',
+                w: 8, h: 5,
+                unitLbl: 'm',
+                text: "Müfit Bey, <span>8m x 5m</span> boyutlarındaki dikdörtgen şeklindeki salonunun zeminini halıyla kaplamak istiyor. Halının <span>metrekare (m²) fiyatı 200 TL'dir.</span> Toplam halı masrafı kaç TL olur?",
+                ans: (8 * 5) * 200,
+                hintText: "Önce salonun alanını (m²) bulmalısın.",
+                solveRender: () => showArea(8, 5, "40 m²")
+            },
+            {
+                type: 'rect',
+                w: 12, h: 7,
+                unitLbl: 'm',
+                text: "Bir çiftçi, <span>12m x 7m</span> boyutlarındaki dikdörtgen şeklindeki bahçesinin etrafına <span>3 sıra dikenli tel</span> çekecektir. Çiftçinin toplam kaç metre tele ihtiyacı vardır?",
+                ans: 2 * (12 + 7) * 3,
+                hintText: "Etrafına denildiği için önce Çevreyi bulmalı, sonra 3 ile çarpmalısın.",
+                solveRender: () => highlightPerimeter(12, 7, "Çevre = 38 m")
+            },
+            {
+                type: 'L',
+                w1: 10, h1: 4, w2: 4, h2: 6,
+                unitLbl: 'm',
+                text: "Yandaki <span>'L' şeklindeki</span> koridorun zeminine parke döşenecektir. Bu bileşik şeklin <span>toplam alanı kaç m²'dir?</span> (İpucu: Şekli zihninizde iki dikdörtgene bölün)",
+                ans: (10 * 4) + (4 * 6),
+                hintText: "Şekli yatay veya dikey bir çizgiyle iki dikdörtgene ayır ve alanlarını topla.",
+                solveRender: () => splitLShape(10, 4, 4, 6)
+            }
+        ];
+
+        function resize() {
+            let rect = svg.getBoundingClientRect();
+            W = rect.width;
+            H = rect.height;
+            CX = W / 2;
+            CY = H / 2;
+            drawGrid();
+            renderLevel();
+        }
+
+        function drawGrid() {
+            gridGroup.innerHTML = '';
+            for(let i = 0; i <= W; i+=UNIT) {
+                let l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                l.setAttribute('x1', i); l.setAttribute('y1', 0); l.setAttribute('x2', i); l.setAttribute('y2', H);
+                l.setAttribute('class', 'grid-line');
+                gridGroup.appendChild(l);
+            }
+            for(let i = 0; i <= H; i+=UNIT) {
+                let l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                l.setAttribute('x1', 0); l.setAttribute('y1', i); l.setAttribute('x2', W); l.setAttribute('y2', i);
+                l.setAttribute('class', 'grid-line');
+                gridGroup.appendChild(l);
+            }
+        }
+
+        function renderLevel() {
+            shapeGroup.innerHTML = '';
+            dimGroup.innerHTML = '';
+            ansInput.value = '';
+            ansInput.disabled = false;
+            feedbackBox.classList.remove('show');
+            nextBtn.style.display = 'none';
+
+            let lvl = levels[currentLevel];
+            lvlBadge.innerText = `GÖREV ${currentLevel + 1} / ${levels.length}`;
+            qText.innerHTML = lvl.text;
+
+            if(lvl.type === 'rect') {
+                let pxW = lvl.w * UNIT;
+                let pxH = lvl.h * UNIT;
+                let sx = CX - pxW/2;
+                let sy = CY - pxH/2;
+
+                let r = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                r.setAttribute('x', sx); r.setAttribute('y', sy);
+                r.setAttribute('width', pxW); r.setAttribute('height', pxH);
+                r.setAttribute('class', 'wall');
+                r.setAttribute('id', 'mainPoly');
+                shapeGroup.appendChild(r);
+
+                addDimText(sx + pxW/2, sy - 15, `${lvl.w} ${lvl.unitLbl}`);
+                addDimText(sx - 30, sy + pxH/2, `${lvl.h} ${lvl.unitLbl}`, true);
+
+            } else if (lvl.type === 'L') {
+                // L shape made of two rects: R1 (top) and R2 (bottom)
+                // Actually, let's draw a single polygon
+                // Top rect: w1 x h1
+                // Bottom rect (attached to left of bottom of R1): w2 x h2
+                let pxW1 = lvl.w1 * UNIT; let pxH1 = lvl.h1 * UNIT;
+                let pxW2 = lvl.w2 * UNIT; let pxH2 = lvl.h2 * UNIT;
+                
+                let totalW = pxW1; 
+                let totalH = pxH1 + pxH2;
+                let sx = CX - totalW/2;
+                let sy = CY - totalH/2;
+
+                let pts = [
+                    `${sx},${sy}`, // TL
+                    `${sx + pxW1},${sy}`, // TR
+                    `${sx + pxW1},${sy + pxH1}`, // BR of top rect
+                    `${sx + pxW2},${sy + pxH1}`, // Inner corner
+                    `${sx + pxW2},${sy + pxH1 + pxH2}`, // BR of bottom rect
+                    `${sx},${sy + pxH1 + pxH2}` // BL
+                ].join(' ');
+
+                let p = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                p.setAttribute('points', pts);
+                p.setAttribute('class', 'wall');
+                p.setAttribute('id', 'mainPoly');
+                shapeGroup.appendChild(p);
+
+                // Dimensions
+                addDimText(sx + pxW1/2, sy - 15, `${lvl.w1} ${lvl.unitLbl}`); // Top
+                addDimText(sx - 30, sy + (pxH1+pxH2)/2, `${lvl.h1 + lvl.h2} ${lvl.unitLbl}`, true); // Left full
+                addDimText(sx + pxW2/2, sy + pxH1 + pxH2 + 20, `${lvl.w2} ${lvl.unitLbl}`); // Bottom
+                addDimText(sx + pxW1 + 30, sy + pxH1/2, `${lvl.h1} ${lvl.unitLbl}`, true); // Right top
+            }
+        }
+
+        function addDimText(x, y, txt, isVertical=false) {
+            let t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            t.setAttribute('x', x); t.setAttribute('y', y);
+            t.setAttribute('class', 'dim-text');
+            if(isVertical) t.setAttribute('dominant-baseline', 'central');
+            t.textContent = txt;
+            dimGroup.appendChild(t);
+        }
+
+        function checkAnswer() {
+            let val = parseFloat(ansInput.value);
+            let lvl = levels[currentLevel];
+            
+            feedbackBox.classList.remove('success', 'error');
+            
+            if(isNaN(val)) {
+                feedbackBox.textContent = "Lütfen bir sayı girin.";
+                feedbackBox.classList.add('error', 'show');
+                return;
+            }
+
+            if(val === lvl.ans) {
+                feedbackBox.textContent = "Mükemmel! Doğru Cevap 👏";
+                feedbackBox.classList.add('success', 'show');
+                ansInput.disabled = true;
+                
+                fireConfetti();
+                lvl.solveRender();
+                
+                if(currentLevel < levels.length - 1) {
+                    nextBtn.style.display = 'block';
+                } else {
+                    nextBtn.style.display = 'block';
+                    nextBtn.innerText = "Tebrikler! Tüm Görevleri Bitirdin 🎉";
+                    nextBtn.onclick = () => location.reload();
+                }
+            } else {
+                feedbackBox.textContent = `Yanlış. ${lvl.hintText}`;
+                feedbackBox.classList.add('error', 'show');
+            }
+        }
+
+        function nextLevel() {
+            currentLevel++;
+            renderLevel();
+        }
+
+        // Specific Visual Solvers
+        function showArea(w, h, txt) {
+            let pxW = w * UNIT; let pxH = h * UNIT;
+            let sx = CX - pxW/2; let sy = CY - pxH/2;
+            let t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            t.setAttribute('x', CX); t.setAttribute('y', CY);
+            t.setAttribute('class', 'area-label');
+            t.setAttribute('dominant-baseline', 'central');
+            t.textContent = txt;
+            dimGroup.appendChild(t);
+            
+            let poly = document.getElementById('mainPoly');
+            poly.style.fill = "rgba(16, 185, 129, 0.4)";
+            
+            setTimeout(() => t.style.opacity = 1, 100);
+        }
+
+        function highlightPerimeter(w, h, txt) {
+            let pxW = w * UNIT; let pxH = h * UNIT;
+            let sx = CX - pxW/2; let sy = CY - pxH/2;
+            let poly = document.getElementById('mainPoly');
+            poly.style.stroke = "var(--amber)";
+            poly.style.strokeWidth = "8";
+            poly.style.strokeDasharray = "15 10";
+            
+            let t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            t.setAttribute('x', CX); t.setAttribute('y', CY);
+            t.setAttribute('class', 'area-label');
+            t.setAttribute('dominant-baseline', 'central');
+            t.style.fill = "var(--amber)";
+            t.textContent = txt;
+            dimGroup.appendChild(t);
+            setTimeout(() => { t.style.opacity = 1; poly.style.fill="transparent"; }, 100);
+        }
+
+        function splitLShape(w1, h1, w2, h2) {
+            let pxW1 = w1 * UNIT; let pxH1 = h1 * UNIT;
+            let pxW2 = w2 * UNIT; let pxH2 = h2 * UNIT;
+            let sx = CX - pxW1/2; let sy = CY - (pxH1+pxH2)/2;
+
+            // Draw cut line
+            let line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', sx); line.setAttribute('y1', sy + pxH1);
+            line.setAttribute('x2', sx + pxW1); line.setAttribute('y2', sy + pxH1);
+            line.setAttribute('class', 'cut-line');
+            dimGroup.appendChild(line);
+
+            // Area 1 text
+            let t1 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            t1.setAttribute('x', sx + pxW1/2); t1.setAttribute('y', sy + pxH1/2);
+            t1.setAttribute('class', 'area-label');
+            t1.setAttribute('dominant-baseline', 'central');
+            t1.textContent = `${w1 * h1} m²`;
+            dimGroup.appendChild(t1);
+
+            // Area 2 text
+            let t2 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            t2.setAttribute('x', sx + pxW2/2); t2.setAttribute('y', sy + pxH1 + pxH2/2);
+            t2.setAttribute('class', 'area-label');
+            t2.setAttribute('dominant-baseline', 'central');
+            t2.textContent = `${w2 * h2} m²`;
+            dimGroup.appendChild(t2);
+
+            setTimeout(() => {
+                line.style.opacity = 1;
+                t1.style.opacity = 1;
+                t2.style.opacity = 1;
+                document.getElementById('mainPoly').style.fill = "rgba(16, 185, 129, 0.2)";
+            }, 300);
+        }
+
+        function fireConfetti() {
+            for(let i=0; i<30; i++) {
+                let c = document.createElement('div');
+                c.className = 'confetti';
+                c.style.left = Math.random() * canvasArea.offsetWidth + 'px';
+                c.style.top = '-10px';
+                c.style.background = ['#F59E0B', '#3B82F6', '#10B981', '#F43F5E'][Math.floor(Math.random()*4)];
+                c.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                canvasArea.appendChild(c);
+                setTimeout(() => c.remove(), 4000);
+            }
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+    </script>
+</body>
+</html>

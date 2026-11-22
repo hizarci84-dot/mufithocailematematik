@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Benzerlik ve Eşlik Laboratuvarı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F0E17; --surface: #1A1A24; --text: #F8FAFC;
+            --primary: #8B5CF6; --secondary: #10B981;
+            --tertiary: #06B6D4; --danger: #F43F5E;
+            --accent: #F59E0B;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, #161625 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(139, 92, 246, 0.2); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; margin-bottom: 20px;}
+        h1 { font-size: 2.2rem; color: var(--tertiary); font-weight: 900;}
+        .subtitle { color: #94A3B8; font-size: 1.1rem; margin-top: 5px;}
+
+        .main-container {
+            display: flex; gap: 30px; width: 100%; max-width: 1000px; flex-wrap: wrap; justify-content: center;
+        }
+
+        .panel {
+            background: #11111A; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.4); 
+            padding: 30px; display: flex; flex-direction: column; width: 100%; gap: 30px; align-items: center;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex; gap: 20px; width: 100%; max-width: 600px; justify-content: center; align-items: center;
+            background: var(--surface); padding: 20px; border-radius: 15px;
+        }
+
+        .k-val { font-size: 2.5rem; font-weight: 900; color: var(--primary); width: 150px; text-align: center;}
+        input[type=range] { flex-grow: 1; cursor: pointer; accent-color: var(--primary); }
+
+        /* Canvas */
+        .canvas-area {
+            display: flex; width: 100%; gap: 30px; justify-content: center; align-items: flex-end;
+            background: #161625; border: 2px dashed #334155; border-radius: 15px; padding: 30px; min-height: 400px;
+        }
+
+        .tri-box {
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+        }
+
+        svg { overflow: visible; }
+        
+        .tri-base { fill: rgba(16, 185, 129, 0.2); stroke: var(--secondary); stroke-width: 3; stroke-linejoin: round;}
+        .tri-copy { fill: rgba(245, 158, 11, 0.2); stroke: var(--accent); stroke-width: 3; stroke-linejoin: round; transition: 0.3s;}
+
+        .lbl-side { fill: white; font-weight: 800; font-family: 'Outfit'; font-size: 14px;}
+        .lbl-ang { fill: white; font-weight: 900; font-family: 'Outfit'; font-size: 14px;}
+
+        .status-box {
+            background: rgba(0,0,0,0.5); padding: 15px 30px; border-radius: 50px;
+            font-size: 1.5rem; font-weight: 900; color: white; border: 2px solid #334155;
+            text-align: center; width: 100%; transition: 0.3s;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.8.3.3. Eşlik ve Benzerlik (Etkinlik)</div>
+    </div>
+
+    <div class="title-area">
+        <h1>Fotokopi Makinesi (Benzerlik Oranı)</h1>
+        <p class="subtitle">Benzerlik oranı (k) 1 olduğunda eş, diğer durumlarda benzer şekiller oluşur. Açılar ASLA değişmez!</p>
+    </div>
+
+    <div class="main-container">
+        
+        <div class="panel">
+            
+            <div class="controls">
+                <span style="font-size:1.2rem; font-weight:800; color:white;">Oran (k):</span>
+                <input type="range" id="sliderK" min="0.5" max="3" step="0.5" value="1" oninput="updateSystem()">
+                <div class="k-val" id="valK">k = 1</div>
+            </div>
+
+            <div class="canvas-area">
+                
+                <div class="tri-box">
+                    <span style="color:#94A3B8; font-weight:800;">Orijinal Üçgen</span>
+                    <!-- 3-4-5 Triangle: base 100, height 75 -->
+                    <svg width="150" height="150" viewBox="0 0 150 150">
+                        <polygon class="tri-base" points="20,130 120,130 20,55" />
+                        <text x="60" y="145" class="lbl-side">4 cm</text>
+                        <text x="5" y="95" class="lbl-side" transform="rotate(-90 5 95)">3 cm</text>
+                        <text x="60" y="85" class="lbl-side" transform="rotate(37 60 85)">5 cm</text>
+                        
+                        <text x="25" y="125" class="lbl-ang" fill="var(--secondary)">90°</text>
+                        <text x="95" y="125" class="lbl-ang">37°</text>
+                        <text x="25" y="75" class="lbl-ang">53°</text>
+                    </svg>
+                </div>
+
+                <div style="font-size:3rem; color:#334155; margin-bottom: 50px;">→</div>
+
+                <div class="tri-box">
+                    <span style="color:var(--accent); font-weight:800;">Kopya Üçgen</span>
+                    <svg width="350" height="350" viewBox="0 0 350 350" id="svgCopy">
+                        <polygon class="tri-copy" id="polyCopy" points="20,330 120,330 20,255" />
+                        
+                        <text id="lblBase" class="lbl-side">4 cm</text>
+                        <text id="lblHeight" class="lbl-side">3 cm</text>
+                        <text id="lblHypo" class="lbl-side">5 cm</text>
+                        
+                        <text id="ang90" class="lbl-ang" fill="var(--accent)">90°</text>
+                        <text id="ang37" class="lbl-ang">37°</text>
+                        <text id="ang53" class="lbl-ang">53°</text>
+                    </svg>
+                </div>
+
+            </div>
+            
+            <div class="status-box" id="statusBox">
+                ⭐ Birebir Aynı (EŞ ÜÇGEN) ⭐<br>
+                <span style="font-size:1rem; color:#94A3B8;">(k = 1 olduğu için sembolü ≅)</span>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        const sliderK = document.getElementById('sliderK');
+        const valK = document.getElementById('valK');
+        const polyCopy = document.getElementById('polyCopy');
+        const statusBox = document.getElementById('statusBox');
+
+        const lblBase = document.getElementById('lblBase');
+        const lblHeight = document.getElementById('lblHeight');
+        const lblHypo = document.getElementById('lblHypo');
+        
+        const ang90 = document.getElementById('ang90');
+        const ang37 = document.getElementById('ang37');
+        const ang53 = document.getElementById('ang53');
+
+        // Original logic: base = 100px (4cm), height = 75px (3cm), hypo = 125px (5cm)
+        // Origin of copy SVG is at bottom left (20, 330)
+
+        function updateSystem() {
+            let k = parseFloat(sliderK.value);
+            valK.innerText = "k = " + k;
+
+            let w = 100 * k;
+            let h = 75 * k;
+
+            // points: (20,330), (20+w, 330), (20, 330-h)
+            let p1x = 20, p1y = 330;
+            let p2x = 20 + w, p2y = 330;
+            let p3x = 20, p3y = 330 - h;
+
+            polyCopy.setAttribute('points', `${p1x},${p1y} ${p2x},${p2y} ${p3x},${p3y}`);
+
+            // Update Labels
+            lblBase.textContent = (4 * k) + " cm";
+            lblHeight.textContent = (3 * k) + " cm";
+            lblHypo.textContent = (5 * k) + " cm";
+
+            // Position side labels
+            lblBase.setAttribute('x', p1x + w/2 - 10); lblBase.setAttribute('y', p1y + 15);
+            
+            lblHeight.setAttribute('x', p1x - 15); lblHeight.setAttribute('y', p1y - h/2);
+            // rotation for height
+            lblHeight.setAttribute('transform', `rotate(-90 ${p1x - 15} ${p1y - h/2})`);
+
+            lblHypo.setAttribute('x', p1x + w/2 + 5); lblHypo.setAttribute('y', p1y - h/2 - 5);
+            // Angle of hypo is atan(3/4) = 36.87 deg. SVG rotates clockwise, so 37 deg
+            lblHypo.setAttribute('transform', `rotate(37 ${p1x + w/2} ${p1y - h/2})`);
+
+            // Position angle labels (Angles NEVER change)
+            ang90.setAttribute('x', p1x + 5); ang90.setAttribute('y', p1y - 5);
+            ang37.setAttribute('x', p2x - 25); ang37.setAttribute('y', p2y - 5);
+            ang53.setAttribute('x', p3x + 5); ang53.setAttribute('y', p3y + 20);
+
+            // Status Logic
+            if(k === 1) {
+                statusBox.innerHTML = `⭐ Birebir Aynı (EŞ ÜÇGEN) ⭐<br><span style="font-size:1rem; color:#94A3B8;">Kenarlar aynı, açılar aynı. Sembolü ≅</span>`;
+                statusBox.style.borderColor = "var(--secondary)";
+                statusBox.style.background = "rgba(16, 185, 129, 0.2)";
+                polyCopy.style.stroke = "var(--secondary)";
+                polyCopy.style.fill = "rgba(16, 185, 129, 0.2)";
+            } else if (k < 1) {
+                statusBox.innerHTML = `🔍 Küçültülmüş (BENZER ÜÇGEN)<br><span style="font-size:1rem; color:#94A3B8;">Açılar korundu, kenarlar ${k} oranında küçüldü. Sembolü ~</span>`;
+                statusBox.style.borderColor = "var(--accent)";
+                statusBox.style.background = "rgba(245, 158, 11, 0.2)";
+                polyCopy.style.stroke = "var(--accent)";
+                polyCopy.style.fill = "rgba(245, 158, 11, 0.2)";
+            } else {
+                statusBox.innerHTML = `🔍 Büyütülmüş (BENZER ÜÇGEN)<br><span style="font-size:1rem; color:#94A3B8;">Açılar korundu, kenarlar ${k} oranında büyüdü. Sembolü ~</span>`;
+                statusBox.style.borderColor = "var(--tertiary)";
+                statusBox.style.background = "rgba(6, 182, 212, 0.2)";
+                polyCopy.style.stroke = "var(--tertiary)";
+                polyCopy.style.fill = "rgba(6, 182, 212, 0.2)";
+            }
+        }
+
+        // Global spam click prevention for Etkinlik files
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'BUTTON' && !e.target.hasAttribute('data-spam-locked')) {
+                e.target.setAttribute('data-spam-locked', 'true');
+                let originalOpacity = e.target.style.opacity || '1';
+                e.target.style.opacity = '0.7';
+                e.target.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    e.target.removeAttribute('data-spam-locked');
+                    e.target.style.opacity = originalOpacity;
+                    e.target.style.pointerEvents = 'auto';
+                }, 400);
+            }
+        });
+
+        // Init
+        setTimeout(updateSystem, 100);
+        
+    </script>
+</body>
+</html>

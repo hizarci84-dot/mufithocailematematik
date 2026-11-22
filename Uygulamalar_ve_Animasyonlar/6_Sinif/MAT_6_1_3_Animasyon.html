@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asal Sayılar - Animasyon</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A; --text: #F8FAFC;
+            --primary: #3B82F6; --secondary: #10B981;
+            --tertiary: #F59E0B; --danger: #F43F5E;
+            --purple: #8B5CF6;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 900px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--tertiary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; width: 100%; max-width: 800px; margin-bottom: 20px; height: 110px;}
+        h1 { font-size: 2.2rem; color: var(--tertiary); text-shadow: 0 5px 15px rgba(0,0,0,0.5); line-height: 1.3;}
+        .subtitle { font-size: 1.2rem; color: #94A3B8; margin-top: 10px; line-height: 1.5; min-height: 55px;}
+        .subtitle span { color: white; font-weight: 800; background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 5px;}
+
+        .canvas-area {
+            position: relative; width: 100%; max-width: 800px; height: 450px; 
+            background: #0B1120; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.3); 
+            overflow: hidden; display: flex; align-items: center; justify-content: center;
+        }
+
+        .scene { position: absolute; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.8s; pointer-events: none;}
+        .scene.active { opacity: 1; z-index: 10; }
+
+        /* Scene 1 Elements */
+        .number-cards { display: flex; gap: 30px; margin-top: 20px;}
+        .n-card {
+            background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1);
+            padding: 20px; border-radius: 20px; width: 180px; text-align: center;
+            opacity: 0; transform: translateY(30px); transition: all 0.5s;
+        }
+        .nc-num { font-size: 4rem; font-weight: 900; color: white; margin-bottom: 10px;}
+        .nc-factors { font-size: 1.2rem; color: #94A3B8; font-weight: 800;}
+        .nc-factors span { color: var(--tertiary); }
+        
+        .n-card.show { opacity: 1; transform: translateY(0); }
+        .n-card.is-prime { border-color: var(--tertiary); box-shadow: 0 0 20px rgba(245, 158, 11, 0.4); background: rgba(245, 158, 11, 0.1); }
+
+        /* Sieve Grid */
+        .sieve-grid {
+            display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; opacity: 0; transition: all 0.5s; transform: scale(0.9);
+        }
+        .sieve-cell {
+            width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 8px;
+            display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem;
+            transition: all 0.3s;
+        }
+        .sieve-cell.crossed { background: rgba(244, 63, 94, 0.2); color: rgba(255,255,255,0.3); text-decoration: line-through;}
+        .sieve-cell.prime { background: var(--tertiary); color: white; transform: scale(1.1); box-shadow: 0 0 10px var(--tertiary); z-index: 2;}
+        .sieve-cell.special { background: #334155; color: rgba(255,255,255,0.3); }
+
+        .btn-start {
+            margin-top: 30px; background: var(--tertiary); color: white; border: none; padding: 15px 40px; border-radius: 50px;
+            font-size: 1.2rem; font-weight: 800; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 20px rgba(245, 158, 11, 0.4);
+        }
+        .btn-start:hover { transform: scale(1.05); }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=3B82F6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.6.1.3. Asal Sayılar</div>
+    </div>
+
+    <div class="title-area">
+        <h1 id="mTitle">Matematiğin Yalnız Kalpleri: Asal Sayılar</h1>
+        <p class="subtitle" id="mSub">Bazı sayılar o kadar inatçıdır ki, <span>sadece 1'e ve Kendisine</span> bölünür.</p>
+    </div>
+
+    <div class="canvas-area">
+        
+        <!-- SCENE 1 -->
+        <div class="scene active" id="sc1">
+            <div style="font-size: 1.5rem; font-weight: 800; color: white;">Hangi sayı daha inatçı?</div>
+            <div class="number-cards">
+                
+                <div class="n-card" id="card6">
+                    <div class="nc-num">6</div>
+                    <div class="nc-factors">Bölenleri:<br>1, 2, 3, 6</div>
+                </div>
+
+                <div class="n-card" id="card7">
+                    <div class="nc-num">7</div>
+                    <div class="nc-factors">Bölenleri:<br><span>Sadece 1 ve 7</span></div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- SCENE 2 : Eratosten -->
+        <div class="scene" id="sc2">
+            <div class="sieve-grid" id="sGrid">
+                <!-- JS Fill 1 to 50 -->
+            </div>
+            <div style="position:absolute; bottom: 20px; background: rgba(0,0,0,0.8); padding: 10px 20px; border-radius:10px; font-weight:800; color:var(--tertiary);" id="sieveText">Eratosten Kalburu (Elenecek sayılar aranıyor...)</div>
+        </div>
+
+    </div>
+
+    <button class="btn-start" id="startBtn" onclick="runTimeline()">Animasyonu Başlat</button>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        const mTitle = document.getElementById('mTitle');
+        const mSub = document.getElementById('mSub');
+        const startBtn = document.getElementById('startBtn');
+        const sGrid = document.getElementById('sGrid');
+        const sieveText = document.getElementById('sieveText');
+
+        // Init Grid
+        let gridHTML = "";
+        for(let i=1; i<=50; i++) {
+            gridHTML += `<div class="sieve-cell" id="cell${i}">${i}</div>`;
+        }
+        sGrid.innerHTML = gridHTML;
+        
+        async function runTimeline() {
+            startBtn.style.display = 'none';
+
+            // Reset sieve
+            for(let i=1; i<=50; i++) {
+                document.getElementById('cell'+i).className = 'sieve-cell';
+            }
+
+            // SCENE 1
+            document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+            document.getElementById('sc1').classList.add('active');
+            mTitle.innerText = "Yalnız Sayılar: Asallar";
+            mSub.innerHTML = "Sadece 1'e ve kendisine bölünen sayılara <span>ASAL SAYI</span> denir.";
+            
+            document.getElementById('card6').classList.remove('show', 'is-prime');
+            document.getElementById('card7').classList.remove('show', 'is-prime');
+
+            await sleep(1000);
+            document.getElementById('card6').classList.add('show');
+            await sleep(2000);
+            document.getElementById('card7').classList.add('show');
+            await sleep(1000);
+            document.getElementById('card7').classList.add('is-prime');
+            await sleep(3500);
+
+            // SCENE 2
+            document.getElementById('sc1').classList.remove('active');
+            document.getElementById('sc2').classList.add('active');
+            mTitle.innerText = "Eratosten Kalburu (1'den 50'ye)";
+            mSub.innerHTML = "Asal sayıları bulmak için katları <span>eleyelim!</span>";
+            
+            sGrid.style.opacity = 1;
+            sGrid.style.transform = 'scale(1)';
+            
+            await sleep(1500);
+            sieveText.innerText = "1 sayısı ne asal ne de birleşiktir. Onu ayrı tutuyoruz.";
+            document.getElementById('cell1').classList.add('special');
+            await sleep(2000);
+
+            // Step 2
+            sieveText.innerText = "İlk Asal Sayı 2'dir. (En küçük ve TEK çift asal sayıdır)";
+            document.getElementById('cell2').classList.add('prime');
+            await sleep(2000);
+
+            sieveText.innerText = "2'nin katları olan tüm çift sayıları eliyoruz...";
+            for(let i=4; i<=50; i+=2) {
+                document.getElementById('cell'+i).classList.add('crossed');
+                await sleep(50);
+            }
+            await sleep(1500);
+
+            // Step 3
+            sieveText.innerText = "Sıradaki sayı 3. Onu asal olarak işaretliyoruz.";
+            document.getElementById('cell3').classList.add('prime');
+            await sleep(1500);
+
+            sieveText.innerText = "3'ün katlarını eliyoruz...";
+            for(let i=6; i<=50; i+=3) {
+                document.getElementById('cell'+i).classList.add('crossed');
+                await sleep(50);
+            }
+            await sleep(1500);
+
+            // Step 5
+            sieveText.innerText = "Sıradaki elenmemiş sayı 5 ve 7. Onlar da Asal!";
+            document.getElementById('cell5').classList.add('prime');
+            document.getElementById('cell7').classList.add('prime');
+            await sleep(1500);
+
+            sieveText.innerText = "5'in ve 7'nin katlarını da elediğimizde, geriye kalan tüm sayılar ASALDIR!";
+            for(let i=10; i<=50; i+=5) { document.getElementById('cell'+i).classList.add('crossed'); }
+            for(let i=14; i<=50; i+=7) { document.getElementById('cell'+i).classList.add('crossed'); }
+            
+            await sleep(1500);
+            sieveText.innerText = "İşte karşınızda 50'ye kadar olan ASAL SAYILAR!";
+            
+            // Mark remaining primes
+            const primes = [11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47];
+            primes.forEach(p => {
+                document.getElementById('cell'+p).classList.add('prime');
+            });
+
+            setTimeout(() => {
+                startBtn.style.display = 'block';
+                startBtn.innerText = "Tekrar İzle";
+            }, 4000);
+        }
+    </script>
+</body>
+</html>

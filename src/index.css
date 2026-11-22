@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-canvas: #f5f1e8;
+    --bg-surface: #fffdf8;
+    --bg-linen: #ede7da;
+    --bg-ink: #191a1e;
+    --text-primary: #191a1e;
+    --text-secondary: #5d584f;
+    --text-muted: #847e72;
+    --border-warm: #e4ddd0;
+    --border-strong: #d3c9b7;
+    --accent-cobalt: #1d4ed8;
+    --accent-terracotta: #d94e34;
+    --accent-teal: #0f766e;
+    --accent-amber: #b45309;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    background-color: var(--bg-canvas);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    background-color: var(--bg-canvas);
+    color: var(--text-primary);
+  }
+
+  .font-serif-editorial {
+    font-family: 'Fraunces', Georgia, serif;
+  }
+
+  .font-mono-code {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  }
+}
+
+/* Warm Architectural Paper Texture with ultra-subtle drafting lines */
+.warm-studio-bg {
+  background-color: var(--bg-canvas);
+  background-image:
+    radial-gradient(circle at 12% 8%, rgba(217, 78, 52, 0.055), transparent 38%),
+    radial-gradient(circle at 88% 12%, rgba(29, 78, 216, 0.055), transparent 40%),
+    linear-gradient(to right, rgba(25, 26, 30, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(25, 26, 30, 0.035) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 48px 48px, 48px 48px;
+}
+
+.warm-card-shadow {
+  box-shadow: 0 8px 24px -12px rgba(45, 35, 20, 0.1);
+}
+
+.warm-card-shadow-hover {
+  box-shadow: 0 22px 44px -16px rgba(45, 35, 20, 0.16);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* Clean warm scrollbar */
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-canvas);
+}
+::-webkit-scrollbar-thumb {
+  background: #cfc6b4;
+  border-radius: 9999px;
+  border: 2px solid var(--bg-canvas);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #b5aa95;
+}

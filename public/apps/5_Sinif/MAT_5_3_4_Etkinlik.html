@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doğruların Dansı - Geometri Laboratuvarı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A;
+            --surface: #1E293B;
+            --text: #F8FAFC;
+            --primary: #38BDF8; /* Light Blue */
+            --secondary: #F43F5E; /* Rose */
+            --tertiary: #10B981; /* Green */
+            --highlight: #FDE047; /* Yellow */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: #0F172A; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .container {
+            width: 100%; max-width: 1000px; display: grid; grid-template-columns: 1fr 350px; gap: 20px;
+        }
+
+        .canvas-area {
+            background: var(--surface); border-radius: 24px; padding: 20px; border: 1px solid rgba(255,255,255,0.05);
+            position: relative; height: 500px; display: flex; flex-direction: column; align-items: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3); overflow: hidden;
+        }
+
+        .tools-area {
+            display: flex; flex-direction: column; gap: 15px;
+        }
+
+        .panel {
+            background: rgba(255,255,255,0.03); border-radius: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .panel-title { font-size: 1.2rem; font-weight: 800; color: var(--highlight); margin-bottom: 15px; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 10px;}
+        
+        .mode-btn {
+            width: 100%; background: rgba(255,255,255,0.05); color: white; border: none; padding: 12px; border-radius: 12px;
+            font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-bottom: 10px; text-align: left;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .mode-btn.active { background: var(--primary); color: #0F172A; }
+        .mode-btn:hover:not(.active) { background: rgba(255,255,255,0.1); }
+
+        .info-box {
+            background: rgba(16, 185, 129, 0.1); border: 2px solid var(--tertiary); padding: 15px; border-radius: 15px;
+            margin-top: 15px; font-size: 0.95rem; line-height: 1.5;
+        }
+        .info-box span { font-weight: 800; color: var(--highlight); }
+
+        .table-container {
+            margin-top: 15px; background: rgba(0,0,0,0.2); border-radius: 12px; padding: 10px;
+        }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;}
+        th, td { padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        th { color: #94A3B8; font-weight: 600; }
+        td { font-weight: 800; font-variant-numeric: tabular-nums;}
+        .val-primary { color: var(--primary); }
+        .val-secondary { color: var(--secondary); }
+
+        /* SVG Canvas */
+        svg { width: 100%; height: 100%; cursor: crosshair; }
+        
+        .line-base { stroke-width: 6; stroke-linecap: round; transition: all 0.2s; }
+        .line-1 { stroke: var(--primary); }
+        .line-2 { stroke: var(--secondary); }
+        .line-3 { stroke: var(--tertiary); }
+
+        .arc { fill: none; stroke-width: 30; opacity: 0.2; transition: all 0.2s; }
+        .arc-p1 { stroke: var(--primary); }
+        .arc-p2 { stroke: var(--secondary); }
+
+        .angle-text {
+            font-size: 16px; font-weight: 800; fill: white; text-anchor: middle; dominant-baseline: central;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8); pointer-events: none;
+        }
+
+        .point-dot { fill: white; r: 6; cursor: pointer; transition: r 0.2s; }
+        .point-dot:hover { r: 10; fill: var(--highlight); }
+
+        /* Sliders */
+        .slider-group { margin-bottom: 15px; }
+        .slider-label { display: flex; justify-content: space-between; font-size: 0.9rem; color: #94A3B8; margin-bottom: 5px;}
+        input[type=range] {
+            width: 100%; -webkit-appearance: none; background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%;
+            background: var(--highlight); cursor: pointer; margin-top: -6px;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px; cursor: pointer; background: rgba(255,255,255,0.1); border-radius: 2px;
+        }
+
+        .status-badge {
+            position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.5); padding: 8px 15px;
+            border-radius: 20px; border: 1px solid rgba(255,255,255,0.2); font-weight: 800; font-size: 1.1rem;
+            backdrop-filter: blur(5px);
+        }
+
+        @media (max-width: 768px) {
+            .container { grid-template-columns: 1fr; }
+            .canvas-area { height: 350px; }
+            .header { flex-direction: column; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.5.3.4. Doğruların Durumları ve Açılar</div>
+    </div>
+
+    <div class="container">
+        
+        <div class="canvas-area">
+            <div class="status-badge" id="statusBadge">Kesişen Doğrular</div>
+            <svg id="svgCanvas" viewBox="0 0 600 400">
+                <!-- Arcs for angles -->
+                <g id="arcsGroup"></g>
+                
+                <!-- Lines -->
+                <line class="line-base line-1" id="line1" x1="50" y1="200" x2="550" y2="200" />
+                <line class="line-base line-2" id="line2" x1="300" y1="50" x2="300" y2="350" />
+                <line class="line-base line-3" id="line3" x1="100" y1="50" x2="500" y2="350" style="display:none;" />
+                
+                <!-- Intersection Point -->
+                <circle class="point-dot" id="intersectPt" cx="300" cy="200" />
+                
+                <!-- Angle Texts -->
+                <g id="textsGroup"></g>
+            </svg>
+        </div>
+
+        <div class="tools-area">
+            <div class="panel">
+                <div class="panel-title">İnceleme Modu</div>
+                <button class="mode-btn active" onclick="setMode('2lines')" id="btn2L">İki Doğru <span>⤧</span></button>
+                <button class="mode-btn" onclick="setMode('3lines')" id="btn3L">Üç Doğru (Kesen) <span>⫻</span></button>
+                <button class="mode-btn" onclick="setMode('3lines_point')" id="btn3LP">Üç Doğru (Noktadaş) <span>✳</span></button>
+            </div>
+
+            <div class="panel" id="controlPanel">
+                <div class="panel-title">Doğruyu Kontrol Et</div>
+                
+                <div class="slider-group">
+                    <div class="slider-label"><span>Açı (Dönme)</span> <span id="angleVal">90°</span></div>
+                    <input type="range" id="angleSlider" min="0" max="180" value="90" step="1">
+                </div>
+                
+                <div class="slider-group" id="distGroup">
+                    <div class="slider-label"><span>Uzaklık (Paralellik)</span> <span id="distVal">0px</span></div>
+                    <input type="range" id="distSlider" min="-100" max="100" value="0" step="1">
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">Çıkarımlar (Önermeler)</div>
+                <div class="table-container" id="angleTable">
+                    <table>
+                        <tr><th>Açı 1 (Mavi)</th><td class="val-primary" id="tA1">90°</td></tr>
+                        <tr><th>Açı 2 (Kırmızı)</th><td class="val-secondary" id="tA2">90°</td></tr>
+                        <tr><th>Toplam</th><td id="tTotal">180° (Bütünler)</td></tr>
+                    </table>
+                </div>
+                <div class="info-box" id="infoBox">
+                    İki doğru dik kesiştiğinde <span>dört adet dik açı (90°)</span> meydana gelir.
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const line1 = document.getElementById('line1');
+        const line2 = document.getElementById('line2');
+        const line3 = document.getElementById('line3');
+        const intersectPt = document.getElementById('intersectPt');
+        const arcsGroup = document.getElementById('arcsGroup');
+        const textsGroup = document.getElementById('textsGroup');
+        
+        const angleSlider = document.getElementById('angleSlider');
+        const distSlider = document.getElementById('distSlider');
+        const angleVal = document.getElementById('angleVal');
+        const distVal = document.getElementById('distVal');
+        
+        const statusBadge = document.getElementById('statusBadge');
+        const infoBox = document.getElementById('infoBox');
+        
+        const tA1 = document.getElementById('tA1');
+        const tA2 = document.getElementById('tA2');
+        const tTotal = document.getElementById('tTotal');
+        const distGroup = document.getElementById('distGroup');
+
+        let currentMode = '2lines';
+
+        function setMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+            if(mode === '2lines') document.getElementById('btn2L').classList.add('active');
+            if(mode === '3lines') document.getElementById('btn3L').classList.add('active');
+            if(mode === '3lines_point') document.getElementById('btn3LP').classList.add('active');
+            
+            if(mode === '2lines') {
+                distGroup.style.display = 'block';
+                distSlider.value = 0;
+            } else {
+                distGroup.style.display = 'none';
+                distSlider.value = 0;
+            }
+            updateCanvas();
+        }
+
+        angleSlider.addEventListener('input', updateCanvas);
+        distSlider.addEventListener('input', updateCanvas);
+
+        function polar2Cart(cx, cy, r, angleDeg) {
+            let rad = (angleDeg) * Math.PI / 180;
+            return { x: cx + r * Math.cos(rad), y: cy - r * Math.sin(rad) };
+        }
+
+        function createArc(cx, cy, r, startAngle, endAngle, className) {
+            // SVG Y is down, so we handle angles carefully
+            let start = polar2Cart(cx, cy, r, startAngle);
+            let end = polar2Cart(cx, cy, r, endAngle);
+            let diff = endAngle - startAngle;
+            if(diff < 0) diff += 360;
+            let largeArc = diff > 180 ? 1 : 0;
+            
+            let path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            // sweep flag 0 for counter-clockwise in standard math (since SVG Y is inverted, polar2Cart handles it)
+            path.setAttribute('d', `M ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 0 ${end.x} ${end.y}`);
+            path.setAttribute('class', `arc ${className}`);
+            return path;
+        }
+
+        function createText(cx, cy, r, midAngle, textVal, color) {
+            let pos = polar2Cart(cx, cy, r, midAngle);
+            let text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', pos.x);
+            text.setAttribute('y', pos.y);
+            text.setAttribute('class', 'angle-text');
+            text.setAttribute('fill', color);
+            text.textContent = textVal + "°";
+            return text;
+        }
+
+        function drawAnglesForIntersection(cx, cy, angleLine) {
+            arcsGroup.innerHTML = '';
+            textsGroup.innerHTML = '';
+
+            let a1 = angleLine; // e.g. 30
+            let a2 = 180 - angleLine; // e.g. 150
+            
+            // Draw 4 arcs
+            // Quadrant 1: 0 to a1
+            if(a1 > 0 && a1 < 180) {
+                arcsGroup.appendChild(createArc(cx, cy, 40, 0, a1, 'arc-p1'));
+                textsGroup.appendChild(createText(cx, cy, 65, a1/2, a1, '#38BDF8'));
+                
+                arcsGroup.appendChild(createArc(cx, cy, 40, a1, 180, 'arc-p2'));
+                textsGroup.appendChild(createText(cx, cy, 65, a1 + a2/2, a2, '#F43F5E'));
+                
+                arcsGroup.appendChild(createArc(cx, cy, 40, 180, 180+a1, 'arc-p1'));
+                textsGroup.appendChild(createText(cx, cy, 65, 180 + a1/2, a1, '#38BDF8'));
+                
+                arcsGroup.appendChild(createArc(cx, cy, 40, 180+a1, 360, 'arc-p2'));
+                textsGroup.appendChild(createText(cx, cy, 65, 180+a1 + a2/2, a2, '#F43F5E'));
+            } else if (a1 === 0 || a1 === 180) {
+                // parallel / coincident
+            }
+        }
+
+        function updateCanvas() {
+            let angle = parseInt(angleSlider.value);
+            let dist = parseInt(distSlider.value);
+            
+            angleVal.innerText = angle + "°";
+            distVal.innerText = dist + "px";
+
+            // Base line 1 is fixed at y=200, x=50 to 550
+            let cx = 300;
+            let cy = 200;
+
+            if (currentMode === '2lines') {
+                line3.style.display = 'none';
+                
+                let rad = angle * Math.PI / 180;
+                // Line length 500. So r=250.
+                let r = 250;
+                
+                // If dist != 0 and angle == 0, it's parallel
+                if (angle === 0 || angle === 180) {
+                    cy -= dist;
+                    line2.setAttribute('x1', cx - r);
+                    line2.setAttribute('y1', cy);
+                    line2.setAttribute('x2', cx + r);
+                    line2.setAttribute('y2', cy);
+                    
+                    arcsGroup.innerHTML = '';
+                    textsGroup.innerHTML = '';
+                    intersectPt.style.display = 'none';
+                    
+                    tA1.innerText = "YOK";
+                    tA2.innerText = "YOK";
+                    tTotal.innerText = "Açı Oluşmaz";
+
+                    if (dist === 0) {
+                        statusBadge.innerText = "Çakışık Doğrular";
+                        infoBox.innerHTML = "İki doğrunun <span>tüm noktaları ortaktır</span>. Açı oluşturmazlar.";
+                    } else {
+                        statusBadge.innerText = "Paralel Doğrular";
+                        infoBox.innerHTML = "Ortak noktası bulunmayan ve <span>hiç kesişmeyen</span> doğrulardır. Açı oluşturmazlar.";
+                    }
+                } else {
+                    intersectPt.style.display = 'block';
+                    intersectPt.setAttribute('cx', cx);
+                    intersectPt.setAttribute('cy', cy);
+                    
+                    line2.setAttribute('x1', cx - r * Math.cos(rad));
+                    line2.setAttribute('y1', cy + r * Math.sin(rad)); // SVG Y inverted
+                    line2.setAttribute('x2', cx + r * Math.cos(rad));
+                    line2.setAttribute('y2', cy - r * Math.sin(rad));
+
+                    drawAnglesForIntersection(cx, cy, angle);
+                    
+                    tA1.innerText = angle + "°";
+                    tA2.innerText = (180 - angle) + "°";
+                    tTotal.innerText = "180° (Bütünler)";
+
+                    if (angle === 90) {
+                        statusBadge.innerText = "Dik Kesişen Doğrular";
+                        infoBox.innerHTML = "İki doğru dik kesiştiğinde <span>dört adet dik açı (90°)</span> meydana gelir.";
+                    } else {
+                        statusBadge.innerText = "Kesişen Doğrular";
+                        infoBox.innerHTML = "Kesişen doğrularda yan yana olan açılar <span>Komşu Bütünler</span> (toplam 180°), karşılıklı olan açılar ise <span>Ters Açılardır</span> ve ölçüleri daima <span>eşittir</span>.";
+                    }
+                }
+
+            } else if (currentMode === '3lines') {
+                // 3 Lines, one transversal
+                line3.style.display = 'block';
+                intersectPt.style.display = 'none'; // we have two intersections
+                
+                // Line 1 is base (y=250)
+                line1.setAttribute('y1', 250); line1.setAttribute('y2', 250);
+                // Line 3 is parallel to line 1 (y=150)
+                line3.setAttribute('x1', 50); line3.setAttribute('y1', 150);
+                line3.setAttribute('x2', 550); line3.setAttribute('y2', 150);
+                line3.setAttribute('stroke', 'var(--tertiary)');
+                
+                // Line 2 is transversal
+                let rad = angle * Math.PI / 180;
+                let r = 250;
+                if(angle === 0 || angle === 180) {
+                    // all parallel
+                    line2.setAttribute('x1', 50); line2.setAttribute('y1', 200);
+                    line2.setAttribute('x2', 550); line2.setAttribute('y2', 200);
+                    arcsGroup.innerHTML = '';
+                    textsGroup.innerHTML = '';
+                    statusBadge.innerText = "3 Paralel Doğru";
+                    infoBox.innerHTML = "Birbirini kesmeyen üç doğrudan <span>hiçbiri açı oluşturmaz</span>.";
+                } else {
+                    line2.setAttribute('x1', 300 - r * Math.cos(rad));
+                    line2.setAttribute('y1', 200 + r * Math.sin(rad));
+                    line2.setAttribute('x2', 300 + r * Math.cos(rad));
+                    line2.setAttribute('y2', 200 - r * Math.sin(rad));
+                    
+                    arcsGroup.innerHTML = ''; textsGroup.innerHTML = '';
+                    
+                    // Intersection 1 (Line 1 & 2 at y=250)
+                    // dx = dy / tan(rad)
+                    let dx1 = 50 / Math.tan(rad);
+                    drawAnglesForIntersectionCustom(300 - dx1, 250, angle, arcsGroup, textsGroup);
+                    
+                    // Intersection 2 (Line 3 & 2 at y=150)
+                    let dx2 = 50 / Math.tan(rad);
+                    drawAnglesForIntersectionCustom(300 + dx2, 150, angle, arcsGroup, textsGroup);
+
+                    tA1.innerText = angle + "°";
+                    tA2.innerText = (180 - angle) + "°";
+                    tTotal.innerText = "180° (Bütünler)";
+
+                    if (angle === 90) {
+                        statusBadge.innerText = "Kesen Doğru (Dik)";
+                        infoBox.innerHTML = "Paralel iki doğruyu kesen bir dik doğru, tam <span>sekiz adet dik açı</span> oluşturur.";
+                    } else {
+                        statusBadge.innerText = "Kesen Doğru";
+                        infoBox.innerHTML = "Paralel iki doğruyu kesen bir doğrudan tam <span>4 eş dar açı</span> ve <span>4 eş geniş açı</span> meydana gelir. Bunlar yöndeş, iç ters ve dış ters açılardır.";
+                    }
+                }
+            } else if (currentMode === '3lines_point') {
+                // Noktadaş (Concurrent) lines
+                line3.style.display = 'block';
+                line1.setAttribute('y1', 200); line1.setAttribute('y2', 200);
+                
+                intersectPt.style.display = 'block';
+                intersectPt.setAttribute('cx', 300); intersectPt.setAttribute('cy', 200);
+                
+                let rad = angle * Math.PI / 180;
+                let r = 250;
+                line2.setAttribute('x1', 300 - r * Math.cos(rad));
+                line2.setAttribute('y1', 200 + r * Math.sin(rad));
+                line2.setAttribute('x2', 300 + r * Math.cos(rad));
+                line2.setAttribute('y2', 200 - r * Math.sin(rad));
+
+                // Line 3 is fixed at a different angle, say 45 deg more than line 2
+                let rad3 = (angle + 60) * Math.PI / 180;
+                line3.setAttribute('x1', 300 - r * Math.cos(rad3));
+                line3.setAttribute('y1', 200 + r * Math.sin(rad3));
+                line3.setAttribute('x2', 300 + r * Math.cos(rad3));
+                line3.setAttribute('y2', 200 - r * Math.sin(rad3));
+
+                arcsGroup.innerHTML = ''; textsGroup.innerHTML = '';
+                // Since this is complex to label cleanly, we just state the theorem.
+                tA1.innerText = "Çeşitli";
+                tA2.innerText = "Çeşitli";
+                tTotal.innerText = "Ters Açılar";
+                
+                statusBadge.innerText = "Noktadaş 3 Doğru";
+                infoBox.innerHTML = "Aynı noktada kesişen 3 doğru (noktadaş doğrular), köşeleri ortak olan <span>altı farklı açı</span> oluşturur. Karşılıklı olanlar ters açıdır ve eşittir.";
+            }
+        }
+
+        // Helper for transversal drawing
+        function drawAnglesForIntersectionCustom(cx, cy, a1, arcsGr, txtGr) {
+            let a2 = 180 - a1;
+            if(a1 > 0 && a1 < 180) {
+                arcsGr.appendChild(createArc(cx, cy, 30, 0, a1, 'arc-p1'));
+                arcsGr.appendChild(createArc(cx, cy, 30, a1, 180, 'arc-p2'));
+                arcsGr.appendChild(createArc(cx, cy, 30, 180, 180+a1, 'arc-p1'));
+                arcsGr.appendChild(createArc(cx, cy, 30, 180+a1, 360, 'arc-p2'));
+            }
+        }
+
+        // Initial paint
+        updateCanvas();
+    </script>
+</body>
+</html>

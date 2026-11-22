@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tam Kare Olmayan Sayılar Animasyonu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F0E17; --surface: #1A1A24; --text: #F8FAFC;
+            --primary: #8B5CF6; --secondary: #10B981;
+            --tertiary: #06B6D4; --danger: #F43F5E;
+            --accent: #F59E0B;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, #161625 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(139, 92, 246, 0.2); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; margin-bottom: 20px;}
+        h1 { font-size: 2.2rem; color: var(--tertiary); font-weight: 900;}
+        .subtitle { color: #94A3B8; font-size: 1.1rem; margin-top: 5px;}
+
+        .canvas-area {
+            position: relative; width: 100%; max-width: 800px; height: 450px; 
+            background: #11111A; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.4); 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden;
+        }
+
+        .expl-text { background:rgba(139,92,246,0.15); border:1px solid rgba(139,92,246,0.3); padding:15px 25px; border-radius:12px; font-size:1.25rem; color:white; font-weight:800; text-align:center; width:100%; max-width:800px; margin-bottom:15px; transition:0.5s; }
+
+        /* 3D illusion container */
+        .stage {
+            display: flex; align-items: flex-end; justify-content: center; gap: 20px;
+            height: 250px; width: 100%; border-bottom: 2px dashed rgba(255,255,255,0.2);
+            padding-bottom: 10px; position: relative;
+        }
+
+        .sq-box {
+            position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+            opacity: 0; transform: translateY(50px); transition: all 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .sq {
+            background: rgba(16, 185, 129, 0.2); border: 2px solid var(--secondary);
+            border-radius: 10px; display: flex; align-items: center; justify-content: center;
+            box-shadow: inset 0 0 20px rgba(16, 185, 129, 0.4);
+            font-size: 1.5rem; font-weight: 900; color: white; text-shadow: 0 2px 5px black;
+        }
+        
+        /* Specific boxes */
+        #sq16 { width: 120px; height: 120px; }
+        #sq20 { 
+            width: 140px; height: 140px; 
+            background: rgba(245, 158, 11, 0.2); border-color: var(--accent); box-shadow: inset 0 0 20px rgba(245, 158, 11, 0.4);
+            position: absolute; bottom: 10px; /* absolute for popping in between */
+        }
+        #sq25 { width: 160px; height: 160px; }
+
+        .side-label {
+            position: absolute; bottom: -40px; font-weight: 900; color: white; font-size: 1.2rem;
+            background: #334155; padding: 5px 15px; border-radius: 10px; border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .btn-play {
+            background: var(--primary); color: white; border: none; padding: 15px 40px; border-radius: 50px;
+            font-size: 1.2rem; font-weight: 900; cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(139, 92, 246, 0.4); margin-top: 30px; z-index: 10;
+        }
+        .btn-play:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 15px 25px rgba(139, 92, 246, 0.6); }
+
+        .formula-box {
+            position: absolute; bottom: 80px; background: rgba(0,0,0,0.8); border: 2px solid var(--danger);
+            padding: 10px 30px; border-radius: 20px; font-size: 1.5rem; font-weight: 900; color: white;
+            opacity: 0; transform: translateY(20px); transition: all 1s; z-index: 10;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.8.1.2. Kareköklü Sayılar (Animasyon)</div>
+    </div>
+
+    <div class="title-area">
+        <h1>Tam Kare Olmayan Sayıların Sıkışması</h1>
+        <p class="subtitle">Alanı 20 olan bir karenin kenarı, 4 ile 5 arasında sıkışıp kalmış bir ondalık sayıdır.</p>
+    </div>
+
+    <div class="expl-text" id="explText">1. Alanı 16 birimkare olan mükemmel bir tam karemiz var.</div>
+    <div class="canvas-area">
+        
+
+        <div class="stage">
+            <div class="sq-box" id="b16" style="transform: translateX(-100px) translateY(50px);">
+                <div class="sq" id="sq16">Alan 16</div>
+                <div class="side-label">Kenar: 4 (√16)</div>
+            </div>
+
+            <div class="sq-box" id="b25" style="transform: translateX(100px) translateY(50px);">
+                <div class="sq" id="sq25">Alan 25</div>
+                <div class="side-label">Kenar: 5 (√25)</div>
+            </div>
+
+            <div class="sq-box" id="b20" style="z-index: 5;">
+                <div class="sq" id="sq20">Alan 20</div>
+                <div class="side-label" style="background:var(--danger); border-color:var(--danger)">Kenar: ? (√20)</div>
+            </div>
+        </div>
+
+        <div class="formula-box" id="formulaBox">
+            4 < <span style="color:var(--accent)">√20</span> < 5
+        </div>
+
+    </div>
+
+    <button class="btn-play" id="btnPlay" onclick="runAnim()">Hikayeyi Başlat</button>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        const btnPlay = document.getElementById('btnPlay');
+        const explText = document.getElementById('explText');
+        
+        const b16 = document.getElementById('b16');
+        const b25 = document.getElementById('b25');
+        const b20 = document.getElementById('b20');
+        const formulaBox = document.getElementById('formulaBox');
+
+        async function runAnim() {
+            btnPlay.disabled = true;
+            btnPlay.style.opacity = 0.5;
+
+            // Step 1
+            b16.style.opacity = 1;
+            b16.style.transform = "translateX(-150px) translateY(0)";
+            await sleep(2500);
+
+            // Step 2
+            explText.innerText = "2. Ardından gelen bir sonraki tam karemizin alanı 25'tir.";
+            b25.style.opacity = 1;
+            b25.style.transform = "translateX(150px) translateY(0)";
+            await sleep(2500);
+
+            // Step 3
+            explText.innerText = "3. Peki ya alanı 20 olan bir kare olsaydı? O nereye sığardı?";
+            await sleep(2000);
+            
+            b20.style.opacity = 1;
+            b20.style.transform = "translateY(0)";
+            await sleep(1500);
+
+            explText.innerText = "4. Alanı 16 ile 25 arasına sıkıştığı için, Kenar uzunluğu (Karekökü) de 4 ile 5 arasına sıkışır!";
+            formulaBox.style.opacity = 1;
+            formulaBox.style.transform = "translateY(0)";
+
+            await sleep(2500);
+
+            explText.style.color = "var(--secondary)";
+            explText.innerText = "√20 değeri, 4 ile 5 arasında (4,47...) devam eden bir sayıdır.";
+
+            btnPlay.style.display = "none";
+        }
+    </script>
+</body>
+</html>

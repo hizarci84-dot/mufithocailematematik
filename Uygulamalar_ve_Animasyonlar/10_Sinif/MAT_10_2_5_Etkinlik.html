@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10.2.5 - Bileşke Fonksiyon Makinesi</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --panel-bg: #1e293b;
+            --f-color: #ec4899; /* Pink */
+            --g-color: #3b82f6; /* Blue */
+            --input-color: #10b981; /* Emerald */
+            --text-main: #f8fafc;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        
+        body { background-color: var(--bg-color); color: var(--text-main); display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; overflow-x: hidden; }
+
+        .header { width: 100%; max-width: 1000px; display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background: var(--panel-bg); border-radius: 12px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1); }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 800; font-size: 1.2rem; }
+        .kazanim { background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 6px; font-weight: 600; }
+
+        h1 { font-size: 2.2rem; margin-bottom: 10px; text-align: center; }
+        .subtitle { color: #94a3b8; font-size: 1.05rem; margin-bottom: 30px; text-align: center; max-width: 800px; }
+
+        .container { display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 1000px; }
+
+        .controls-panel { display: flex; gap: 20px; justify-content: space-between; }
+        @media(max-width: 800px) { .controls-panel { flex-direction: column; } }
+        
+        .func-box { background: var(--panel-bg); padding: 20px; border-radius: 12px; flex: 1; border: 1px solid; }
+        .func-box.f-box { border-color: var(--f-color); }
+        .func-box.g-box { border-color: var(--g-color); }
+        
+        .func-title { font-weight: 800; font-size: 1.2rem; margin-bottom: 15px; text-align: center; }
+        .f-title { color: var(--f-color); }
+        .g-title { color: var(--g-color); }
+
+        .slider-group label { display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 8px; font-size: 0.95rem; }
+        input[type=range] { width: 100%; }
+        input[type=range].f-slider { accent-color: var(--f-color); }
+        input[type=range].g-slider { accent-color: var(--g-color); }
+        .val-badge { font-weight: 800; background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 4px; }
+
+        .factory-area {
+            position: relative; height: 300px; background: #0b1120; border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-around; align-items: center;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.8); overflow: hidden; margin-top: 20px;
+        }
+
+        .conveyor { position: absolute; height: 10px; background: repeating-linear-gradient(90deg, #334155, #334155 10px, #475569 10px, #475569 20px); width: 100%; top: 65%; left: 0; }
+
+        .machine {
+            position: relative; width: 180px; height: 200px; border-radius: 15px; border: 4px solid;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10;
+            background: #1e293b; box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        }
+        .machine.g-mach { border-color: var(--g-color); box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+        .machine.f-mach { border-color: var(--f-color); box-shadow: 0 0 20px rgba(236, 72, 153, 0.3); }
+        
+        .m-title { font-size: 2rem; font-weight: 900; }
+        .m-screen { background: #000; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 1.2rem; min-width: 120px; text-align: center; margin-top: 10px; border: 1px solid #334155; }
+        
+        .block {
+            position: absolute; width: 50px; height: 50px; border-radius: 8px;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 1.2rem; font-weight: 800; color: white;
+            top: calc(65% - 50px); left: -60px; z-index: 20;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5); transition: 1s linear;
+        }
+
+        .input-panel {
+            background: rgba(0,0,0,0.4); padding: 15px 25px; border-radius: 12px;
+            display: flex; gap: 20px; align-items: center; justify-content: center;
+            border-bottom: 4px solid var(--input-color); margin-top: -10px; z-index: 30; position: relative;
+        }
+        .input-panel input { width: 80px; padding: 10px; font-size: 1.2rem; text-align: center; border-radius: 6px; border: none; font-weight: 800; }
+        .btn-run { background: var(--input-color); color: white; border: none; padding: 12px 25px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 1.1rem; }
+        .btn-run:hover { filter: brightness(1.2); }
+        .btn-run:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .math-res { font-size: 1.5rem; font-weight: 800; color: white; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 8px; text-align: center; }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left"><span>@mufithocailematematik</span></div>
+        <div class="kazanim">MAT.10.2.5. Bileşke Fonksiyonlar</div>
+    </div>
+    
+    <h1>Bileşke Fonksiyon Fabrikası</h1>
+    <p class="subtitle">(f o g)(x) işlemi, girdinin önce g(x) makinesinden geçmesi, ardından çıkan sonucun f(x) makinesine girmesi demektir. Fabrika hattını izleyin!</p>
+    
+    <div class="container">
+        
+        <div class="controls-panel">
+            <div class="func-box g-box">
+                <div class="func-title g-title">İç Makine: g(x)</div>
+                <div class="slider-group">
+                    <label>Katsayı (c) <span class="val-badge" id="valC" style="color:var(--g-color)">2</span></label>
+                    <input type="range" class="g-slider" id="slC" min="-5" max="5" step="1" value="2">
+                </div>
+                <div class="slider-group" style="margin-top:10px;">
+                    <label>Sabit (d) <span class="val-badge" id="valD" style="color:var(--g-color)">1</span></label>
+                    <input type="range" class="g-slider" id="slD" min="-10" max="10" step="1" value="1">
+                </div>
+                <div style="text-align:center; font-weight:800; margin-top:15px; font-size:1.2rem;" id="eqG">g(x) = 2x + 1</div>
+            </div>
+            
+            <div class="func-box f-box">
+                <div class="func-title f-title">Dış Makine: f(x)</div>
+                <div class="slider-group">
+                    <label>Katsayı (a) <span class="val-badge" id="valA" style="color:var(--f-color)">3</span></label>
+                    <input type="range" class="f-slider" id="slA" min="-5" max="5" step="1" value="3">
+                </div>
+                <div class="slider-group" style="margin-top:10px;">
+                    <label>Sabit (b) <span class="val-badge" id="valB" style="color:var(--f-color)">-2</span></label>
+                    <input type="range" class="f-slider" id="slB" min="-10" max="10" step="1" value="-2">
+                </div>
+                <div style="text-align:center; font-weight:800; margin-top:15px; font-size:1.2rem;" id="eqF">f(x) = 3x - 2</div>
+            </div>
+        </div>
+
+        <div class="factory-area" id="factArea">
+            <div class="conveyor"></div>
+            
+            <div class="machine g-mach" id="machG">
+                <div class="m-title g-title">g</div>
+                <div class="m-screen" id="scrG">BEKLİYOR</div>
+            </div>
+            
+            <div class="machine f-mach" id="machF">
+                <div class="m-title f-title">f</div>
+                <div class="m-screen" id="scrF">BEKLİYOR</div>
+            </div>
+            
+            <div class="block" id="animBlock" style="background:var(--input-color); opacity:0;"></div>
+        </div>
+
+        <div class="input-panel">
+            <label style="font-weight:800; color:var(--text-muted);">GİRDİ (x):</label>
+            <input type="number" id="inpX" value="4">
+            <button class="btn-run" id="btnRun">Fabrikayı Çalıştır (f o g)</button>
+        </div>
+        
+        <div class="math-res" id="mathRes">\( (f \circ g)(x) = f(g(x)) \)</div>
+
+    </div>
+
+    <script>
+        const slA = document.getElementById('slA'); const slB = document.getElementById('slB');
+        const slC = document.getElementById('slC'); const slD = document.getElementById('slD');
+        const valA = document.getElementById('valA'); const valB = document.getElementById('valB');
+        const valC = document.getElementById('valC'); const valD = document.getElementById('valD');
+        const eqF = document.getElementById('eqF'); const eqG = document.getElementById('eqG');
+        
+        const btnRun = document.getElementById('btnRun');
+        const inpX = document.getElementById('inpX');
+        const animBlock = document.getElementById('animBlock');
+        const scrG = document.getElementById('scrG');
+        const scrF = document.getElementById('scrF');
+        const machG = document.getElementById('machG');
+        const machF = document.getElementById('machF');
+        const mathRes = document.getElementById('mathRes');
+        
+        let a=3, b=-2, c=2, d=1;
+
+        function updateEqs() {
+            a = parseInt(slA.value); b = parseInt(slB.value);
+            c = parseInt(slC.value); d = parseInt(slD.value);
+            
+            valA.innerText = a; valB.innerText = b;
+            valC.innerText = c; valD.innerText = d;
+            
+            let termC = c===1 ? "x" : (c===-1 ? "-x" : c+"x");
+            let termD = d>=0 ? "+"+d : d;
+            if(c===0) termC = ""; if(c===0 && d===0) termD="0";
+            eqG.innerText = `g(x) = ${termC} ${termD}`.trim();
+            
+            let termA = a===1 ? "x" : (a===-1 ? "-x" : a+"x");
+            let termB = b>=0 ? "+"+b : b;
+            if(a===0) termA = ""; if(a===0 && b===0) termB="0";
+            eqF.innerText = `f(x) = ${termA} ${termB}`.trim();
+        }
+        
+        slA.addEventListener('input', updateEqs); slB.addEventListener('input', updateEqs);
+        slC.addEventListener('input', updateEqs); slD.addEventListener('input', updateEqs);
+        
+        btnRun.addEventListener('click', () => {
+            let x = parseFloat(inpX.value);
+            if(isNaN(x)) return;
+            
+            btnRun.disabled = true;
+            
+            // Calc
+            let gx = c * x + d;
+            let fx = a * gx + b;
+            
+            // Get positions
+            let fRect = machF.getBoundingClientRect();
+            let gRect = machG.getBoundingClientRect();
+            let parentRect = document.getElementById('factArea').getBoundingClientRect();
+            
+            let gX = gRect.left - parentRect.left + gRect.width/2 - 25;
+            let fX = fRect.left - parentRect.left + fRect.width/2 - 25;
+            
+            animBlock.style.transition = 'none';
+            animBlock.style.left = '-60px';
+            animBlock.style.opacity = '1';
+            animBlock.style.background = 'var(--input-color)';
+            animBlock.innerText = x;
+            
+            scrG.innerText = "İŞLENİYOR";
+            scrF.innerText = "BEKLİYOR";
+            
+            mathRes.innerHTML = `\\( (f \\circ g)(${x}) = f(g(${x})) \\)`;
+            MathJax.typesetPromise([mathRes]);
+            
+            setTimeout(() => {
+                animBlock.style.transition = 'left 1s linear';
+                animBlock.style.left = `${gX}px`; // Into G
+            }, 50);
+            
+            setTimeout(() => {
+                animBlock.style.opacity = '0'; // inside G
+                scrG.innerText = `g(${x}) = ${gx}`;
+                scrG.style.color = "var(--g-color)";
+            }, 1050);
+            
+            setTimeout(() => {
+                animBlock.style.background = 'var(--g-color)';
+                animBlock.innerText = gx;
+                animBlock.style.opacity = '1';
+                
+                setTimeout(() => {
+                    animBlock.style.left = `${fX}px`; // Into F
+                }, 50);
+            }, 2000);
+            
+            setTimeout(() => {
+                animBlock.style.opacity = '0'; // inside F
+                scrG.innerText = "BEKLİYOR"; scrG.style.color="white";
+                scrF.innerText = `f(${gx}) = ${fx}`;
+                scrF.style.color = "var(--f-color)";
+            }, 3050);
+            
+            setTimeout(() => {
+                animBlock.style.background = 'var(--f-color)';
+                animBlock.innerText = fx;
+                animBlock.style.opacity = '1';
+                
+                setTimeout(() => {
+                    animBlock.style.left = `120%`; // Out of F
+                }, 50);
+            }, 4000);
+            
+            setTimeout(() => {
+                btnRun.disabled = false;
+                scrF.innerText = "BEKLİYOR"; scrF.style.color="white";
+                
+                mathRes.innerHTML = `\\( (f \\circ g)(${x}) = f(g(${x})) = f(${gx}) = ${fx} \\)`;
+                MathJax.typesetPromise([mathRes]);
+                
+            }, 5050);
+            
+        });
+        
+        window.onload = () => updateEqs();
+    </script>
+</body>
+</html>

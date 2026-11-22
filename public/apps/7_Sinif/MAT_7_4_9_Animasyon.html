@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eşkenar Dörtgen Animasyonu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F0E17; --surface: #1A1A24; --text: #F8FAFC;
+            --primary: #8B5CF6; --secondary: #10B981;
+            --tertiary: #06B6D4; --danger: #F43F5E;
+            --accent: #F59E0B;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, #161625 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(139, 92, 246, 0.2); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; margin-bottom: 20px;}
+        h1 { font-size: 2.2rem; color: var(--tertiary); font-weight: 900;}
+        .subtitle { color: #94A3B8; font-size: 1.1rem; margin-top: 5px;}
+
+        .canvas-area {
+            position: relative; width: 100%; max-width: 800px; height: 500px; 
+            background: #11111A; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.4); 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden;
+        }
+
+        .expl-text {
+            position: absolute; top: 30px; font-size: 1.5rem; color: white; font-weight: 800;
+            opacity: 1; transition: 0.5s; text-align: center; width: 80%; text-shadow: 0 5px 10px black; z-index: 10;
+        }
+
+        .formula-box {
+            position: absolute; bottom: 30px; background: rgba(0,0,0,0.5); border: 2px solid var(--accent);
+            padding: 15px 30px; border-radius: 20px; font-size: 2rem; font-weight: 900; color: white;
+            opacity: 0; transform: translateY(20px); transition: all 1s; z-index: 10;
+        }
+
+        svg { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
+
+        .tri { transition: all 2s ease-in-out; }
+        .diag { stroke: rgba(255,255,255,0.5); stroke-dasharray: 5 5; stroke-width: 2; transition: opacity 1s;}
+
+        .btn-play {
+            background: var(--primary); color: white; border: none; padding: 15px 40px; border-radius: 50px;
+            font-size: 1.2rem; font-weight: 900; cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(139, 92, 246, 0.4); margin-top: 30px; z-index: 10;
+        }
+        .btn-play:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 15px 25px rgba(139, 92, 246, 0.6); }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.7.4.9. Çokgen Alanları (Animasyon)</div>
+    </div>
+
+    <div class="title-area">
+        <h1>Eşkenar Dörtgenin Sırrı</h1>
+        <p class="subtitle">Eşkenar dörtgenin parçalanıp dikdörtgene dönüşmesini ve (e×f)/2 formülünün ispatını izleyin.</p>
+    </div>
+
+    <div class="canvas-area">
+        
+        <div class="expl-text" id="explText">1. Köşegenleri "e" ve "f" olan bir eşkenar dörtgen.</div>
+
+        <svg viewBox="0 0 800 500" id="svgArea">
+            <!-- Rhombus center at 400, 250. e=300 (horiz), f=200 (vert) -->
+            <!-- Vertices: (400, 150), (550, 250), (400, 350), (250, 250) -->
+            
+            <g id="rhombusG">
+                <!-- 4 triangles -->
+                <!-- Top Right: (400,250), (550,250), (400,150) -->
+                <polygon id="tr1" class="tri" points="400,250 550,250 400,150" fill="var(--primary)" stroke="white"/>
+                <!-- Top Left: (400,250), (400,150), (250,250) -->
+                <polygon id="tr2" class="tri" points="400,250 400,150 250,250" fill="var(--tertiary)" stroke="white"/>
+                <!-- Bottom Left: (400,250), (250,250), (400,350) -->
+                <polygon id="tr3" class="tri" points="400,250 250,250 400,350" fill="var(--secondary)" stroke="white"/>
+                <!-- Bottom Right: (400,250), (400,350), (550,250) -->
+                <polygon id="tr4" class="tri" points="400,250 400,350 550,250" fill="var(--accent)" stroke="white"/>
+            </g>
+
+            <line id="diag1" class="diag" x1="250" y1="250" x2="550" y2="250"></line>
+            <line id="diag2" class="diag" x1="400" y1="150" x2="400" y2="350"></line>
+            
+            <g id="labels" style="opacity:1; transition: 1s;">
+                <text x="240" y="255" fill="white" font-weight="900" text-anchor="end">e</text>
+                <text x="400" y="140" fill="white" font-weight="900" text-anchor="middle">f</text>
+            </g>
+        </svg>
+
+        <div class="formula-box" id="formulaBox">
+            Alan = <span style="color:var(--secondary)">e</span> × <span style="color:var(--tertiary)">(f / 2)</span> = <span style="color:var(--accent)">e × f / 2</span>
+        </div>
+
+    </div>
+
+    <button class="btn-play" id="btnPlay" onclick="runAnim()">Animasyonu Başlat</button>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        const btnPlay = document.getElementById('btnPlay');
+        const explText = document.getElementById('explText');
+        const labels = document.getElementById('labels');
+        const diag1 = document.getElementById('diag1');
+        const diag2 = document.getElementById('diag2');
+        const formulaBox = document.getElementById('formulaBox');
+
+        const tr1 = document.getElementById('tr1');
+        const tr2 = document.getElementById('tr2');
+        const tr3 = document.getElementById('tr3');
+        const tr4 = document.getElementById('tr4');
+
+        async function runAnim() {
+            btnPlay.disabled = true;
+            btnPlay.style.opacity = 0.5;
+
+            // Reset
+            tr1.style.transform = "translate(0, 0)";
+            tr2.style.transform = "translate(0, 0)";
+            tr3.style.transform = "translate(0, 0)";
+            tr4.style.transform = "translate(0, 0)";
+            diag1.style.opacity = 1; diag2.style.opacity = 1; labels.style.opacity = 1;
+            formulaBox.style.opacity = 0; formulaBox.style.transform = "translateY(20px)";
+
+            explText.innerText = "1. Eşkenar dörtgen köşegenleri vasıtasıyla 4 adet dik üçgene ayrılır.";
+
+            await sleep(2000);
+
+            explText.innerText = "2. Alt kısımdaki iki üçgen yukarıya taşınıp birleştirilir.";
+            diag1.style.opacity = 0; diag2.style.opacity = 0; labels.style.opacity = 0;
+
+            // Move tr3 and tr4 to fill the gaps and form a rectangle of e x (f/2)
+            // The bounding box of top half is (250,150) to (550,250). width=300 (e), height=100 (f/2).
+            // Currently: 
+            // tr1 is TopRight. tr2 is TopLeft. They stay.
+            // tr3 (BottomLeft) is at (400,250)-(250,250)-(400,350).
+            // We want it to fill the TopLeft empty space, which is (250,150)-(400,150)-(250,250).
+            // So we translate tr3 up by 100. (400,250)->(400,150). And we need to rotate or flip it?
+            // tr3: (400,250), (250,250), (400,350)
+            // If we just translate Y by -100: (400,150), (250,150), (400,250). This perfectly forms a rectangle with tr2!
+            
+            // Wait, tr2 is (400,250)-(400,150)-(250,250).
+            // Translated tr3 is (400,150)-(250,150)-(400,250).
+            // Yes! They combine to form a rectangle of width 150, height 100.
+            
+            // Similarly for tr4 (BottomRight): (400,250)-(400,350)-(550,250)
+            // Translate Y by -100: (400,150)-(400,250)-(550,150).
+            // tr1 is (400,250)-(550,250)-(400,150).
+            // They combine to form another rectangle of width 150, height 100.
+
+            // So we just translate both up by -100!
+            // Wait, the points in tr3 are: 400,250 250,250 400,350
+            // Translated by -100 Y: 400,150 250,150 400,250
+            // Wait, tr3 drawn as: points="400,250 250,250 400,350".
+            // The empty space in TopLeft is above the hypotenuse of tr2. 
+            // tr2: 400,250 400,150 250,250. Hypotenuse from (400,150) to (250,250).
+            // Translated tr3: (400,150), (250,150), (400,250).
+            // Wait, (400,250) is already in tr2.
+            // Ah, to fill the bounding box (250,150) to (400,250) which is a rectangle,
+            // we have tr2 filling the lower-right triangle of that box.
+            // We need a triangle covering the top-left, which has vertices (250,150), (400,150), (250,250).
+            // But translated tr3 has vertices (400,150), (250,150), (400,250).
+            // Wait! (400,150), (250,150), (400,250) covers the upper-right triangle! Which overlaps with tr2 (they both share 400,250 and 400,150).
+            // So pure translation doesn't work. We must rotate.
+            
+            // Let's rotate tr3 180 degrees around (250, 250)? No.
+            // Rotate tr3 180 degrees around its hypotenuse midpoint?
+            // Center of the target rectangle is (325, 200).
+            
+            // Let's use simple SVG transforms.
+            // tr3: 400,250 250,250 400,350
+            // To make it fit (250,150)-(400,150)-(250,250)
+            // It needs to flip or rotate. 
+            // Let's rotate 180 around (325, 250) which is midpoint of base.
+            // Then it becomes (250, 250)-(400, 250)-(250, 150). Exactly what we need!
+            
+            // Likewise for tr4:
+            // tr4: 400,250 400,350 550,250.
+            // Rotate 180 around midpoint of base (475, 250).
+            // Becomes (550,250)-(550,150)-(400,250). Perfect!
+
+            tr3.style.transform = "rotate(-180deg)";
+            tr3.style.transformOrigin = "325px 250px";
+
+            tr4.style.transform = "rotate(180deg)";
+            tr4.style.transformOrigin = "475px 250px";
+
+            await sleep(2500);
+
+            explText.innerText = "3. Ortaya çıkan şekil, tabanı 'e', yüksekliği 'f/2' olan bir dikdörtgendir!";
+            
+            formulaBox.style.opacity = 1;
+            formulaBox.style.transform = "translateY(0)";
+
+            await sleep(3000);
+
+            explText.style.color = "var(--secondary)";
+
+            btnPlay.disabled = false;
+            btnPlay.style.opacity = 1;
+            btnPlay.innerText = "Tekrar İzle";
+        }
+    </script>
+</body>
+</html>

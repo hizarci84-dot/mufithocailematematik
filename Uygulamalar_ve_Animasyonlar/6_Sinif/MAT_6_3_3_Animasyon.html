@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Köşegenlerin Sırrı - Animasyon</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A; --text: #F8FAFC;
+            --primary: #3B82F6; --secondary: #10B981;
+            --tertiary: #F59E0B; --danger: #F43F5E;
+            --purple: #8B5CF6; --cyan: #06B6D4;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 900px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--tertiary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; width: 100%; max-width: 800px; margin-bottom: 20px; height: 110px;}
+        h1 { font-size: 2.2rem; color: var(--tertiary); text-shadow: 0 5px 15px rgba(0,0,0,0.5); line-height: 1.3;}
+        .subtitle { font-size: 1.2rem; color: #94A3B8; margin-top: 10px; line-height: 1.5; min-height: 55px;}
+        .subtitle span { color: white; font-weight: 800; background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 5px;}
+
+        .canvas-area {
+            position: relative; width: 100%; max-width: 800px; height: 450px; 
+            background: #0B1120; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.3); 
+            overflow: hidden; display: flex; align-items: center; justify-content: center;
+        }
+
+        .center-point {
+            position: absolute; width: 10px; height: 10px; background: white; border-radius: 50%; z-index: 5;
+            box-shadow: 0 0 10px white;
+        }
+
+        /* Diagonals */
+        .diag {
+            position: absolute; height: 4px; background: var(--primary); border-radius: 2px;
+            transform-origin: center; transition: all 1.5s ease-in-out;
+            display: flex; align-items: center; justify-content: center; z-index: 3;
+        }
+        
+        /* Dashed boundary lines (Quadrilateral) */
+        .boundary {
+            position: absolute; stroke: var(--secondary); stroke-width: 3; stroke-dasharray: 10 5;
+            fill: rgba(16, 185, 129, 0.1); transition: all 1.5s ease-in-out; opacity: 0; z-index: 1;
+        }
+
+        .shape-name {
+            position: absolute; font-size: 3rem; font-weight: 900; color: rgba(255,255,255,0.2);
+            text-transform: uppercase; letter-spacing: 5px; z-index: 0; text-align: center;
+            opacity: 0; transition: opacity 1s;
+        }
+
+        .btn-start {
+            margin-top: 30px; background: var(--tertiary); color: white; border: none; padding: 15px 40px; border-radius: 50px;
+            font-size: 1.2rem; font-weight: 800; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 20px rgba(245, 158, 11, 0.4);
+        }
+        .btn-start:hover { transform: scale(1.05); }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=3B82F6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.6.3.3. Köşegenlerin Sırrı</div>
+    </div>
+
+    <div class="title-area">
+        <h1 id="mTitle">İskeletten Şekle</h1>
+        <p class="subtitle" id="mSub">Birbirini tam ortadan bölen iki çubuk (köşegen), dörtgenlerin iskeletidir.</p>
+    </div>
+
+    <div class="canvas-area">
+        
+        <div class="shape-name" id="sName">ŞEKİL</div>
+        
+        <svg id="svgBoundary" width="800" height="450" style="position:absolute; top:0; left:0; z-index:2;">
+            <polygon class="boundary" id="poly" points="400,225 400,225 400,225 400,225" />
+        </svg>
+
+        <div class="center-point"></div>
+        <div class="diag" id="d1" style="width: 300px; transform: rotate(30deg);"></div>
+        <div class="diag" id="d2" style="width: 200px; transform: rotate(-40deg); background: var(--danger);"></div>
+
+    </div>
+
+    <button class="btn-start" id="startBtn" onclick="runTimeline()">Animasyonu Başlat</button>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        const mTitle = document.getElementById('mTitle');
+        const mSub = document.getElementById('mSub');
+        const startBtn = document.getElementById('startBtn');
+        const d1 = document.getElementById('d1');
+        const d2 = document.getElementById('d2');
+        const poly = document.getElementById('poly');
+        const sName = document.getElementById('sName');
+        
+        // Helper to calculate 4 corners of the diagonals
+        function updatePolygon(len1, ang1, len2, ang2) {
+            const rad = (deg) => deg * Math.PI / 180;
+            const cx = 400, cy = 225; // center of canvas
+            
+            // d1 points
+            const d1dx = (len1/2) * Math.cos(rad(ang1));
+            const d1dy = (len1/2) * Math.sin(rad(ang1));
+            const p1 = {x: cx + d1dx, y: cy + d1dy};
+            const p3 = {x: cx - d1dx, y: cy - d1dy};
+            
+            // d2 points
+            const d2dx = (len2/2) * Math.cos(rad(ang2));
+            const d2dy = (len2/2) * Math.sin(rad(ang2));
+            const p2 = {x: cx + d2dx, y: cy + d2dy};
+            const p4 = {x: cx - d2dx, y: cy - d2dy};
+
+            // draw order p1 -> p2 -> p3 -> p4
+            poly.setAttribute('points', `${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y} ${p4.x},${p4.y}`);
+        }
+
+        async function applyState(title, sub, len1, ang1, len2, ang2, name, wait=3000) {
+            mTitle.innerText = title;
+            mSub.innerHTML = sub;
+            sName.innerText = name;
+            
+            d1.style.width = len1 + "px";
+            d1.style.transform = `rotate(${ang1}deg)`;
+            
+            d2.style.width = len2 + "px";
+            d2.style.transform = `rotate(${ang2}deg)`;
+            
+            updatePolygon(len1, ang1, len2, ang2);
+            
+            poly.style.opacity = 1;
+            sName.style.opacity = 1;
+            await sleep(wait);
+        }
+
+        async function runTimeline() {
+            startBtn.style.display = 'none';
+            poly.style.opacity = 0;
+            sName.style.opacity = 0;
+            
+            // Initial chaotic state
+            d1.style.width = "300px"; d1.style.transform = "rotate(30deg)";
+            d2.style.width = "200px"; d2.style.transform = "rotate(-40deg)";
+            
+            await sleep(1000);
+
+            // PARALELKENAR (Only bisect)
+            await applyState("Sadece Ortadan Bölme", 
+                             "Köşegenler (farklı boylarda) sadece birbirini ortalarsa, köşeleri birleştirdiğimizde <span>Paralelkenar</span> oluşur.", 
+                             300, 20, 200, -40, "PARALELKENAR");
+
+            sName.style.opacity = 0;
+            poly.style.opacity = 0;
+            await sleep(1000);
+
+            // EŞKENAR DÖRTGEN (Bisect + Perpendicular)
+            await applyState("Dik Kesişme Ekle!", 
+                             "Eğer köşegenler birbirini ortalarken <span>DİK (90°)</span> kesişirse şekil gerilir ve kenarlar eşitlenir: <span>Eşkenar Dörtgen</span>.", 
+                             300, 0, 200, -90, "EŞKENAR DÖRTGEN");
+                             
+            sName.style.opacity = 0;
+            poly.style.opacity = 0;
+            await sleep(1000);
+
+            // DİKDÖRTGEN (Bisect + Equal length)
+            await applyState("Dikliği Bırak, Boyları Eşitle!", 
+                             "Eğer köşegenler <span>EŞİT UZUNLUKTA</span> olur ve sadece ortalarsa, şekil dikleşir: <span>Dikdörtgen</span>.", 
+                             300, 30, 300, -30, "DİKDÖRTGEN");
+
+            sName.style.opacity = 0;
+            poly.style.opacity = 0;
+            await sleep(1000);
+
+            // KARE (Bisect + Perpendicular + Equal length)
+            await applyState("Hepsi Bir Arada: Kusursuzluk", 
+                             "Köşegenler hem EŞİT UZUNLUKTA hem de DİK kesişiyorsa, matematikteki en düzgün dörtgen oluşur: <span>Kare</span>.", 
+                             300, 45, 300, -45, "KARE", 4000);
+
+
+            setTimeout(() => {
+                startBtn.style.display = 'block';
+                startBtn.innerText = "Tekrar İzle";
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bölünebilme Test Merkezi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A; --surface: #1E293B; --text: #F8FAFC;
+            --primary: #3B82F6; --secondary: #10B981;
+            --tertiary: #F59E0B; --danger: #F43F5E;
+            --purple: #8B5CF6;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, var(--surface) 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--secondary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .container {
+            width: 100%; max-width: 1000px; display: flex; flex-direction: column; gap: 20px;
+        }
+
+        .input-panel {
+            background: rgba(255,255,255,0.03); border-radius: 20px; padding: 30px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center;
+        }
+
+        .input-panel h2 { font-size: 1.8rem; color: var(--secondary); margin-bottom: 20px; font-weight: 900;}
+
+        .input-group { display: flex; justify-content: center; gap: 15px; align-items: center;}
+        input[type="number"] {
+            background: #0B1120; border: 2px solid var(--secondary); color: white;
+            font-size: 2rem; font-weight: 900; width: 200px; text-align: center; padding: 10px; border-radius: 15px;
+            outline: none; transition: all 0.3s;
+        }
+        input[type="number"]:focus { box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);}
+        
+        .btn-calc {
+            background: var(--secondary); color: white; border: none; padding: 15px 30px; border-radius: 15px;
+            font-size: 1.2rem; font-weight: 900; cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.4);
+        }
+        .btn-calc:hover { transform: translateY(-2px); box-shadow: 0 15px 25px rgba(16, 185, 129, 0.6); }
+
+        /* Results Area */
+        .results-list {
+            display: flex; flex-direction: column; gap: 15px; opacity: 0; pointer-events: none;
+            transform: translateY(20px); transition: all 0.5s;
+        }
+        .results-list.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+        .result-row {
+            display: flex; align-items: center; background: rgba(0,0,0,0.3); border-radius: 15px; padding: 15px 20px;
+            border-left: 5px solid transparent; transition: all 0.3s;
+        }
+        .result-row.success { border-left-color: var(--secondary); background: rgba(16, 185, 129, 0.05); }
+        .result-row.fail { border-left-color: var(--danger); background: rgba(244, 63, 94, 0.05); }
+        
+        .rule-number {
+            font-size: 2.5rem; font-weight: 900; width: 60px; text-align: center;
+        }
+        .result-row.success .rule-number { color: var(--secondary); }
+        .result-row.fail .rule-number { color: var(--danger); }
+        
+        .rule-icon { font-size: 2rem; margin: 0 20px; }
+        
+        .rule-desc { flex: 1; }
+        .rd-title { font-size: 1.2rem; font-weight: 800; margin-bottom: 5px; color: white;}
+        .rd-reason { font-size: 1rem; color: #94A3B8; font-weight: 600;}
+        .rd-reason span { color: white; background: rgba(255,255,255,0.1); padding: 2px 5px; border-radius: 4px;}
+
+        @media (max-width: 768px) {
+            .header { flex-direction: column; gap: 10px; }
+            .input-group { flex-direction: column; }
+            .result-row { flex-direction: column; text-align: center; gap: 10px; }
+            .rule-icon { margin: 5px 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=3B82F6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.6.1.2. Bölünebilme Test Merkezi</div>
+    </div>
+
+    <div class="container">
+        
+        <div class="input-panel">
+            <h2>🔍 Sayını Test Et!</h2>
+            <div class="input-group">
+                <input type="number" id="numInput" min="1" value="2340">
+                <button class="btn-calc" onclick="calculate()">Kuralları Çalıştır ➔</button>
+            </div>
+            <p style="color:#94A3B8; margin-top:15px; font-size:0.9rem;">(Bölme işlemi yapmadan, kurallarla kanıtlayalım)</p>
+        </div>
+
+        <div class="results-list" id="resultsList">
+            <!-- Dynamically generated rows -->
+        </div>
+
+    </div>
+
+    <script>
+        const numInput = document.getElementById('numInput');
+        const resultsList = document.getElementById('resultsList');
+
+        function generateRow(num, title, isSuccess, reason) {
+            return `
+                <div class="result-row ${isSuccess ? 'success' : 'fail'}">
+                    <div class="rule-number">${num}</div>
+                    <div class="rule-icon">${isSuccess ? '✅' : '❌'}</div>
+                    <div class="rule-desc">
+                        <div class="rd-title">${title}</div>
+                        <div class="rd-reason">${reason}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function calculate() {
+            let valStr = numInput.value.trim();
+            let n = parseInt(valStr);
+            if(isNaN(n) || n < 1) {
+                alert("Lütfen geçerli bir sayı giriniz.");
+                return;
+            }
+
+            resultsList.classList.remove('show');
+            
+            setTimeout(() => {
+                
+                let lastDigit = parseInt(valStr.slice(-1));
+                let lastTwoDigits = valStr.length > 1 ? parseInt(valStr.slice(-2)) : n;
+                let sumOfDigits = valStr.split('').reduce((acc, digit) => acc + parseInt(digit), 0);
+
+                let html = "";
+
+                // Rule 2
+                let is2 = lastDigit % 2 === 0;
+                let r2 = is2 ? `Son rakam <span>${lastDigit}</span> çift olduğu için tam bölünür.` : `Son rakam <span>${lastDigit}</span> tek olduğu için bölünemez.`;
+                html += generateRow(2, "2 ile Bölünebilme (Çift Sayı)", is2, r2);
+
+                // Rule 3
+                let is3 = sumOfDigits % 3 === 0;
+                let r3 = is3 ? `Rakamları toplamı <span>${sumOfDigits}</span>, 3'ün katı olduğu için tam bölünür.` : `Rakamları toplamı <span>${sumOfDigits}</span>, 3'ün katı olmadığı için bölünemez.`;
+                html += generateRow(3, "3 ile Bölünebilme (Rakamlar Toplamı)", is3, r3);
+
+                // Rule 4
+                let is4 = lastTwoDigits % 4 === 0;
+                let r4Str = valStr.length > 1 ? valStr.slice(-2) : valStr;
+                let r4 = is4 ? `Son iki basamağı <span>${r4Str}</span>, 4'ün katı olduğu için tam bölünür.` : `Son iki basamağı <span>${r4Str}</span>, 4'ün katı olmadığı için bölünemez.`;
+                html += generateRow(4, "4 ile Bölünebilme (Son İki Rakam)", is4, r4);
+
+                // Rule 5
+                let is5 = lastDigit === 0 || lastDigit === 5;
+                let r5 = is5 ? `Son rakam <span>${lastDigit}</span> olduğu için (0 veya 5) tam bölünür.` : `Son rakam <span>${lastDigit}</span> olduğu için bölünemez.`;
+                html += generateRow(5, "5 ile Bölünebilme (Son Rakam 0/5)", is5, r5);
+
+                // Rule 6
+                let is6 = is2 && is3;
+                let r6 = is6 ? `Hem 2'ye hem de 3'e tam bölündüğü için 6'ya da tam bölünür.` : `2 ve 3 kurallarından en az birini sağlamadığı için bölünemez.`;
+                html += generateRow(6, "6 ile Bölünebilme (2 ve 3 Şartı)", is6, r6);
+
+                // Rule 9
+                let is9 = sumOfDigits % 9 === 0;
+                let r9 = is9 ? `Rakamları toplamı <span>${sumOfDigits}</span>, 9'un katı olduğu için tam bölünür.` : `Rakamları toplamı <span>${sumOfDigits}</span>, 9'un katı olmadığı için bölünemez.`;
+                html += generateRow(9, "9 ile Bölünebilme (Rakamlar Toplamı)", is9, r9);
+
+                // Rule 10
+                let is10 = lastDigit === 0;
+                let r10 = is10 ? `Son rakamı <span>0</span> olduğu için tam bölünür.` : `Son rakamı <span>0</span> olmadığı için bölünemez.`;
+                html += generateRow(10, "10 ile Bölünebilme (Son Rakam 0)", is10, r10);
+
+
+                resultsList.innerHTML = html;
+                resultsList.classList.add('show');
+
+            }, 300);
+        }
+
+        // Run once on load
+        calculate();
+
+        // Enter key
+        numInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') calculate();
+        });
+    </script>
+</body>
+</html>

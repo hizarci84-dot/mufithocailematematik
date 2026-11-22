@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sayıların Gösterimleri ve Muhakeme</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg:#0F0E17; --primary:#8B5CF6; --secondary:#10B981; --tertiary:#06B6D4; --danger:#F43F5E; --accent:#F59E0B; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Outfit',sans-serif; }
+        body { background:linear-gradient(135deg,var(--bg),#161625); color:#F8FAFC; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:20px; overflow-x:hidden; }
+        
+        /* Header */
+        .header { width:100%; max-width:1100px; display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); padding:15px 25px; border-radius:20px; border:1px solid rgba(139,92,246,0.2); margin-bottom:20px; backdrop-filter:blur(10px); }
+        .header-left { display:flex; align-items:center; gap:15px; font-weight:600; font-size:1.2rem; }
+        .header-left img { width:50px; height:50px; border-radius:50%; background:white; padding:2px; }
+        .kazanim { background:var(--primary); color:white; padding:8px 20px; border-radius:20px; font-weight:800; font-size:1rem; box-shadow: 0 0 20px rgba(139,92,246,0.4); }
+        
+        h1 { font-size:2.5rem; color:var(--tertiary); font-weight:900; text-align:center; text-shadow:0 0 20px rgba(6,182,212,0.3); margin-bottom: 5px; }
+        .subtitle { color:#94A3B8; font-size:1.15rem; text-align:center; margin-bottom:25px; font-weight:600; max-width: 800px; }
+        
+        /* Banner */
+        .expl-text { background:rgba(139,92,246,0.15); border:1px solid rgba(139,92,246,0.4); padding:15px 25px; border-radius:15px; font-size:1.3rem; color:white; font-weight:800; text-align:center; width:100%; max-width:1100px; margin-bottom:20px; transition:all 0.5s; backdrop-filter:blur(5px); box-shadow:0 8px 32px rgba(0,0,0,0.3); min-height:65px; display:flex; align-items:center; justify-content:center; }
+        
+        /* Tabs */
+        .tabs { display:flex; gap:15px; margin-bottom:20px; }
+        .tab-btn { background:rgba(255,255,255,0.05); border:2px solid transparent; padding:15px 30px; border-radius:50px; color:white; font-size:1.2rem; font-weight:800; cursor:pointer; transition:all 0.3s; box-shadow:0 5px 15px rgba(0,0,0,0.3); }
+        .tab-btn:hover { background:rgba(255,255,255,0.1); transform:translateY(-2px); }
+        .tab-btn.active { border-color:var(--tertiary); background:rgba(6,182,212,0.15); box-shadow:0 0 25px rgba(6,182,212,0.4); color:var(--tertiary); }
+        
+        /* Stages */
+        .stage { display:none; width:100%; max-width:1100px; background:#11111A; border:1px solid rgba(255,255,255,0.1); border-radius:24px; padding:30px; position:relative; min-height:500px; overflow:hidden; box-shadow:inset 0 0 50px rgba(0,0,0,0.5); flex-direction:column; align-items:center; justify-content:center; }
+        .stage.active { display:flex; animation: fadeIn 0.5s ease; }
+        
+        @keyframes fadeIn { from { opacity:0; transform:scale(0.98); } to { opacity:1; transform:scale(1); } }
+        
+        /* Scene 1: Macro & Micro */
+        .split-view { display:flex; width:100%; gap:30px; margin-bottom:30px; }
+        .split-card { flex:1; background:rgba(255,255,255,0.02); border:2px dashed rgba(255,255,255,0.1); border-radius:20px; padding:30px; display:flex; flex-direction:column; align-items:center; position:relative; transition:all 0.5s; }
+        .split-card:hover { border-color:var(--primary); background:rgba(139,92,246,0.05); }
+        
+        .visual-icon { font-size:5rem; margin-bottom:20px; filter:drop-shadow(0 0 20px rgba(255,255,255,0.2)); transition:1s; }
+        .num-container { font-family:'Courier New', monospace; font-size:2.5rem; font-weight:900; background:rgba(0,0,0,0.5); padding:10px 20px; border-radius:15px; border:1px solid rgba(255,255,255,0.2); color:var(--tertiary); min-width: 320px; text-align:center; position:relative; display:flex; align-items:baseline; justify-content:center; }
+        
+        .sci-sup { transform:translateY(-40%) scale(0.65); display:inline-block; margin-left: 2px; }
+        
+        /* Scene 2: Root and Error Margin */
+        .field-container { position:relative; width:300px; height:300px; background:#224229; border:2px dashed #4ADE80; margin:20px 0; display:flex; align-items:center; justify-content:center; }
+        .field-text { font-size:2rem; color:#4ADE80; font-weight:900; text-shadow:0 0 10px rgba(0,0,0,0.8); }
+        
+        .fence-edge { position:absolute; left:-15px; top:-15px; height:calc(100% + 30px); width:10px; background:var(--accent); border-radius:5px; transition:all 1s cubic-bezier(0.2, 0.8, 0.2, 1); transform-origin:bottom; }
+        .fence-label { position:absolute; left:-120px; top:50%; transform:translateY(-50%); font-size:1.8rem; font-weight:900; color:white; background:rgba(0,0,0,0.7); padding:5px 15px; border-radius:10px; border:1px solid var(--accent); display:flex; align-items:center; white-space:nowrap; }
+        .fence-error { position:absolute; top:-40px; left:0; width:10px; height:40px; background:var(--danger); border-radius:5px; opacity:0; transition:0.5s; box-shadow:0 0 15px var(--danger); }
+        
+        .math-rule-box { background:rgba(15,14,23,0.95); border:2px solid var(--primary); padding:15px 30px; border-radius:15px; font-size:1.6rem; font-weight:900; color:white; display:flex; align-items:center; justify-content:center; gap:15px; box-shadow:0 10px 30px rgba(139,92,246,0.3); margin-top:20px; }
+        
+        .btn-action { background:var(--primary); color:white; border:none; padding:15px 40px; border-radius:50px; font-size:1.2rem; font-weight:900; cursor:pointer; box-shadow:0 10px 20px rgba(139,92,246,0.4); margin-top:10px; transition:0.3s; }
+        .btn-action:hover { transform:translateY(-3px); box-shadow:0 15px 25px rgba(139,92,246,0.6); }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.9.1.1. Üslü ve Köklü Gösterimler (Animasyon)</div>
+    </div>
+    
+    <h1>Makrodan Mikroya Gerçek Sayılar</h1>
+    <p class="subtitle">Evrendeki devasa mesafeleri veya günlük hayattaki köklü sayıların yaklaşık değerlerini matematiğin diliyle nasıl ifade ederiz?</p>
+    
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab(1)">Uzay ve Hücre (Bilimsel Gösterim)</button>
+        <button class="tab-btn" onclick="switchTab(2)">Çit Maliyeti (Kök ve Hata Payı)</button>
+    </div>
+    
+    <div class="expl-text" id="explText">👇 Evrenin devasa boşluğundan, hücrenin mikroskobik dünyasına... Bu iki uç boyutu aynı dille nasıl konuşabiliriz?</div>
+    
+    <!-- STAGE 1: Scientific Notation -->
+    <div class="stage active" id="stage1">
+        <div class="split-view">
+            <!-- Macro -->
+            <div class="split-card">
+                <div style="font-size:1.5rem; font-weight:900; color:var(--tertiary); margin-bottom:10px;">Güneş - Dünya Mesafesi</div>
+                <div class="visual-icon" id="sunIcon">☀️🌍</div>
+                <div class="num-container" id="macroNum">
+                    <span id="mBase">149.600.000</span> <span style="font-size:1.2rem; margin-left:10px; color:#94A3B8;">km</span>
+                </div>
+            </div>
+            
+            <!-- Micro -->
+            <div class="split-card">
+                <div style="font-size:1.5rem; font-weight:900; color:var(--secondary); margin-bottom:10px;">Bir Virüsün Boyutu</div>
+                <div class="visual-icon" id="virusIcon">🦠</div>
+                <div class="num-container" id="microNum">
+                    <span id="miBase">0.000002</span> <span style="font-size:1.2rem; margin-left:10px; color:#94A3B8;">m</span>
+                </div>
+            </div>
+        </div>
+        <button class="btn-action" id="btnSci" onclick="animateScientific()">Bilimsel Gösterime Çevir</button>
+    </div>
+    
+    <!-- STAGE 2: Irrational Numbers & Error Margin -->
+    <div class="stage" id="stage2">
+        <div style="display:flex; gap:40px; align-items:center; justify-content:center; width:100%;">
+            <!-- Visual -->
+            <div class="field-container">
+                <div class="field-text">Alan = 1000 m²</div>
+                
+                <div class="fence-label" id="fenceLabel">
+                    <span style="font-size:2rem; color:var(--accent); margin-right:5px;">√</span><span style="text-decoration:overline; padding-top:2px;">1000</span>
+                </div>
+                
+                <div class="fence-edge" id="fenceEdge">
+                    <div class="fence-error" id="fenceError"></div>
+                </div>
+            </div>
+            
+            <!-- Controls -->
+            <div style="display:flex; flex-direction:column; gap:20px; max-width:500px;">
+                <div class="math-rule-box">
+                    <span style="color:var(--accent);">a</span> = <span style="color:#4ADE80;">√</span><span style="text-decoration:overline; color:#4ADE80; padding-top:2px;">1000</span> = <span id="rootDec">31.6227...</span>
+                </div>
+                <div style="font-size:1.2rem; color:#CBD5E1; line-height:1.6;">
+                    Kare şeklindeki tarlamızı çitle çevireceğiz. Kenar uzunluğu tam sayı değil, <b>irrasyonel</b> bir sayı.<br><br>
+                    Yaklaşık değer alırken yapacağımız en ufak <b>yuvarlama hatası</b>, çitin kısa kalmasına veya bütçe israfına yol açar.
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-action" style="background:var(--danger);" onclick="animateFence(31.6)">31.6 m (Kısa)</button>
+                    <button class="btn-action" style="background:var(--secondary);" onclick="animateFence(31.7)">31.7 m (Fazla)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const explText = document.getElementById('explText');
+        const stage1 = document.getElementById('stage1');
+        const stage2 = document.getElementById('stage2');
+        
+        function switchTab(tabIndex) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-btn')[tabIndex-1].classList.add('active');
+            
+            stage1.classList.remove('active');
+            stage2.classList.remove('active');
+            
+            if(tabIndex === 1) {
+                stage1.classList.add('active');
+                explText.innerHTML = "👇 Evrenin devasa boşluğundan, hücrenin mikroskobik dünyasına... Bu iki uç boyutu aynı dille nasıl konuşabiliriz?";
+                // Reset
+                document.getElementById('mBase').innerHTML = "149.600.000";
+                document.getElementById('miBase').innerHTML = "0.000002";
+                document.getElementById('btnSci').style.display = "block";
+            } else {
+                stage2.classList.add('active');
+                explText.innerHTML = "👇 Mühendislik ve günlük hayatta irrasyonel sayıların yaklaşık değerini kullanırken 'Hata Payı' çok önemlidir.";
+                document.getElementById('fenceEdge').style.height = "calc(100% + 30px)";
+                document.getElementById('fenceError').style.opacity = "0";
+            }
+        }
+
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+        async function animateScientific() {
+            document.getElementById('btnSci').style.display = "none";
+            
+            explText.innerHTML = "Matematik, büyüklükleri kontrol etme sanatıdır. Bilimsel gösterim ile karmaşayı düzene sokarız.";
+            
+            let mBase = document.getElementById('mBase');
+            let miBase = document.getElementById('miBase');
+            
+            // Step 1: Fade out commas
+            mBase.style.opacity = "0.5";
+            miBase.style.opacity = "0.5";
+            await sleep(500);
+            
+            // Macro transformation
+            mBase.innerHTML = `1.496 &times; 10<span class="sci-sup">8</span>`;
+            document.getElementById('sunIcon').style.transform = "scale(1.2)";
+            
+            // Micro transformation
+            miBase.innerHTML = `2 &times; 10<span class="sci-sup">-6</span>`;
+            document.getElementById('virusIcon').style.transform = "scale(1.2)";
+            
+            mBase.style.opacity = "1";
+            miBase.style.opacity = "1";
+            
+            await sleep(1000);
+            document.getElementById('sunIcon').style.transform = "scale(1)";
+            document.getElementById('virusIcon').style.transform = "scale(1)";
+        }
+
+        async function animateFence(val) {
+            const edge = document.getElementById('fenceEdge');
+            const err = document.getElementById('fenceError');
+            const rootDec = document.getElementById('rootDec');
+            const trueVal = 31.6227;
+            
+            // Reset
+            edge.style.height = "10px"; // collapse to bottom
+            err.style.opacity = "0";
+            rootDec.innerHTML = val;
+            
+            await sleep(500);
+            
+            if(val === 31.6) {
+                // Short
+                explText.innerHTML = "⚠️ <b>31.6 metre</b> aldınız. Çit kısa kaldı! Tarlanın köşesi açıkta. Hata payı tehlikelidir.";
+                explText.style.borderColor = "var(--danger)";
+                edge.style.height = "calc(95% + 15px)";
+                await sleep(1000);
+                err.style.opacity = "1"; // Show red gap
+            } else {
+                // Excess
+                explText.innerHTML = "✅ <b>31.7 metre</b> aldınız. Çit tarlayı tamamen kapattı ancak artan parça israf oldu. Mühendislik optimizasyon gerektirir!";
+                explText.style.borderColor = "var(--secondary)";
+                edge.style.height = "calc(105% + 30px)"; // overflows top
+                err.style.opacity = "0";
+            }
+            
+            setTimeout(()=> { explText.style.borderColor = "rgba(139,92,246,0.4)"; }, 4000);
+        }
+    </script>
+</body>
+</html>

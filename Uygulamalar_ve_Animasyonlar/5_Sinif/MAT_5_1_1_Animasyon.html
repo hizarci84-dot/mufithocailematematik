@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Çok Basamaklı Sayılar Animasyonu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0F172A;
+            --text-color: #F8FAFC;
+            --milyonlar: #F472B6; /* Pink */
+            --binler: #60A5FA;   /* Blue */
+            --birler: #34D399;   /* Green */
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0F172A 0%, #312E81 100%);
+            color: var(--text-color);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Branding */
+        .brand-header {
+            position: absolute;
+            top: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px 25px;
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+
+        .brand-header img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: contain;
+            background: white;
+            padding: 2px;
+        }
+
+        .brand-header span {
+            color: #A78BFA;
+            font-weight: 600;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Kazanım Box */
+        .kazanim-box {
+            position: absolute;
+            bottom: 30px;
+            padding: 15px 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            text-align: center;
+            z-index: 100;
+            opacity: 0.7;
+        }
+
+        .kazanim-box p {
+            font-size: 1rem;
+            color: #CBD5E1;
+        }
+
+        /* Scene Container */
+        .scene {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+
+        .scene.active {
+            opacity: 1;
+        }
+
+        /* Scene 1 Elements */
+        h1.title {
+            font-size: 4rem;
+            background: linear-gradient(to right, #60A5FA, #A78BFA);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            transform: scale(0.8);
+            transition: transform 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .scene.active h1.title {
+            transform: scale(1);
+        }
+
+        /* Scene 2 & 3 & 4 Elements */
+        .number-container {
+            display: flex;
+            gap: 10px;
+            font-size: 7rem;
+            font-weight: 800;
+            letter-spacing: 5px;
+        }
+
+        .digit-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            padding: 0 20px;
+            border-radius: 20px;
+            transition: all 1s ease;
+        }
+
+        .digit-group .digits {
+            z-index: 2;
+        }
+
+        .digit-group.milyonlar .digits { color: var(--text-color); }
+        .digit-group.binler .digits { color: var(--text-color); }
+        .digit-group.birler .digits { color: var(--text-color); }
+
+        .period-label {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-top: 15px;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.8s ease;
+            white-space: nowrap;
+        }
+
+        /* Activation Classes for Sequence */
+        .split-active .number-container {
+            gap: 50px;
+        }
+
+        .color-active .milyonlar .digits { color: var(--milyonlar); }
+        .color-active .binler .digits { color: var(--binler); }
+        .color-active .birler .digits { color: var(--birler); }
+
+        .box-active .milyonlar { background: rgba(244, 114, 182, 0.15); border: 2px dashed var(--milyonlar); }
+        .box-active .binler { background: rgba(96, 165, 250, 0.15); border: 2px dashed var(--binler); }
+        .box-active .birler { background: rgba(52, 211, 153, 0.15); border: 2px dashed var(--birler); }
+
+        .label-active .period-label {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .label-active .milyonlar .period-label { color: var(--milyonlar); }
+        .label-active .binler .period-label { color: var(--binler); }
+        .label-active .birler .period-label { color: var(--birler); }
+
+        /* Scene 5 Elements */
+        .reading-text {
+            margin-top: 50px;
+            font-size: 2.5rem;
+            font-weight: 600;
+            text-align: center;
+            max-width: 90%;
+            line-height: 1.4;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 1s ease;
+        }
+
+        .reading-active .reading-text {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .reading-text span.r-mil { color: var(--milyonlar); }
+        .reading-text span.r-bin { color: var(--binler); }
+        .reading-text span.r-bir { color: var(--birler); }
+
+        /* Replay Button */
+        #replayBtn {
+            position: absolute;
+            right: 30px;
+            bottom: 30px;
+            background: #A78BFA;
+            color: #0F172A;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            cursor: pointer;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+            z-index: 100;
+        }
+        
+        #replayBtn.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="brand-header">
+        <img src="../../logom.png" alt="Müfit Hoca Logo">
+        <span>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+            @mufithocailematematik
+        </span>
+    </div>
+
+    <!-- SCENE 1: Intro -->
+    <div id="scene1" class="scene">
+        <h1 class="title">Çok Basamaklı Sayıları<br>Okuyalım!</h1>
+    </div>
+
+    <!-- SCENE 2-5: The Number Animation -->
+    <div id="scene2" class="scene">
+        <div class="number-container" id="numContainer">
+            <div class="digit-group milyonlar">
+                <div class="digits">345</div>
+                <div class="period-label">Milyonlar Bölüğü</div>
+            </div>
+            <div class="digit-group binler">
+                <div class="digits">812</div>
+                <div class="period-label">Binler Bölüğü</div>
+            </div>
+            <div class="digit-group birler">
+                <div class="digits">094</div>
+                <div class="period-label">Birler Bölüğü</div>
+            </div>
+        </div>
+        
+        <div class="reading-text">
+            <span class="r-mil">Üç yüz kırk beş milyon</span> 
+            <span class="r-bin">sekiz yüz on iki bin</span> 
+            <span class="r-bir">doksan dört</span>
+        </div>
+    </div>
+
+    <div class="kazanim-box">
+        <p><strong>MAT.5.1.1.</strong> Altı basamaklı sayıları okuma ve yazmayı çok basamaklı sayılara genelleyebilme</p>
+    </div>
+
+    <button id="replayBtn" onclick="startSequence()">Tekrar Oynat</button>
+
+    <script>
+        const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+        async function startSequence() {
+            // Reset state
+            const scene1 = document.getElementById('scene1');
+            const scene2 = document.getElementById('scene2');
+            const numContainer = document.getElementById('numContainer');
+            const replayBtn = document.getElementById('replayBtn');
+            
+            scene1.classList.remove('active');
+            scene2.classList.remove('active', 'split-active', 'color-active', 'box-active', 'label-active', 'reading-active');
+            replayBtn.classList.remove('visible');
+
+            // Delay before starting
+            await sleep(500);
+
+            // Scene 1: Show Title
+            scene1.classList.add('active');
+            await sleep(2500);
+            scene1.classList.remove('active');
+            await sleep(1000);
+
+            // Scene 2: Show Number combined
+            scene2.classList.add('active');
+            await sleep(2000);
+
+            // Scene 3: Split into periods
+            scene2.classList.add('split-active');
+            await sleep(1500);
+
+            // Scene 4: Color them
+            scene2.classList.add('color-active');
+            await sleep(1500);
+
+            // Scene 5: Box and Label
+            scene2.classList.add('box-active');
+            await sleep(500);
+            scene2.classList.add('label-active');
+            await sleep(2000);
+
+            // Scene 6: Show reading text
+            scene2.classList.add('reading-active');
+            await sleep(2500);
+
+            // Show replay button
+            replayBtn.classList.add('visible');
+        }
+
+        // Run on load
+        window.onload = startSequence;
+    </script>
+</body>
+</html>

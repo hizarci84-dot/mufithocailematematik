@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Olasılık Simülatörü</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A; --surface: #1E293B; --text: #F8FAFC;
+            --primary: #3B82F6; --secondary: #10B981;
+            --tertiary: #F59E0B; --danger: #F43F5E;
+            --purple: #8B5CF6; --cyan: #06B6D4;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, var(--surface) 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--tertiary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .container {
+            width: 100%; max-width: 1000px; display: grid; grid-template-columns: 350px 1fr; gap: 20px;
+        }
+
+        /* Control Panel */
+        .control-panel {
+            background: rgba(255,255,255,0.03); border-radius: 20px; padding: 25px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 20px;
+        }
+
+        .control-panel h2 { font-size: 1.5rem; color: var(--tertiary); font-weight: 900;}
+
+        .control-group { display: flex; flex-direction: column; gap: 10px;}
+        .control-group label { font-size: 1rem; color: #94A3B8; font-weight: 600;}
+        
+        select, input[type="number"] {
+            background: #0B1120; border: 2px solid #334155; color: white;
+            font-size: 1.1rem; font-weight: 600; padding: 12px; border-radius: 12px; outline: none; transition: 0.3s;
+        }
+        select:focus, input:focus { border-color: var(--tertiary); box-shadow: 0 0 15px rgba(245, 158, 11, 0.2);}
+
+        .btn-sim {
+            background: var(--tertiary); color: white; border: none; padding: 15px; border-radius: 12px;
+            font-size: 1.2rem; font-weight: 900; cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(245, 158, 11, 0.4); text-align: center; margin-top: 10px;
+        }
+        .btn-sim:hover { transform: translateY(-2px); box-shadow: 0 15px 25px rgba(245, 158, 11, 0.6); }
+
+        .theoretical-box {
+            background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1);
+            font-size: 0.95rem; color: #94A3B8; line-height: 1.5;
+        }
+        .theoretical-box span { color: white; font-weight: 800;}
+
+        /* Results Panel */
+        .results-panel {
+            background: rgba(255,255,255,0.02); border-radius: 20px; padding: 30px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2); display: flex; flex-direction: column;
+        }
+        .results-panel h2 { font-size: 1.8rem; color: white; font-weight: 900; margin-bottom: 5px;}
+        .rp-sub { color: #94A3B8; margin-bottom: 20px; font-weight: 600;}
+
+        /* Chart Area */
+        .chart-container {
+            flex-grow: 1; display: flex; align-items: flex-end; justify-content: space-around;
+            padding-top: 40px; border-bottom: 2px solid #334155; position: relative; gap: 15px;
+        }
+
+        /* Y-Axis guide lines */
+        .guide-line {
+            position: absolute; width: 100%; height: 1px; background: rgba(255,255,255,0.05);
+            left: 0; pointer-events: none;
+        }
+        .gl-100 { top: 0%; }
+        .gl-50 { top: 50%; }
+        .gl-text { position: absolute; left: -35px; transform: translateY(-50%); font-size: 0.8rem; color: #475569; font-weight: 800;}
+
+        .bar-wrapper {
+            display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 80px;
+            position: relative; height: 100%; justify-content: flex-end;
+        }
+        
+        .bar {
+            width: 100%; background: var(--primary); border-radius: 10px 10px 0 0;
+            display: flex; flex-direction: column; justify-content: flex-start; align-items: center;
+            transition: height 0.5s cubic-bezier(0.4, 0, 0.2, 1); min-height: 5px; height: 0%;
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.3); overflow: hidden; position: relative;
+        }
+        
+        .bar-label {
+            margin-top: 15px; font-size: 1.1rem; font-weight: 900; color: white; text-align: center;
+        }
+        
+        .bar-val {
+            position: absolute; top: -30px; font-weight: 900; color: var(--secondary); font-size: 1.1rem;
+            transition: all 0.5s;
+        }
+        .bar-count {
+            color: rgba(255,255,255,0.7); font-size: 0.8rem; font-weight: 600; margin-top: 5px;
+        }
+
+        /* Color schemes for bars */
+        .bar-c1 { background: linear-gradient(180deg, var(--primary) 0%, #1D4ED8 100%); }
+        .bar-c2 { background: linear-gradient(180deg, var(--secondary) 0%, #047857 100%); }
+        .bar-c3 { background: linear-gradient(180deg, var(--danger) 0%, #BE123C 100%); }
+        .bar-c4 { background: linear-gradient(180deg, var(--tertiary) 0%, #B45309 100%); }
+        .bar-c5 { background: linear-gradient(180deg, var(--purple) 0%, #6D28D9 100%); }
+        .bar-c6 { background: linear-gradient(180deg, var(--cyan) 0%, #0369A1 100%); }
+
+        @media (max-width: 768px) {
+            .container { grid-template-columns: 1fr; }
+            .chart-container { min-height: 300px; margin-left: 20px;}
+            .bar-label { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=3B82F6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.6.6.1. Olasılık Simülatörü Laboratuvarı</div>
+    </div>
+
+    <div class="container">
+        
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <h2>🧪 Simülasyon Ayarları</h2>
+            
+            <div class="control-group">
+                <label>Deney Aracı:</label>
+                <select id="selTool" onchange="updateTheoretical()">
+                    <option value="coin">Madeni Para (Yazı / Tura)</option>
+                    <option value="dice">Hilesiz Zar (1'den 6'ya)</option>
+                    <option value="spinner">Çark (Kırmızı, Mavi, Yeşil, Sarı)</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>Deney Tekrar Sayısı:</label>
+                <select id="selTrials">
+                    <option value="10">10 Kez</option>
+                    <option value="100">100 Kez</option>
+                    <option value="1000">1000 Kez</option>
+                    <option value="5000">5000 Kez (Maksimum)</option>
+                </select>
+            </div>
+
+            <button class="btn-sim" onclick="runSim()">Simülasyonu Çalıştır</button>
+
+            <div class="theoretical-box" id="tBox">
+                Seçilen araca göre <span>Teorik Olasılık</span> beklentisi burada yazacak.
+            </div>
+        </div>
+
+        <!-- Results Panel -->
+        <div class="results-panel">
+            <h2>📈 Göreli Sıklık Grafiği</h2>
+            <div class="rp-sub" id="rpSub">Deney sonuçlarının yüzdelik dağılımı</div>
+
+            <div class="chart-container" id="chartArea">
+                <!-- Guide lines for reference (100%, 50%, etc depending on tool) -->
+                
+                <!-- Bars will be generated here by JS -->
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const selTool = document.getElementById('selTool');
+        const selTrials = document.getElementById('selTrials');
+        const tBox = document.getElementById('tBox');
+        const chartArea = document.getElementById('chartArea');
+        const rpSub = document.getElementById('rpSub');
+
+        const tools = {
+            "coin": {
+                name: "Madeni Para",
+                outcomes: ["Yazı", "Tura"],
+                classes: ["bar-c1", "bar-c2"],
+                expectedPct: 50
+            },
+            "dice": {
+                name: "Hilesiz Zar",
+                outcomes: ["1", "2", "3", "4", "5", "6"],
+                classes: ["bar-c1", "bar-c2", "bar-c3", "bar-c4", "bar-c5", "bar-c6"],
+                expectedPct: 16.67
+            },
+            "spinner": {
+                name: "Çark (4 Renk)",
+                outcomes: ["Kırmızı", "Mavi", "Yeşil", "Sarı"],
+                classes: ["bar-c3", "bar-c1", "bar-c2", "bar-c4"],
+                expectedPct: 25
+            }
+        };
+
+        function updateTheoretical() {
+            let t = selTool.value;
+            let expected = tools[t].expectedPct;
+            
+            tBox.innerHTML = `
+                ${tools[t].name} atıldığında teorik olarak her bir çıktının gelme olasılığı eşittir.<br><br>
+                Teorik Beklenti: Her çıktı için <span>~%${expected}</span> oranında gelmesi beklenir.
+            `;
+            
+            initChart(t);
+        }
+
+        function initChart(toolKey) {
+            let data = tools[toolKey];
+            
+            // Build Guide lines based on expected
+            let maxGraphPct = data.expectedPct * 2.5; // Scale so expected line is around middle
+            if(maxGraphPct > 100) maxGraphPct = 100;
+
+            let html = `
+                <div class="guide-line gl-100"><div class="gl-text">%${Math.round(maxGraphPct)}</div></div>
+                <div class="guide-line" style="top: ${(1 - (data.expectedPct/maxGraphPct)) * 100}%"><div class="gl-text">%${Math.round(data.expectedPct)}</div><div style="position:absolute; right:10px; top:-20px; font-size:0.8rem; color:var(--tertiary); font-weight:800;">Teorik</div></div>
+                <div class="guide-line gl-50" style="top: 100%;"><div class="gl-text">%0</div></div>
+            `;
+
+            for(let i=0; i<data.outcomes.length; i++) {
+                html += `
+                    <div class="bar-wrapper">
+                        <div class="bar-val" id="val_${i}">%0</div>
+                        <div class="bar ${data.classes[i]}" id="bar_${i}">
+                            <div class="bar-count" id="count_${i}">0</div>
+                        </div>
+                        <div class="bar-label">${data.outcomes[i]}</div>
+                    </div>
+                `;
+            }
+
+            chartArea.innerHTML = html;
+        }
+
+        function runSim() {
+            let tKey = selTool.value;
+            let tool = tools[tKey];
+            let trials = parseInt(selTrials.value);
+            
+            rpSub.innerHTML = `<b>${trials} Kez</b> deney yapıldı. Göreli Sıklık dağılımı hesaplanıyor...`;
+
+            // Reset UI smoothly
+            for(let i=0; i<tool.outcomes.length; i++) {
+                document.getElementById(`bar_${i}`).style.height = "0%";
+                document.getElementById(`val_${i}`).innerText = "%0";
+                document.getElementById(`count_${i}`).innerText = "0";
+            }
+
+            // Simulate
+            setTimeout(() => {
+                let results = new Array(tool.outcomes.length).fill(0);
+                
+                for(let i=0; i<trials; i++) {
+                    let randIdx = Math.floor(Math.random() * tool.outcomes.length);
+                    results[randIdx]++;
+                }
+
+                // Scale max Y axis
+                let maxGraphPct = tool.expectedPct * 2.5;
+                if(maxGraphPct > 100) maxGraphPct = 100;
+
+                // Animate bars
+                for(let i=0; i<tool.outcomes.length; i++) {
+                    let pct = (results[i] / trials) * 100;
+                    
+                    let heightPct = (pct / maxGraphPct) * 100;
+                    if(heightPct > 100) heightPct = 100;
+
+                    let bar = document.getElementById(`bar_${i}`);
+                    let val = document.getElementById(`val_${i}`);
+                    let countLbl = document.getElementById(`count_${i}`);
+
+                    bar.style.height = heightPct + "%";
+                    val.innerText = "%" + pct.toFixed(1);
+                    countLbl.innerText = results[i];
+
+                    // Highlight those very close to theoretical
+                    let diff = Math.abs(pct - tool.expectedPct);
+                    if(diff < 2 && trials > 50) {
+                        val.style.color = "var(--secondary)"; // Green if close
+                    } else if (diff > 10) {
+                        val.style.color = "var(--danger)"; // Red if far (happens on 10 trials)
+                    } else {
+                        val.style.color = "white";
+                    }
+                }
+
+            }, 500); // Wait for reset animation
+        }
+
+        // Init on load
+        updateTheoretical();
+
+    </script>
+</body>
+</html>

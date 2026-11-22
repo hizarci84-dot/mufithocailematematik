@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Çember Problem Çözücü</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A; --surface: #1E293B; --text: #F8FAFC;
+            --primary: #3B82F6; --secondary: #10B981;
+            --tertiary: #F59E0B; --danger: #F43F5E;
+            --purple: #8B5CF6; --cyan: #06B6D4;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, var(--surface) 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--secondary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .container {
+            width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 20px;
+        }
+
+        .lab-panel {
+            background: rgba(255,255,255,0.03); border-radius: 20px; padding: 40px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; position: relative; overflow: hidden;
+        }
+
+        .lab-panel h2 { font-size: 2rem; color: var(--secondary); margin-bottom: 10px; font-weight: 900;}
+
+        .problem-card {
+            background: rgba(0,0,0,0.4); border: 2px solid var(--primary); padding: 30px; border-radius: 20px;
+            margin-top: 20px; text-align: left;
+        }
+        .problem-text { font-size: 1.4rem; font-weight: 600; line-height: 1.5; color: white; margin-bottom: 25px;}
+
+        .input-row {
+            display: flex; align-items: center; justify-content: center; gap: 15px;
+        }
+
+        .input-box {
+            background: #0B1120; border: 2px solid var(--secondary); color: white;
+            font-size: 1.5rem; font-weight: 900; text-align: center; padding: 15px; border-radius: 10px;
+            width: 150px; outline: none; transition: all 0.3s;
+        }
+        .input-box:focus { box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+
+        .btn-check {
+            background: var(--secondary); color: white; border: none; padding: 15px 30px; border-radius: 10px;
+            font-size: 1.2rem; font-weight: 800; cursor: pointer; transition: all 0.3s;
+        }
+        .btn-check:hover { transform: scale(1.05); }
+
+        .feedback { margin-top: 20px; font-size: 1.1rem; font-weight: 800; padding: 15px; border-radius: 10px; display: none; }
+        .feedback.error { background: rgba(244, 63, 94, 0.1); color: var(--danger); border: 1px solid var(--danger); display: block;}
+
+        .overlay-msg {
+            position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(15, 23, 42, 0.95);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20;
+            opacity: 0; pointer-events: none; transition: all 0.5s; backdrop-filter: blur(5px);
+        }
+        .overlay-msg.show { opacity: 1; pointer-events: auto; }
+        .om-title { font-size: 2.5rem; font-weight: 900; margin-bottom: 10px; color: var(--secondary);}
+        .btn-next {
+            background: var(--purple); color: white; border: none; padding: 15px 40px; border-radius: 50px;
+            font-size: 1.2rem; font-weight: 800; cursor: pointer; margin-top: 20px; transition: all 0.3s;
+        }
+        .btn-next:hover { transform: scale(1.05); }
+
+        .pi-note { background: rgba(245, 158, 11, 0.2); color: var(--tertiary); padding: 5px 15px; border-radius: 10px; font-weight: 800; display: inline-block; margin-bottom: 20px;}
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=3B82F6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.6.4.5. Çember Problem Çözücü</div>
+    </div>
+
+    <div class="container">
+        
+        <div class="lab-panel">
+            <h2 id="tTitle">Görev 1</h2>
+            <div class="pi-note">Not: Tüm sorularda π (Pi) değerini 3 alınız.</div>
+            
+            <div class="problem-card">
+                <div class="problem-text" id="pText">
+                    <!-- Injected -->
+                </div>
+                
+                <div class="input-row">
+                    <span style="font-size:1.5rem; font-weight:800; color:white;">Cevap: </span>
+                    <input type="number" id="inpAns" class="input-box" placeholder="?">
+                    <span style="font-size:1.5rem; font-weight:800; color:#94A3B8;" id="unit">m</span>
+                    <button class="btn-check" onclick="checkAnswer()">Yanıtla</button>
+                </div>
+            </div>
+            
+            <div class="feedback" id="fb"></div>
+
+            <div class="overlay-msg" id="overlay">
+                <div class="om-title">Tebrikler! 🏆</div>
+                <p style="color:#94A3B8; font-size:1.2rem; font-weight:600; text-align:center; max-width:80%;" id="oDesc">Problemi doğru çözdün.</p>
+                <button class="btn-next" onclick="nextProblem()" id="btnNext">Sonraki Problem ➔</button>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        const problems = [
+            {
+                title: "Görev 1: Hulahop",
+                text: "Bir hulahop çemberinin <b>çapı</b> 80 cm'dir. Bu çember oyun sırasında arka arkaya <b>10 tam tur</b> attığında toplam kaç <b>metre</b> ilerlemiş olur?",
+                unit: "m",
+                ans: 24, // cap = 80, pi=3 -> cevre = 240 cm. 10 tur = 2400 cm = 24 m.
+                success: "Mükemmel! Önce çap ile Pi'yi çarparak çevreyi buldun, sonra tur sayısıyla çarptın ve en son cm'yi metreye çevirdin."
+            },
+            {
+                title: "Görev 2: Dönme Dolap",
+                text: "Büyük bir lunaparktaki dönme dolabın <b>çevresi</b> tam 120 metredir. Bakım yapmak için merkeze (göbeğe) tırmanacak olan bir işçi, kabinden merkeze doğru düz bir şekilde yürüyecektir. İşçinin yürümesi gereken mesafe <b>(yarıçap)</b> kaç metredir?",
+                unit: "m",
+                ans: 20, // cevre = 120. cap = 120 / 3 = 40. yaricap = 20.
+                success: "Çok zekice! Çevreyi biliyorsak ters işlem yaparak (Pi'ye bölüp) çapı buluruz, sonra da yarısını alarak yarıçapa ulaşırız."
+            }
+        ];
+
+        let currIdx = 0;
+
+        function loadProblem() {
+            let p = problems[currIdx];
+            document.getElementById('tTitle').innerText = p.title;
+            document.getElementById('pText').innerHTML = p.text;
+            document.getElementById('unit').innerText = p.unit;
+            document.getElementById('inpAns').value = "";
+            document.getElementById('fb').className = "feedback";
+            document.getElementById('overlay').classList.remove('show');
+            document.getElementById('oDesc').innerText = p.success;
+        }
+
+        function checkAnswer() {
+            let p = problems[currIdx];
+            let val = parseFloat(document.getElementById('inpAns').value.replace(',', '.'));
+            let fb = document.getElementById('fb');
+
+            if(isNaN(val)) {
+                fb.className = "feedback error";
+                fb.innerText = "Lütfen bulduğunuz sayısal sonucu giriniz.";
+                return;
+            }
+
+            if(val === p.ans) {
+                fb.style.display = "none";
+                document.getElementById('overlay').classList.add('show');
+                if(currIdx === problems.length - 1) {
+                    document.getElementById('btnNext').innerText = "Tüm Görevleri Başardın!";
+                    document.getElementById('btnNext').disabled = true;
+                }
+            } else {
+                fb.className = "feedback error";
+                fb.innerHTML = "Hatalı sonuç. Lütfen şu adımları kontrol et:<br>1- Soruda Yarıçap mı Çap mı verilmiş (veya sorulmuş)?<br>2- Birim dönüşümü (Örn: cm'den metreye) isteniyor mu?";
+            }
+        }
+
+        function nextProblem() {
+            if(currIdx < problems.length - 1) {
+                currIdx++;
+                loadProblem();
+            }
+        }
+
+        // Key bindings
+        document.getElementById('inpAns').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') checkAnswer();
+        });
+
+        loadProblem();
+    </script>
+</body>
+</html>

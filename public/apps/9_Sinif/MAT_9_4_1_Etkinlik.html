@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dinamik Üçgen İnşaatçısı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    
+    <!-- MATHJAX -->
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root { --bg:#0F0E17; --primary:#8B5CF6; --secondary:#10B981; --tertiary:#06B6D4; --danger:#F43F5E; --accent:#F59E0B; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Outfit',sans-serif; }
+        body { background:linear-gradient(135deg,var(--bg),#161625); color:#F8FAFC; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:20px; overflow-x:hidden; }
+        
+        .header { width:100%; max-width:1100px; display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); padding:15px 25px; border-radius:20px; border:1px solid rgba(139,92,246,0.2); margin-bottom:20px; backdrop-filter:blur(10px); }
+        .header-left { display:flex; align-items:center; gap:15px; font-weight:600; font-size:1.2rem; }
+        .header-left img { width:50px; height:50px; border-radius:50%; background:white; padding:2px; }
+        .kazanim { background:var(--primary); color:white; padding:8px 20px; border-radius:20px; font-weight:800; font-size:1rem; box-shadow: 0 0 20px rgba(139,92,246,0.4); }
+        
+        h1 { font-size:2.5rem; color:var(--tertiary); font-weight:900; text-align:center; margin-bottom:5px; }
+        .subtitle { color:#94A3B8; font-size:1.15rem; text-align:center; margin-bottom:25px; font-weight:600; max-width:800px; }
+        
+        .workspace { width:100%; max-width:1100px; background:#11111A; border:1px solid rgba(255,255,255,0.1); border-radius:24px; padding:30px; box-shadow:inset 0 0 50px rgba(0,0,0,0.5); display:flex; flex-direction:column; align-items:center; min-height:600px; }
+        
+        .expl-text { background:rgba(139,92,246,0.15); border:1px solid rgba(139,92,246,0.4); padding:15px 25px; border-radius:15px; font-size:1.3rem; color:white; font-weight:800; text-align:center; width:100%; margin-bottom:20px; }
+        
+        /* Sliders */
+        .controls { display:flex; gap:30px; width:100%; max-width:800px; margin-bottom:20px; }
+        .slider-group { flex:1; background:rgba(255,255,255,0.02); border-radius:15px; padding:20px; border:1px solid rgba(255,255,255,0.05); }
+        .slider-header { display:flex; justify-content:space-between; margin-bottom:15px; font-weight:800; color:#CBD5E1; }
+        .slider-header span.val { color:var(--tertiary); font-size:1.5rem; font-family:'Courier New', monospace; }
+        
+        input[type=range] { -webkit-appearance:none; width:100%; background:transparent; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; height:24px; width:24px; border-radius:50%; background:var(--primary); cursor:pointer; margin-top:-10px; box-shadow:0 0 10px var(--primary); transition:0.2s; }
+        input[type=range]::-webkit-slider-thumb:hover { transform:scale(1.2); }
+        input[type=range]::-webkit-slider-runnable-track { width:100%; height:4px; cursor:pointer; background:rgba(255,255,255,0.2); border-radius:2px; }
+        
+        .c-red::-webkit-slider-thumb { background:var(--danger) !important; box-shadow:0 0 10px var(--danger) !important; }
+        .c-green::-webkit-slider-thumb { background:var(--secondary) !important; box-shadow:0 0 10px var(--secondary) !important; }
+        .c-blue::-webkit-slider-thumb { background:var(--tertiary) !important; box-shadow:0 0 10px var(--tertiary) !important; }
+
+        .math-rule-box { background:rgba(0,0,0,0.5); border:2px solid #334155; padding:15px 30px; border-radius:15px; font-size:1.5rem; font-weight:900; color:white; display:flex; align-items:center; justify-content:center; box-shadow:0 10px 20px rgba(0,0,0,0.5); transition:all 0.5s; width:100%; max-width:800px; margin-bottom:20px; min-height:60px; }
+
+        /* SVG Board */
+        .svg-board { width:100%; max-width:800px; height:400px; background:rgba(255,255,255,0.02); border-radius:15px; border:2px dashed #475569; position:relative; overflow:hidden; transition:0.3s; }
+        
+        .tri-path { fill:rgba(139,92,246,0.1); stroke:var(--primary); stroke-width:4; stroke-linejoin:round; transition:all 0.3s; vector-effect: non-scaling-stroke; }
+        .broken-path { fill:none; stroke:var(--danger); stroke-width:4; stroke-dasharray:0.5,0.5; transition:all 0.3s; vector-effect: non-scaling-stroke; }
+        
+        .lbl-side { fill:#94A3B8; font-family:Outfit; font-weight:800; font-size:22px; text-anchor:middle; dominant-baseline:middle; }
+        
+        .feedback { position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); font-size:2rem; font-weight:900; padding:15px 30px; border-radius:15px; opacity:0; transition:0.3s; pointer-events:none; }
+        .feedback.error { background:rgba(244,63,94,0.9); color:white; opacity:1; box-shadow:0 0 50px rgba(244,63,94,0.6); }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.9.4.1. Üçgen İnşaatçısı (Etkinlik)</div>
+    </div>
+    
+    <h1>Üçgen İnşaatçısı</h1>
+    <p class="subtitle">Kenar uzunluklarını değiştirerek üçgenin şeklini gözlemleyin. Üçgen eşitsizliği bozulduğunda yapı çöker.</p>
+    
+    <div class="workspace">
+        <div class="expl-text">Görev: \( a, b, c \) değerleriyle oynayarak çeşitkenar, ikizkenar ve eşkenar üçgenler oluşturun. Kapanmayan uzunluklara dikkat!</div>
+        
+        <div class="controls">
+            <div class="slider-group">
+                <div class="slider-header"><span>a kenarı (Kırmızı)</span><span class="val" id="valA">10</span></div>
+                <input type="range" id="slA" class="c-red" min="1" max="25" value="10" oninput="draw()">
+            </div>
+            <div class="slider-group">
+                <div class="slider-header"><span>b kenarı (Yeşil)</span><span class="val" id="valB">10</span></div>
+                <input type="range" id="slB" class="c-green" min="1" max="25" value="10" oninput="draw()">
+            </div>
+            <div class="slider-group">
+                <div class="slider-header"><span>c kenarı (Mavi)</span><span class="val" id="valC">10</span></div>
+                <input type="range" id="slC" class="c-blue" min="1" max="25" value="10" oninput="draw()">
+            </div>
+        </div>
+        
+        <div class="math-rule-box" id="ruleBox">
+            <span id="mathOutput"></span>
+        </div>
+        
+        <div class="svg-board" id="board">
+            <svg width="100%" height="100%" viewBox="0 0 800 400" preserveAspectRatio="xMidYMid meet" id="triSvg">
+                <!-- SVG coordinate system adjusted: 
+                     Origin (0,0) is at bottom leftish, y goes UP (negative in SVG terms, so viewBox uses 0 -300 width height).
+                     Let's use normal viewBox and transform.
+                -->
+                <g transform="translate(100, 300) scale(20, -20)" id="svgGroup">
+                    <path class="tri-path" id="triangle" d="" />
+                    <path class="broken-path" id="broken1" d="" />
+                    <path class="broken-path" id="broken2" d="" />
+                </g>
+                <text x="0" y="0" class="lbl-side" id="lbl_a" fill="#F43F5E">a</text>
+                <text x="0" y="0" class="lbl-side" id="lbl_b" fill="#10B981">b</text>
+                <text x="0" y="0" class="lbl-side" id="lbl_c" fill="#06B6D4">c</text>
+            </svg>
+            <div class="feedback" id="feedback">ÜÇGEN KAPANMADI!</div>
+        </div>
+    </div>
+
+    <script>
+        let debounceTimer;
+        function updateMath(texString) {
+            document.getElementById('mathOutput').innerHTML = texString;
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                MathJax.typesetPromise([document.getElementById('mathOutput')]);
+            }, 50);
+        }
+
+        function draw() {
+            let a = parseFloat(document.getElementById('slA').value);
+            let b = parseFloat(document.getElementById('slB').value);
+            let c = parseFloat(document.getElementById('slC').value);
+            
+            document.getElementById('valA').textContent = a;
+            document.getElementById('valB').textContent = b;
+            document.getElementById('valC').textContent = c;
+            
+            const triangle = document.getElementById('triangle');
+            const b1 = document.getElementById('broken1');
+            const b2 = document.getElementById('broken2');
+            const fb = document.getElementById('feedback');
+            const ruleBox = document.getElementById('ruleBox');
+            
+            // Check triangle inequality
+            let valid = (a + b > c) && (a + c > b) && (b + c > a);
+            
+            if(valid) {
+                // Law of Cosines to find angle A (between b and c)
+                // a^2 = b^2 + c^2 - 2bc cos(A)
+                let cosA = (b*b + c*c - a*a) / (2*b*c);
+                let A_rad = Math.acos(cosA);
+                
+                // Coordinates
+                let C_x = 0; let C_y = 0;
+                let B_x = c; let B_y = 0;
+                let A_x = b * Math.cos(A_rad);
+                let A_y = b * Math.sin(A_rad);
+                
+                // Draw closed path
+                triangle.setAttribute('d', `M ${C_x} ${C_y} L ${B_x} ${B_y} L ${A_x} ${A_y} Z`);
+                b1.setAttribute('d', ''); b2.setAttribute('d', '');
+                
+                // Center the triangle visually (shift by half c)
+                let shiftX = (30 - c)/2; // board is roughly 30 units wide (800/20=40, margin)
+                document.getElementById('svgGroup').setAttribute('transform', `translate(${shiftX * 20 + 50}, 300) scale(20, -20)`);
+                
+                fb.className = "feedback";
+                ruleBox.style.borderColor = "var(--secondary)";
+                ruleBox.style.boxShadow = "0 10px 20px rgba(16,185,129,0.2)";
+                document.getElementById('board').style.borderColor = "var(--secondary)";
+                
+                // Update math
+                let type = "";
+                if(a===b && b===c) type = "(Eşkenar Üçgen)";
+                else if(a===b || b===c || a===c) type = "(İkizkenar Üçgen)";
+                else type = "(Çeşitkenar Üçgen)";
+                
+                document.getElementById('mathOutput').innerHTML = `\\( |b-c| < a < b+c \\implies |${b}-${c}| < ${a} < ${b}+${c} \\) <span style="color:#10B981;font-weight:900">Geçerli! ${type}</span>`;
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => { MathJax.typesetPromise([document.getElementById('mathOutput')]); }, 50);
+                
+                // Labels (Pixel space approx)
+                document.getElementById('lbl_c').setAttribute('x', shiftX*20 + 50 + (c/2)*20);
+                document.getElementById('lbl_c').setAttribute('y', 320);
+                
+                document.getElementById('lbl_b').setAttribute('x', shiftX*20 + 50 + (A_x/2)*20 - 20);
+                document.getElementById('lbl_b').setAttribute('y', 300 - (A_y/2)*20 - 10);
+                
+                document.getElementById('lbl_a').setAttribute('x', shiftX*20 + 50 + ((A_x+c)/2)*20 + 10);
+                document.getElementById('lbl_a').setAttribute('y', 300 - (A_y/2)*20 - 10);
+                
+            } else {
+                // Invalid: Draw broken arms
+                triangle.setAttribute('d', '');
+                
+                // Draw base 'c' on x axis
+                b1.setAttribute('d', `M 0 0 L ${c} 0`);
+                
+                // Try to draw a and b flat on the base, since they can't reach
+                b2.setAttribute('d', `M 0 0 L ${b} 0.5 M ${c} 0 L ${c - a} 0.5`);
+                
+                let shiftX = (30 - c)/2;
+                document.getElementById('svgGroup').setAttribute('transform', `translate(${shiftX * 20 + 50}, 300) scale(20, -20)`);
+                
+                fb.className = "feedback error";
+                ruleBox.style.borderColor = "var(--danger)";
+                ruleBox.style.boxShadow = "0 10px 20px rgba(244,63,94,0.4)";
+                document.getElementById('board').style.borderColor = "var(--danger)";
+                
+                document.getElementById('mathOutput').innerHTML = `\\( |b-c| < a < b+c \\implies |${b}-${c}| < ${a} < ${b}+${c} \\) <span style="color:#F43F5E;font-weight:900">HATALI! Kapanmaz.</span>`;
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => { MathJax.typesetPromise([document.getElementById('mathOutput')]); }, 50);
+            }
+        }
+        
+        // Init
+        draw();
+    </script>
+</body>
+</html>

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asal Çarpan Algoritması</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A; --surface: #1E293B; --text: #F8FAFC;
+            --primary: #3B82F6; --secondary: #10B981;
+            --tertiary: #F59E0B; --danger: #F43F5E;
+            --purple: #8B5CF6;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, var(--surface) 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--tertiary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .container {
+            width: 100%; max-width: 700px; display: flex; flex-direction: column; gap: 20px;
+        }
+
+        .input-panel {
+            background: rgba(255,255,255,0.03); border-radius: 20px; padding: 30px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center;
+        }
+
+        .input-panel h2 { font-size: 1.8rem; color: var(--tertiary); margin-bottom: 20px; font-weight: 900;}
+
+        .input-group { display: flex; justify-content: center; gap: 15px; align-items: center;}
+        input[type="number"] {
+            background: #0B1120; border: 2px solid var(--tertiary); color: white;
+            font-size: 2rem; font-weight: 900; width: 150px; text-align: center; padding: 10px; border-radius: 15px;
+            outline: none; transition: all 0.3s;
+        }
+        input[type="number"]:focus { box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);}
+        
+        .btn-calc {
+            background: var(--tertiary); color: white; border: none; padding: 15px 30px; border-radius: 15px;
+            font-size: 1.2rem; font-weight: 900; cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(245, 158, 11, 0.4);
+        }
+        .btn-calc:hover { transform: translateY(-2px); box-shadow: 0 15px 25px rgba(245, 158, 11, 0.6); }
+
+        /* Algorithm Display */
+        .algo-container {
+            background: rgba(255,255,255,0.02); border-radius: 20px; padding: 30px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2); display: flex; flex-direction: column; align-items: center;
+            opacity: 0; transform: translateY(20px); transition: all 0.5s; pointer-events: none;
+        }
+        .algo-container.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+        .algo-grid {
+            display: grid; grid-template-columns: 1fr 2px 1fr; gap: 15px; align-items: center; justify-items: center;
+            font-size: 2.5rem; font-weight: 900; margin-bottom: 30px;
+        }
+        .v-line { background: rgba(255,255,255,0.5); width: 4px; height: 100%; border-radius: 2px;}
+        
+        .num-left { color: white; justify-self: end; padding-right: 20px;}
+        .num-right { color: var(--secondary); justify-self: start; padding-left: 20px;}
+
+        .result-box {
+            background: rgba(16, 185, 129, 0.1); border: 1px dashed var(--secondary);
+            padding: 20px; border-radius: 15px; text-align: center; width: 100%;
+        }
+        .rb-title { font-size: 1rem; color: #94A3B8; font-weight: 600; margin-bottom: 10px;}
+        .rb-equation { font-size: 2rem; font-weight: 900; color: white;}
+        .rb-equation sup { color: var(--tertiary); font-size: 1.2rem; }
+
+        @media (max-width: 768px) {
+            .header { flex-direction: column; gap: 10px; }
+            .input-group { flex-direction: column; }
+            .algo-grid { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=3B82F6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.6.1.3. Asal Çarpan Algoritması</div>
+    </div>
+
+    <div class="container">
+        
+        <div class="input-panel">
+            <h2>🧬 Sayıyı Asallarına Ayır!</h2>
+            <div class="input-group">
+                <input type="number" id="numInput" min="2" max="9999" value="120">
+                <button class="btn-calc" onclick="calculate()">Algoritmayı Çalıştır ➔</button>
+            </div>
+            <p style="color:#94A3B8; margin-top:15px; font-size:0.9rem;">(Bölen listesi / Asal çarpan çizgisi yöntemi)</p>
+        </div>
+
+        <div class="algo-container" id="algoContainer">
+            <div class="algo-grid" id="algoGrid">
+                <!-- Dynamically filled -->
+            </div>
+            
+            <div class="result-box">
+                <div class="rb-title">Üslü İfade Şeklinde Gösterim</div>
+                <div class="rb-equation" id="resultEq">
+                    <!-- 2<sup>3</sup> x 3 x 5 -->
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const numInput = document.getElementById('numInput');
+        const algoContainer = document.getElementById('algoContainer');
+        const algoGrid = document.getElementById('algoGrid');
+        const resultEq = document.getElementById('resultEq');
+
+        function getPrimeFactors(n) {
+            let factors = [];
+            let current = n;
+            let d = 2;
+            let steps = [];
+
+            while (current > 1) {
+                if (current % d === 0) {
+                    steps.push({ left: current, right: d });
+                    factors.push(d);
+                    current = current / d;
+                } else {
+                    d++;
+                }
+            }
+            steps.push({ left: 1, right: "" }); // End state
+            return { steps, factors };
+        }
+
+        function calculate() {
+            let val = parseInt(numInput.value);
+            if(isNaN(val) || val < 2) {
+                alert("Lütfen 2 veya daha büyük bir sayı giriniz.");
+                return;
+            }
+
+            algoContainer.classList.remove('show');
+            
+            setTimeout(() => {
+                const { steps, factors } = getPrimeFactors(val);
+                
+                // Build Grid
+                let gridHTML = "";
+                steps.forEach((step, idx) => {
+                    gridHTML += `<div class="num-left">${step.left}</div>`;
+                    if(idx === 0) {
+                        gridHTML += `<div class="v-line" style="grid-row: span ${steps.length}"></div>`;
+                    }
+                    gridHTML += `<div class="num-right">${step.right}</div>`;
+                });
+                algoGrid.innerHTML = gridHTML;
+
+                // Build Equation
+                let counts = {};
+                factors.forEach(f => {
+                    counts[f] = (counts[f] || 0) + 1;
+                });
+
+                let eqParts = [];
+                for (let prime in counts) {
+                    if (counts[prime] > 1) {
+                        eqParts.push(`${prime}<sup>${counts[prime]}</sup>`);
+                    } else {
+                        eqParts.push(`${prime}`);
+                    }
+                }
+
+                resultEq.innerHTML = `${val} = ` + eqParts.join(" <span style='color:var(--tertiary); font-size:1.5rem;'>x</span> ");
+
+                algoContainer.classList.add('show');
+
+            }, 300);
+        }
+
+        // Run once on load
+        calculate();
+
+        // Enter key
+        numInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') calculate();
+        });
+    </script>
+</body>
+</html>

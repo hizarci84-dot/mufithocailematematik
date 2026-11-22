@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sayı Kümeleri Laboratuvarı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F0E17; --surface: #1A1A24; --text: #F8FAFC;
+            --primary: #8B5CF6; --secondary: #10B981;
+            --tertiary: #06B6D4; --danger: #F43F5E;
+            --accent: #F59E0B;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, #161625 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(139, 92, 246, 0.2); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; margin-bottom: 20px;}
+        h1 { font-size: 2.2rem; color: var(--tertiary); font-weight: 900;}
+        .subtitle { color: #94A3B8; font-size: 1.1rem; margin-top: 5px;}
+
+        .container {
+            width: 100%; max-width: 1000px; display: grid; grid-template-columns: 300px 1fr; gap: 20px;
+        }
+
+        /* Number Bank */
+        .number-bank {
+            background: rgba(255,255,255,0.03); border-radius: 20px; padding: 25px; border: 1px solid rgba(255,255,255,0.05);
+            display: flex; flex-wrap: wrap; gap: 15px; align-content: flex-start; min-height: 400px;
+        }
+        
+        .drag-num {
+            background: #11111A; border: 2px solid var(--primary); color: white;
+            font-size: 1.5rem; font-weight: 900; padding: 10px 20px; border-radius: 12px;
+            cursor: grab; display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s; box-shadow: 0 5px 15px rgba(139, 92, 246, 0.3);
+        }
+        .drag-num:active { cursor: grabbing; transform: scale(0.9); }
+        .drag-num.dragging { opacity: 0.5; border-style: dashed;}
+
+        /* Sets Target Area (Venn Diagram style) */
+        .sets-area {
+            position: relative; background: #11111A; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;
+            min-height: 500px; overflow: hidden;
+        }
+
+        .set-circle {
+            position: absolute; border-radius: 50%; display: flex; flex-direction: column; align-items: center;
+            border: 3px dashed; transition: 0.3s;
+        }
+        .set-circle.drag-over { background: rgba(255,255,255,0.1) !important; transform: scale(1.02);}
+        
+        /* Q (Rasyonel) */
+        .set-q { width: 450px; height: 450px; border-color: var(--secondary); background: rgba(16, 185, 129, 0.05); z-index: 1;}
+        .set-q > .set-title { color: var(--secondary); margin-top: 20px;}
+        
+        /* Z (Tam Sayı) */
+        .set-z { width: 320px; height: 320px; border-color: var(--tertiary); background: rgba(6, 182, 212, 0.1); z-index: 2; margin-top: 50px;}
+        .set-z > .set-title { color: var(--tertiary); margin-top: 20px;}
+
+        /* N (Doğal Sayı) */
+        .set-n { width: 190px; height: 190px; border-color: var(--accent); background: rgba(245, 158, 11, 0.15); z-index: 3; margin-top: 70px;}
+        .set-n > .set-title { color: var(--accent); margin-top: 20px;}
+
+        .set-title { font-size: 1.5rem; font-weight: 900; }
+        
+        .drop-zone {
+            width: 100%; height: 100%; position: absolute; top: 0; left: 0; border-radius: 50%;
+            display: flex; flex-wrap: wrap; align-content: flex-end; justify-content: center; padding-bottom: 30px; gap: 5px;
+        }
+
+        .alert-box {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
+            background: rgba(244, 63, 94, 0.95); border: 2px solid white; color: white;
+            padding: 30px 50px; border-radius: 20px; font-weight: 900; font-size: 2rem;
+            opacity: 0; transition: all 0.5s; text-align: center; z-index: 100;
+            backdrop-filter: blur(10px); box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        .drop-zone > * { transform: scale(0.85); }
+</style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.7.1.1. Sayı Kümeleri Laboratuvarı</div>
+    </div>
+
+    <div class="title-area">
+        <h1>Sayıları Yerleştir</h1>
+        <p class="subtitle">Soldaki sayıları ait oldukları EN DAR (en içteki) kümeye sürükleyiniz.</p>
+    </div>
+
+    <div class="container">
+        
+        <!-- Draggable Numbers -->
+        <div class="number-bank" id="numBank">
+            <div class="drag-num" draggable="true" data-type="n">5</div>
+            <div class="drag-num" draggable="true" data-type="z">-3</div>
+            <div class="drag-num" draggable="true" data-type="q">1/2</div>
+            <div class="drag-num" draggable="true" data-type="n">0</div>
+            <div class="drag-num" draggable="true" data-type="q">-0.5</div>
+            <div class="drag-num" draggable="true" data-type="z">-100</div>
+        </div>
+
+        <!-- Sets Area -->
+        <div class="sets-area">
+            
+            <div class="set-circle set-q">
+                <div class="set-title">Rasyonel Sayılar (Q)</div>
+                <div class="drop-zone" data-target="q" id="zoneQ"></div>
+                
+                <div class="set-circle set-z">
+                    <div class="set-title">Tam Sayılar (Z)</div>
+                    <div class="drop-zone" data-target="z" id="zoneZ"></div>
+                    
+                    <div class="set-circle set-n">
+                        <div class="set-title">Doğal Sayılar (N)</div>
+                        <div class="drop-zone" data-target="n" id="zoneN"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="alert-box" id="alertBox">HATA! Bu sayı o kümeye ait değil!</div>
+
+    <script>
+        const draggables = document.querySelectorAll('.drag-num');
+        const dropZones = document.querySelectorAll('.drop-zone');
+        const alertBox = document.getElementById('alertBox');
+
+        let draggedItem = null;
+
+        draggables.forEach(item => {
+            item.addEventListener('dragstart', () => {
+                draggedItem = item;
+                item.classList.add('dragging');
+            });
+
+            item.addEventListener('dragend', () => {
+                draggedItem = null;
+                item.classList.remove('dragging');
+            });
+        });
+
+        dropZones.forEach(zone => {
+            zone.addEventListener('dragover', e => {
+                e.preventDefault();
+                zone.parentElement.classList.add('drag-over');
+            });
+
+            zone.addEventListener('dragleave', () => {
+                zone.parentElement.classList.remove('drag-over');
+            });
+
+            zone.addEventListener('drop', e => {
+                e.preventDefault();
+                zone.parentElement.classList.remove('drag-over');
+                
+                // Check logic
+                const targetType = zone.getAttribute('data-target'); // n, z, q
+                const itemType = draggedItem.getAttribute('data-type'); // n, z, q
+                
+                // Allow dropping if valid.
+                // Strict rule: Put it in the tightest possible set.
+                // So if item is 'n', it MUST go to 'n'.
+                if(itemType === targetType) {
+                    // Success
+                    draggedItem.style.position = "static";
+                    draggedItem.style.margin = "2px";
+                    draggedItem.draggable = false;
+                    draggedItem.style.boxShadow = "none";
+                    zone.appendChild(draggedItem);
+                } else {
+                    // Fail
+                    showAlert();
+                }
+            });
+        });
+
+        function showAlert() {
+            alertBox.style.opacity = 1;
+            alertBox.style.transform = "translate(-50%, -50%) scale(1)";
+            setTimeout(() => {
+                alertBox.style.opacity = 0;
+                alertBox.style.transform = "translate(-50%, -50%) scale(0)";
+            }, 2000);
+        }
+
+    </script>
+
+    <script>
+        // Global spam click prevention for Etkinlik files
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'BUTTON' && !e.target.hasAttribute('data-spam-locked')) {
+                e.target.setAttribute('data-spam-locked', 'true');
+                let originalOpacity = e.target.style.opacity || '1';
+                e.target.style.opacity = '0.7';
+                e.target.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    e.target.removeAttribute('data-spam-locked');
+                    e.target.style.opacity = originalOpacity;
+                    e.target.style.pointerEvents = 'auto';
+                }, 400);
+            }
+        });
+    </script>
+</body>
+</html>

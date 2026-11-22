@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Akış Şeması ve Algoritma Takibi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #F8FAFC;
+            --text: #0F172A;
+            --primary: #8B5CF6; /* Violet */
+            --primary-hover: #7C3AED;
+            --success: #10B981;
+            --card: #FFFFFF;
+            --border: #E2E8F0;
+            --shape-oval: #F472B6;
+            --shape-para: #38BDF8;
+            --shape-rect: #FBBF24;
+            --shape-diamond: #A78BFA;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, #EDE9FE 0%, #DDD6FE 100%);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 1100px;
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--card); padding: 15px 25px; border-radius: 50px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; color: #4C1D95;}
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; }
+        .kazanim { background: #EDE9FE; color: #4C1D95; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .container {
+            width: 100%; max-width: 1100px;
+            display: flex; gap: 20px;
+        }
+
+        /* Flowchart Panel */
+        .flowchart-panel {
+            flex: 1; background: var(--card); border-radius: 24px; padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1); display: flex; flex-direction: column; align-items: center;
+        }
+
+        h2 { color: #4C1D95; font-size: 1.8rem; margin-bottom: 20px; text-align: center;}
+        p.desc { color: #64748B; font-weight: 600; text-align: center; margin-bottom: 20px;}
+
+        .flow-container {
+            display: flex; flex-direction: column; align-items: center; gap: 15px; position: relative;
+        }
+
+        /* Shapes */
+        .shape {
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; color: #0F172A; text-align: center; padding: 10px 20px;
+            position: relative; transition: all 0.3s; z-index: 2;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .shape.active { transform: scale(1.1); box-shadow: 0 0 20px rgba(139, 92, 246, 0.6); border: 3px solid #7C3AED;}
+        
+        .oval { border-radius: 50px; background: var(--shape-oval); width: 150px; height: 50px; color: white;}
+        .parallelogram { transform: skew(-20deg); background: var(--shape-para); width: 220px; height: 60px; }
+        .parallelogram span { transform: skew(20deg); }
+        .rectangle { background: var(--shape-rect); width: 220px; height: 60px; border-radius: 8px;}
+        .diamond { 
+            background: var(--shape-diamond); color: white;
+            width: 140px; height: 140px; 
+            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+            padding: 30px;
+        }
+
+        /* Arrows */
+        .arrow-down {
+            width: 4px; height: 20px; background: #94A3B8; position: relative; z-index: 1;
+        }
+        .arrow-down::after {
+            content: ''; position: absolute; bottom: -5px; left: -6px;
+            border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 10px solid #94A3B8;
+        }
+        
+        /* Loop Arrow */
+        .loop-line {
+            position: absolute; border: 4px solid #94A3B8; border-left: none; border-bottom: none;
+            right: -80px; top: 225px; width: 80px; height: 280px; z-index: 0;
+            border-top-right-radius: 20px; border-bottom-right-radius: 20px;
+        }
+        .loop-line::after {
+            content: ''; position: absolute; top: -7px; left: 0;
+            border-top: 8px solid transparent; border-bottom: 8px solid transparent; border-right: 10px solid #94A3B8;
+        }
+        .loop-label { position: absolute; right: -50px; top: 380px; font-weight: 800; color: #EF4444; background: white; padding: 2px 5px; border-radius: 5px;}
+        .yes-label { position: absolute; left: 50%; transform: translateX(-50%); top: 480px; font-weight: 800; color: #10B981; background: white; padding: 2px 5px; border-radius: 5px; z-index: 3;}
+
+        /* Trace Table Panel */
+        .table-panel {
+            flex: 1; background: var(--card); border-radius: 24px; padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1); display: flex; flex-direction: column;
+        }
+
+        .inputs-box {
+            background: #F1F5F9; padding: 15px; border-radius: 12px; margin-bottom: 20px;
+            display: flex; gap: 20px; justify-content: center; font-size: 1.5rem; font-weight: 800; color: #334155;
+        }
+
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { padding: 12px; text-align: center; border: 2px solid var(--border); font-size: 1.2rem; font-weight: 600;}
+        th { background: #F8FAFC; color: #4C1D95; }
+        
+        .trace-row { background: white; transition: background 0.3s;}
+        .trace-row.active { background: #EDE9FE; }
+
+        .btn-action {
+            background: var(--primary); color: white; border: none; padding: 15px; border-radius: 12px; font-size: 1.2rem; font-weight: 800; cursor: pointer; transition: all 0.3s; width: 100%;
+        }
+        .btn-action:hover { background: var(--primary-hover); transform: translateY(-2px);}
+        .btn-action:disabled { background: #CBD5E1; cursor: not-allowed; transform: none;}
+
+        .final-result {
+            margin-top: 20px; font-size: 1.5rem; font-weight: 800; color: var(--success); text-align: center; opacity: 0; transition: opacity 0.5s;
+        }
+        .final-result.visible { opacity: 1; }
+
+        @media (max-width: 900px) {
+            .container { flex-direction: column; }
+            .loop-line { right: -40px; width: 40px; }
+            .loop-label { right: -20px; }
+            table { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.5.2.4. Algoritmalar (Tablo Temsiline Dönüştürme)</div>
+    </div>
+
+    <div class="container">
+        <!-- Akış Şeması -->
+        <div class="flowchart-panel">
+            <h2>Bölme Algoritması (Tekrarlı Çıkarma)</h2>
+            <p class="desc">Aşağıdaki akış şeması, bölme işlemini "tekrarlı çıkarma" yöntemiyle yapan bir bilgisayar algoritmasıdır.</p>
+            
+            <div class="flow-container">
+                <div class="shape oval" id="s1">BAŞLA</div>
+                <div class="arrow-down"></div>
+                
+                <div class="shape parallelogram" id="s2"><span>Bölünen (A) ve Bölen (B) GİR</span></div>
+                <div class="arrow-down"></div>
+                
+                <div class="shape rectangle" id="s3">Bölüm = 0</div>
+                <div class="arrow-down"></div>
+                
+                <div class="shape diamond" id="s4"><span>A < B mi?</span></div>
+                <div class="yes-label">EVET</div>
+                <div class="arrow-down" style="height: 40px;"></div>
+                
+                <div class="shape rectangle" id="s5" style="background:#EF4444; color:white;">A = A - B<br>Bölüm = Bölüm + 1</div>
+                
+                <div class="loop-line" id="loopLine"></div>
+                <div class="loop-label">HAYIR</div>
+                
+                <div class="shape oval" id="s6" style="margin-top: 20px;">BİTİR (Bölüm'ü Yazdır)</div>
+            </div>
+        </div>
+
+        <!-- İzleme Tablosu -->
+        <div class="table-panel">
+            <h2>İzleme Tablosu (Trace Table)</h2>
+            <p class="desc">Algoritmayı adım adım çalıştırarak tablodaki değerlerin nasıl değiştiğini izle.</p>
+            
+            <div class="inputs-box">
+                Başlangıç: A = <span style="color:#EF4444;">11</span>, B = <span style="color:#3B82F6;">3</span>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Döngü Adımı</th>
+                        <th>A'nın Değeri</th>
+                        <th>Bölüm Değeri</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- JS Rows -->
+                </tbody>
+            </table>
+
+            <button class="btn-action" id="nextBtn" onclick="nextStep()">Algoritmayı İlerlet (Adım 1)</button>
+            <div class="final-result" id="finalResult">İşlem Bitti! 11 ÷ 3 = 3 (Kalan 2)</div>
+        </div>
+    </div>
+
+    <script>
+        // State variables
+        let A = 11;
+        let B = 3;
+        let bolum = 0;
+        let loopCount = 0;
+        let currentState = 0; // 0: Start, 1: Enter, 2: Init, 3: Condition, 4: Process, 5: End
+
+        const s1 = document.getElementById('s1');
+        const s2 = document.getElementById('s2');
+        const s3 = document.getElementById('s3');
+        const s4 = document.getElementById('s4');
+        const s5 = document.getElementById('s5');
+        const s6 = document.getElementById('s6');
+        const tbody = document.getElementById('tableBody');
+        const nextBtn = document.getElementById('nextBtn');
+        const finalRes = document.getElementById('finalResult');
+
+        function removeActive() {
+            [s1, s2, s3, s4, s5, s6].forEach(el => el.classList.remove('active'));
+            const rows = document.querySelectorAll('.trace-row');
+            rows.forEach(r => r.classList.remove('active'));
+        }
+
+        function addTableRow(step, valA, valBolum) {
+            const tr = document.createElement('tr');
+            tr.className = 'trace-row active';
+            tr.innerHTML = `<td>${step}</td><td>${valA}</td><td>${valBolum}</td>`;
+            tbody.appendChild(tr);
+        }
+
+        function nextStep() {
+            removeActive();
+
+            if (currentState === 0) {
+                s1.classList.add('active');
+                nextBtn.innerText = "Değerleri Gir";
+                currentState = 1;
+            } 
+            else if (currentState === 1) {
+                s2.classList.add('active');
+                nextBtn.innerText = "Bölüm'ü Sıfırla";
+                currentState = 2;
+            }
+            else if (currentState === 2) {
+                s3.classList.add('active');
+                addTableRow("Başlangıç", A, bolum);
+                nextBtn.innerText = "Şartı Kontrol Et";
+                currentState = 3;
+            }
+            else if (currentState === 3) {
+                s4.classList.add('active');
+                if (A < B) {
+                    nextBtn.innerText = "EVET -> Bitir";
+                    currentState = 5;
+                } else {
+                    nextBtn.innerText = "HAYIR -> Çıkarma Yap";
+                    currentState = 4;
+                }
+            }
+            else if (currentState === 4) {
+                s5.classList.add('active');
+                loopCount++;
+                A = A - B;
+                bolum = bolum + 1;
+                addTableRow(`Döngü ${loopCount}`, A, bolum);
+                nextBtn.innerText = "Şartı Tekrar Kontrol Et";
+                currentState = 3;
+            }
+            else if (currentState === 5) {
+                s6.classList.add('active');
+                nextBtn.innerText = "Tamamlandı";
+                nextBtn.disabled = true;
+                finalRes.classList.add('visible');
+                finalRes.innerText = `İşlem Bitti! 11 ÷ 3 işleminde Bölüm = ${bolum}, Kalan = ${A}`;
+            }
+        }
+
+        // Initialize
+        window.onload = () => {
+            nextBtn.innerText = "BAŞLA";
+        };
+    </script>
+</body>
+</html>

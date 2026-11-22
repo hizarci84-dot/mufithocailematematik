@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10.1.3 - Kalanı Bulma Mantığı Animasyonu</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0F172A; /* Slate 900 */
+            --panel-bg: #1E293B; /* Slate 800 */
+            --primary: #38BDF8; /* Sky 400 */
+            --secondary: #A78BFA; /* Violet 400 */
+            --accent: #F472B6; /* Pink 400 */
+            --danger: #F43F5E; /* Rose 500 */
+            --success: #10B981; /* Emerald 500 */
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background-color: var(--bg-color); color: var(--text-main);
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 900px; display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 25px; background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px); border-radius: 20px; border: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 800; color: var(--primary); }
+        .header-left img { width: 40px; height: 40px; border-radius: 10px; }
+        .kazanim { background: rgba(56, 189, 248, 0.1); padding: 8px 15px; border-radius: 12px; color: var(--primary); font-weight: 600; font-size: 0.9rem; }
+
+        h1 { font-size: 2.5rem; font-weight: 900; margin-bottom: 10px; text-align: center; 
+             background: linear-gradient(135deg, var(--primary), var(--secondary)); 
+             -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+             
+        .subtitle { color: var(--text-muted); font-size: 1.1rem; margin-bottom: 30px; text-align: center; max-width: 700px; }
+
+        .workspace { display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 900px; align-items: center; }
+
+        .controls {
+            display: flex; gap: 20px; align-items: center; justify-content: center; background: var(--panel-bg);
+            padding: 15px 25px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2); width: 100%;
+        }
+
+        .input-group { display: flex; align-items: center; gap: 10px; }
+        .input-group label { font-weight: 600; color: var(--text-muted); }
+        .input-group input { 
+            width: 120px; background: rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.1); 
+            color: white; font-size: 1.2rem; font-weight: 800; padding: 8px; border-radius: 10px; text-align: center;
+        }
+
+        .btn-action {
+            background: linear-gradient(135deg, var(--primary), var(--secondary)); border: none;
+            color: white; padding: 10px 20px; border-radius: 10px; font-weight: 800; font-size: 1.1rem;
+            cursor: pointer; transition: all 0.3s;
+        }
+        .btn-action:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(167, 139, 250, 0.4); }
+
+        .svg-board {
+            width: 100%; height: 450px; background: rgba(255,255,255,0.02);
+            border-radius: 20px; border: 2px dashed rgba(255,255,255,0.1);
+            position: relative; overflow: hidden;
+        }
+
+        .math-rule-box {
+            background: rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.1);
+            padding: 20px; border-radius: 15px; font-size: 1.5rem; font-weight: 600; color: white;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+            width: 100%; min-height: 80px; transition: 0.5s; box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        }
+
+        /* Funnel SVGs */
+        .funnel { fill: rgba(255,255,255,0.05); stroke: rgba(255,255,255,0.2); stroke-width: 3; stroke-linejoin: round; }
+        .funnel-text { fill: var(--text-muted); font-size: 20px; font-weight: 800; text-anchor: middle; }
+        
+        .number-ball { fill: var(--primary); stroke: white; stroke-width: 2; transition: all 1s ease-in-out; }
+        .ball-text { fill: white; font-weight: 900; font-size: 20px; text-anchor: middle; dominant-baseline: middle; transition: all 1s; }
+        
+        .mod-box { fill: var(--panel-bg); stroke: var(--secondary); stroke-width: 3; rx: 15; }
+        .mod-title { fill: var(--secondary); font-size: 22px; font-weight: 900; text-anchor: middle; dominant-baseline: middle; }
+        
+        .res-ball { fill: var(--accent); stroke: white; stroke-width: 2; opacity: 0; transition: all 1s ease-in-out; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=38BDF8&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.10.1.3. Aralarında Asal Çarpanlarla Kalan İlişkisi (Animasyon)</div>
+    </div>
+    
+    <h1>3, 4 ve 12 ile Bölümünden Kalanlar</h1>
+    <p class="subtitle">Aralarında asal olan 3 ve 4 ile bölümünden kalanlar biliniyorsa, bu sayının 12'ye bölümünden kalanı (c) makinede gözlemleyelim.</p>
+    
+    <div class="workspace">
+        <div class="controls">
+            <div class="input-group">
+                <label>Sayı (N):</label>
+                <input type="number" id="inpNum" min="1" max="999" value="41">
+            </div>
+            <button class="btn-action" id="btnPlay" onclick="runMachine()">Makineyi Çalıştır</button>
+        </div>
+        
+        <div class="svg-board">
+            <svg width="100%" height="100%" viewBox="0 0 800 450" preserveAspectRatio="xMidYMid meet" id="machineSvg">
+                
+                <!-- Main Input Pipe -->
+                <path d="M 370 20 L 430 20 L 430 80 L 370 80 Z" class="funnel" />
+                <text x="400" y="15" class="funnel-text" style="font-size: 16px;">Sayı (N)</text>
+                
+                <!-- Diverging Pipes -->
+                <path d="M 370 80 L 250 150 L 250 200 L 300 200 L 300 150 L 400 80 Z" class="funnel" />
+                <path d="M 430 80 L 550 150 L 550 200 L 500 200 L 500 150 L 400 80 Z" class="funnel" />
+                
+                <!-- Mod 3 Box -->
+                <rect x="180" y="200" width="140" height="80" class="mod-box" />
+                <text x="250" y="240" class="mod-title">MOD 3</text>
+                
+                <!-- Mod 4 Box -->
+                <rect x="480" y="200" width="140" height="80" class="mod-box" />
+                <text x="550" y="240" class="mod-title">MOD 4</text>
+                
+                <!-- Converging Pipes -->
+                <path d="M 230 280 L 270 280 L 380 350 L 380 380 L 340 380 L 230 310 Z" class="funnel" />
+                <path d="M 570 280 L 530 280 L 420 350 L 420 380 L 460 380 L 570 310 Z" class="funnel" />
+                
+                <!-- Mod 12 Box -->
+                <rect x="330" y="380" width="140" height="70" class="mod-box" style="stroke:var(--primary);" />
+                <text x="400" y="415" class="mod-title" style="fill:var(--primary);">MOD 12</text>
+                
+                <!-- Animated Elements -->
+                <g id="animGroup"></g>
+            </svg>
+        </div>
+        
+        <div class="math-rule-box" id="ruleBox">
+            <span id="mathOutput">Değer girip Makineyi Çalıştırın.</span>
+        </div>
+    </div>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        const ruleBox = document.getElementById('ruleBox');
+        const mathOutput = document.getElementById('mathOutput');
+        const animGroup = document.getElementById('animGroup');
+        const btnPlay = document.getElementById('btnPlay');
+        
+        let debounceTimer;
+        function updateMath(texString) {
+            mathOutput.innerHTML = texString;
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                MathJax.typesetPromise([mathOutput]);
+            }, 50);
+        }
+
+        async function runMachine() {
+            let num = parseInt(document.getElementById('inpNum').value);
+            if(isNaN(num)) num = 41;
+            
+            btnPlay.disabled = true;
+            btnPlay.style.opacity = '0.5';
+            
+            let mod3 = num % 3;
+            let mod4 = num % 4;
+            let mod12 = num % 12;
+            
+            animGroup.innerHTML = '';
+            document.getElementById('ruleBox').style.borderColor = 'rgba(255,255,255,0.1)';
+            document.getElementById('ruleBox').style.boxShadow = 'none';
+            updateMath(`\\( N = ${num} \\) sisteme giriyor...`);
+            
+            // Drop initial ball
+            let b1 = `
+                <g id="mainBall" transform="translate(400, 50)">
+                    <circle cx="0" cy="0" r="25" class="number-ball" />
+                    <text x="0" y="0" class="ball-text">${num}</text>
+                </g>
+            `;
+            animGroup.innerHTML = b1;
+            
+            await sleep(100);
+            let mainBall = document.getElementById('mainBall');
+            
+            // Move ball into pipes
+            mainBall.style.transform = "translate(400px, 80px)";
+            await sleep(1000);
+            
+            // Split ball into two
+            mainBall.style.opacity = '0';
+            
+            let b2 = `
+                <g id="ballLeft" transform="translate(400, 80)">
+                    <circle cx="0" cy="0" r="20" class="number-ball" style="fill:var(--secondary);" />
+                    <text x="0" y="0" class="ball-text">${num}</text>
+                </g>
+                <g id="ballRight" transform="translate(400, 80)">
+                    <circle cx="0" cy="0" r="20" class="number-ball" style="fill:var(--secondary);" />
+                    <text x="0" y="0" class="ball-text">${num}</text>
+                </g>
+            `;
+            animGroup.innerHTML += b2;
+            
+            await sleep(100);
+            let ballLeft = document.getElementById('ballLeft');
+            let ballRight = document.getElementById('ballRight');
+            
+            ballLeft.style.transform = "translate(250px, 150px)";
+            ballRight.style.transform = "translate(550px, 150px)";
+            
+            await sleep(1000);
+            ballLeft.style.transform = "translate(250px, 200px)";
+            ballRight.style.transform = "translate(550px, 200px)";
+            
+            await sleep(1000);
+            
+            // Mod boxes compute remainders
+            ballLeft.style.opacity = '0';
+            ballRight.style.opacity = '0';
+            
+            updateMath(`\\( ${num} \\equiv ${mod3} \\pmod 3 \\) \\quad ve \\quad \\( ${num} \\equiv ${mod4} \\pmod 4 \\)`);
+            
+            let r1 = `
+                <g id="resLeft" transform="translate(250, 280)">
+                    <circle cx="0" cy="0" r="25" class="res-ball" style="opacity:1;" />
+                    <text x="0" y="0" class="ball-text" style="opacity:1;">a=${mod3}</text>
+                </g>
+                <g id="resRight" transform="translate(550, 280)">
+                    <circle cx="0" cy="0" r="25" class="res-ball" style="opacity:1;" />
+                    <text x="0" y="0" class="ball-text" style="opacity:1;">b=${mod4}</text>
+                </g>
+            `;
+            animGroup.innerHTML += r1;
+            
+            await sleep(2000);
+            let resLeft = document.getElementById('resLeft');
+            let resRight = document.getElementById('resRight');
+            
+            resLeft.style.transform = "translate(360px, 350px)";
+            resRight.style.transform = "translate(440px, 350px)";
+            
+            await sleep(1000);
+            resLeft.style.transform = "translate(400px, 380px)";
+            resRight.style.transform = "translate(400px, 380px)";
+            
+            await sleep(1000);
+            resLeft.style.opacity = '0';
+            resRight.style.opacity = '0';
+            
+            // Final mod 12 result
+            let f = `
+                <g id="finalBall" transform="translate(400, 420)">
+                    <circle cx="0" cy="0" r="30" class="res-ball" style="fill:var(--primary); opacity:1;" />
+                    <text x="0" y="0" class="ball-text" style="opacity:1;">c=${mod12}</text>
+                </g>
+            `;
+            animGroup.innerHTML += f;
+            
+            await sleep(500);
+            
+            ruleBox.style.borderColor = "var(--primary)";
+            ruleBox.style.boxShadow = "0 0 30px rgba(56, 189, 248, 0.4)";
+            
+            updateMath(`Kalanlar: \\( a = ${mod3} \\) ve \\( b = ${mod4} \\) <br><br> \\( ${num} \\equiv ${mod12} \\pmod{12} \\implies c = ${mod12} \\)`);
+            
+            btnPlay.disabled = false;
+            btnPlay.style.opacity = '1';
+        }
+    </script>
+</body>
+</html>

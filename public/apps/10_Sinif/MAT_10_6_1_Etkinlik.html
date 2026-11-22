@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10.6.1 - Veri Bilimi Laboratuvarı</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-dark: #121212;
+            --panel-bg: #1E1E1E;
+            --border-light: #333333;
+            
+            --primary: #4C9F70; /* Pastel Green */
+            --secondary: #F07167; /* Pastel Coral/Red */
+            --accent: #FED766; /* Pastel Yellow */
+            
+            --text-main: #F3F4F6;
+            --text-muted: #9CA3AF;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        
+        body {
+            background-color: var(--bg-dark); color: var(--text-main);
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 1300px; display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 25px; background: var(--panel-bg);
+            border-radius: 12px; border: 1px solid var(--border-light);
+            margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 800; color: var(--text-main); font-size: 1.2rem; }
+        .header-left img { width: 40px; height: 40px; border-radius: 8px; }
+        .kazanim { background: rgba(76, 159, 112, 0.2); padding: 6px 12px; border-radius: 6px; color: var(--primary); font-weight: 600; font-size: 0.9rem; }
+
+        h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 10px; text-align: center; color: var(--text-main); }
+        .subtitle { color: var(--text-muted); font-size: 1.05rem; margin-bottom: 30px; text-align: center; max-width: 900px; }
+
+        .dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; max-width: 1300px; }
+        @media (max-width: 1000px) { .dashboard { grid-template-columns: 1fr; } }
+
+        .panel {
+            background: var(--panel-bg); padding: 25px; border-radius: 12px;
+            border: 1px solid var(--border-light); box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            display: flex; flex-direction: column; gap: 20px;
+        }
+
+        .panel-title { font-size: 1.4rem; font-weight: 700; color: var(--accent); border-bottom: 2px solid var(--border-light); padding-bottom: 10px; margin-bottom: 5px; }
+
+        /* Table Styles */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid var(--border-light); padding: 12px; text-align: center; }
+        th { background: rgba(255,255,255,0.05); font-weight: 600; color: var(--text-muted); }
+        .total-cell { font-weight: 700; background: rgba(255,255,255,0.02); }
+        .grand-total { font-weight: 800; color: var(--accent); background: rgba(254, 215, 102, 0.1); }
+        
+        input[type="number"] {
+            width: 70px; padding: 8px; border-radius: 6px; border: 1px solid var(--border-light);
+            background: rgba(0,0,0,0.3); color: var(--text-main); text-align: center;
+            font-size: 1.1rem; font-weight: 600;
+        }
+        input[type="number"]:focus { outline: none; border-color: var(--primary); }
+
+        .editable-label {
+            background: transparent; border: none; border-bottom: 1px dashed var(--text-muted);
+            color: var(--text-main); font-weight: 600; font-size: 1rem; text-align: center; width: 120px;
+        }
+        .editable-label:focus { outline: none; border-color: var(--primary); }
+
+        /* Segment Control */
+        .segment-control { display: flex; background: rgba(0,0,0,0.3); border-radius: 8px; padding: 4px; gap: 4px; }
+        .seg-btn {
+            flex: 1; border: none; background: transparent; color: var(--text-muted); padding: 10px;
+            border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s;
+        }
+        .seg-btn.active { background: var(--border-light); color: var(--text-main); box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+
+        /* Chart Area */
+        .chart-container {
+            width: 100%; height: 350px; display: flex; align-items: flex-end; justify-content: space-around;
+            padding: 20px 20px 40px 60px; position: relative;
+            border-left: 2px solid var(--text-muted); border-bottom: 2px solid var(--text-muted);
+            margin-top: 20px;
+        }
+        
+        /* Y-Axis Labels */
+        .y-axis-labels { position: absolute; left: 10px; top: 0; bottom: 40px; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-end; font-size: 0.85rem; color: var(--text-muted); }
+        
+        /* X-Axis Labels */
+        .x-group { display: flex; flex-direction: column; align-items: center; width: 30%; height: 100%; justify-content: flex-end; position: relative; }
+        .x-label { position: absolute; bottom: -30px; font-weight: 600; font-size: 0.9rem; text-align: center; width: 150px; }
+        
+        .bar-pair { display: flex; gap: 10px; align-items: flex-end; height: 100%; width: 100%; justify-content: center; }
+        
+        .bar-wrapper { display: flex; flex-direction: column; align-items: center; width: 40px; justify-content: flex-end; height: 100%; }
+        
+        .bar { width: 100%; border-radius: 4px 4px 0 0; transition: height 0.5s cubic-bezier(0.4, 0, 0.2, 1); position: relative; }
+        .bar.v1 { background-color: var(--primary); }
+        .bar.v2 { background-color: var(--secondary); }
+        
+        .bar-val { position: absolute; top: -25px; font-size: 0.85rem; font-weight: 700; width: 100%; text-align: center; }
+
+        /* Legend */
+        .legend { display: flex; gap: 20px; justify-content: center; margin-top: 15px; }
+        .legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; font-weight: 600; }
+        .legend-color { width: 16px; height: 16px; border-radius: 4px; }
+        .legend-color.v1 { background-color: var(--primary); }
+        .legend-color.v2 { background-color: var(--secondary); }
+
+        /* Toggle Switch */
+        .toggle-container {
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(240, 113, 103, 0.1); padding: 15px; border-radius: 8px;
+            border: 1px solid rgba(240, 113, 103, 0.3); margin-top: 15px;
+        }
+        .toggle-text { font-weight: 600; color: var(--secondary); }
+        .switch { position: relative; display: inline-block; width: 50px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.2); transition: .4s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--secondary); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        .alert-info { font-size: 0.85rem; color: var(--text-muted); margin-top: 10px; font-style: italic; }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=4C9F70&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.10.6.1 - 10.6.2. Veri Analizi ve İstatistiksel Hatalar</div>
+    </div>
+    
+    <h1>Veri Bilimi ve İstatistik Laboratuvarı</h1>
+    <p class="subtitle">İki kategorik değişkenli verileri analiz edin. Çapraz tabloyu (iki yönlü tablo) doldurun, göreli sıklıkları hesaplayın ve medyadaki "yanıltıcı grafik" taktiklerinin nasıl yapıldığını keşfedin.</p>
+    
+    <div class="dashboard">
+        
+        <!-- DATA PANEL -->
+        <div class="panel">
+            <div class="panel-title">1. Veri Girişi (İki Yönlü Tablo)</div>
+            
+            <p style="color:var(--text-muted); font-size: 0.95rem;">Tablodaki değerleri ve kategori isimlerini değiştirerek kendi araştırmanızı oluşturabilirsiniz.</p>
+            
+            <div style="overflow-x: auto;">
+                <table id="dataTable">
+                    <tr>
+                        <th style="border: none;"></th>
+                        <th><input type="text" class="editable-label" id="col1Name" value="Düzenli Spor"></th>
+                        <th><input type="text" class="editable-label" id="col2Name" value="Spor Yapmıyor"></th>
+                        <th class="total-cell">Satır Toplamı</th>
+                    </tr>
+                    <tr>
+                        <th><input type="text" class="editable-label" id="row1Name" value="Yüksek Enerji"></th>
+                        <td><input type="number" id="v11" value="45" min="0"></td>
+                        <td><input type="number" id="v12" value="15" min="0"></td>
+                        <td class="total-cell" id="r1Tot">0</td>
+                    </tr>
+                    <tr>
+                        <th><input type="text" class="editable-label" id="row2Name" value="Düşük Enerji"></th>
+                        <td><input type="number" id="v21" value="10" min="0"></td>
+                        <td><input type="number" id="v22" value="30" min="0"></td>
+                        <td class="total-cell" id="r2Tot">0</td>
+                    </tr>
+                    <tr>
+                        <th class="total-cell">Sütun Toplamı</th>
+                        <td class="total-cell" id="c1Tot">0</td>
+                        <td class="total-cell" id="c2Tot">0</td>
+                        <td class="grand-total" id="grandTot">0</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="panel-title" style="margin-top: 20px;">2. Analiz Türü</div>
+            <div class="segment-control">
+                <button class="seg-btn active" onclick="setMode('freq')" id="btnFreq">Sıklık (Frekans)</button>
+                <button class="seg-btn" onclick="setMode('rowPct')" id="btnRowPct">Satıra Göre %</button>
+                <button class="seg-btn" onclick="setMode('colPct')" id="btnColPct">Sütuna Göre %</button>
+                <button class="seg-btn" onclick="setMode('allPct')" id="btnAllPct">Genel %</button>
+            </div>
+            
+            <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; font-size: 0.95rem; line-height: 1.5; color: var(--text-main);" id="analysisText">
+                <!-- Dynamic Text -->
+            </div>
+        </div>
+
+        <!-- CHART PANEL -->
+        <div class="panel">
+            <div class="panel-title">3. Kümeli Sütun Grafiği</div>
+            
+            <div class="legend">
+                <div class="legend-item"><div class="legend-color v1"></div> <span id="legCol1">Düzenli Spor</span></div>
+                <div class="legend-item"><div class="legend-color v2"></div> <span id="legCol2">Spor Yapmıyor</span></div>
+            </div>
+
+            <div class="chart-container">
+                <div class="y-axis-labels" id="yLabels">
+                    <span>100</span><span>75</span><span>50</span><span>25</span><span>0</span>
+                </div>
+                
+                <div class="x-group">
+                    <div class="bar-pair">
+                        <div class="bar-wrapper"><div class="bar v1" id="bar11"><span class="bar-val" id="val11"></span></div></div>
+                        <div class="bar-wrapper"><div class="bar v2" id="bar12"><span class="bar-val" id="val12"></span></div></div>
+                    </div>
+                    <div class="x-label" id="lblRow1">Yüksek Enerji</div>
+                </div>
+                
+                <div class="x-group">
+                    <div class="bar-pair">
+                        <div class="bar-wrapper"><div class="bar v1" id="bar21"><span class="bar-val" id="val21"></span></div></div>
+                        <div class="bar-wrapper"><div class="bar v2" id="bar22"><span class="bar-val" id="val22"></span></div></div>
+                    </div>
+                    <div class="x-label" id="lblRow2">Düşük Enerji</div>
+                </div>
+            </div>
+
+            <div class="toggle-container">
+                <div>
+                    <div class="toggle-text">Yanıltıcı Grafik Modu (Manipülasyon)</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">Y eksenini 0'dan değil, verilere yakın bir yerden başlatır.</div>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="chkMislead">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="alert-info" id="misleadInfo" style="display: none;">
+                <strong>Dikkat!</strong> Medyada sıkça kullanılan bir algı oyunudur. Y-ekseni sıfırdan başlamadığı için aradaki %5'lik minik bir fark bile grafikte 5 katıymış gibi devasa görünür. Verileri yorumlarken eksenlere dikkat edilmelidir (Kazanım 10.6.2).
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Inputs
+        const i11 = document.getElementById('v11'); const i12 = document.getElementById('v12');
+        const i21 = document.getElementById('v21'); const i22 = document.getElementById('v22');
+        
+        // Labels
+        const col1N = document.getElementById('col1Name'); const col2N = document.getElementById('col2Name');
+        const row1N = document.getElementById('row1Name'); const row2N = document.getElementById('row2Name');
+        
+        // Totals
+        const r1Tot = document.getElementById('r1Tot'); const r2Tot = document.getElementById('r2Tot');
+        const c1Tot = document.getElementById('c1Tot'); const c2Tot = document.getElementById('c2Tot');
+        const grandTot = document.getElementById('grandTot');
+        
+        // Mode
+        let currentMode = 'freq'; // freq, rowPct, colPct, allPct
+        
+        // Chart Elements
+        const bar11 = document.getElementById('bar11'); const bar12 = document.getElementById('bar12');
+        const bar21 = document.getElementById('bar21'); const bar22 = document.getElementById('bar22');
+        
+        const val11 = document.getElementById('val11'); const val12 = document.getElementById('val12');
+        const val21 = document.getElementById('val21'); const val22 = document.getElementById('val22');
+        
+        const yLabels = document.getElementById('yLabels');
+        const chkMislead = document.getElementById('chkMislead');
+
+        function setMode(mode) {
+            currentMode = mode;
+            ['btnFreq', 'btnRowPct', 'btnColPct', 'btnAllPct'].forEach(id => document.getElementById(id).classList.remove('active'));
+            
+            if(mode === 'freq') document.getElementById('btnFreq').classList.add('active');
+            if(mode === 'rowPct') document.getElementById('btnRowPct').classList.add('active');
+            if(mode === 'colPct') document.getElementById('btnColPct').classList.add('active');
+            if(mode === 'allPct') document.getElementById('btnAllPct').classList.add('active');
+            
+            updateData();
+        }
+
+        function updateData() {
+            // Get raw values
+            let v11 = parseInt(i11.value) || 0; let v12 = parseInt(i12.value) || 0;
+            let v21 = parseInt(i21.value) || 0; let v22 = parseInt(i22.value) || 0;
+            
+            let r1 = v11 + v12; let r2 = v21 + v22;
+            let c1 = v11 + v21; let c2 = v12 + v22;
+            let grand = r1 + r2;
+            
+            // Update Table Totals
+            r1Tot.innerText = r1; r2Tot.innerText = r2;
+            c1Tot.innerText = c1; c2Tot.innerText = c2;
+            grandTot.innerText = grand;
+            
+            // Update Labels
+            document.getElementById('legCol1').innerText = col1N.value;
+            document.getElementById('legCol2').innerText = col2N.value;
+            document.getElementById('lblRow1').innerText = row1N.value;
+            document.getElementById('lblRow2').innerText = row2N.value;
+
+            // Calculate Display Values
+            let d11 = v11, d12 = v12, d21 = v21, d22 = v22;
+            let suffix = "";
+            let maxVal = Math.max(v11, v12, v21, v22);
+            let analysisHtml = "";
+
+            if (grand === 0) return; // Prevent div by 0
+
+            if (currentMode === 'rowPct') {
+                d11 = r1 > 0 ? (v11/r1)*100 : 0; d12 = r1 > 0 ? (v12/r1)*100 : 0;
+                d21 = r2 > 0 ? (v21/r2)*100 : 0; d22 = r2 > 0 ? (v22/r2)*100 : 0;
+                suffix = "%"; maxVal = 100;
+                analysisHtml = `<strong>Satıra Göre Koşullu Göreli Sıklık:</strong><br> - "${row1N.value}" grubunun %${d11.toFixed(1)}'i "${col1N.value}" özelliğini taşıyor.<br> - "${row2N.value}" grubunun %${d21.toFixed(1)}'i "${col1N.value}" özelliğini taşıyor.`;
+            } else if (currentMode === 'colPct') {
+                d11 = c1 > 0 ? (v11/c1)*100 : 0; d12 = c2 > 0 ? (v12/c2)*100 : 0;
+                d21 = c1 > 0 ? (v21/c1)*100 : 0; d22 = c2 > 0 ? (v22/c2)*100 : 0;
+                suffix = "%"; maxVal = 100;
+                analysisHtml = `<strong>Sütuna Göre Koşullu Göreli Sıklık:</strong><br> - "${col1N.value}" grubunun %${d11.toFixed(1)}'i "${row1N.value}" özelliği taşıyor.<br> - "${col2N.value}" grubunun %${d12.toFixed(1)}'i "${row1N.value}" özelliği taşıyor.`;
+            } else if (currentMode === 'allPct') {
+                d11 = (v11/grand)*100; d12 = (v12/grand)*100;
+                d21 = (v21/grand)*100; d22 = (v22/grand)*100;
+                suffix = "%"; maxVal = Math.max(d11, d12, d21, d22); // Use max of all % for dynamic scale
+                maxVal = Math.ceil(maxVal / 10) * 10; // Round up to nearest 10
+                if(maxVal === 0) maxVal = 100;
+                analysisHtml = `<strong>Genel Göreli Sıklık (Yüzde):</strong><br> Tüm katılımcıların (${grand} kişi) %${d11.toFixed(1)} kadarı hem "${row1N.value}" hem de "${col1N.value}" grubundadır.`;
+            } else {
+                analysisHtml = `<strong>Frekans (Sıklık) Verisi:</strong><br> İki kategorik değişkene ait ham gözlem sayıları tabloda ve grafikte görünmektedir. Oransal karşılaştırma yapmak için yüzdelik dilimlere geçmeniz önerilir.`;
+                maxVal = Math.ceil(maxVal / 10) * 10;
+                if(maxVal === 0) maxVal = 10;
+            }
+            
+            document.getElementById('analysisText').innerHTML = analysisHtml;
+
+            // --- CHART UPDATE LOGIC ---
+            
+            let isMislead = chkMislead.checked;
+            document.getElementById('misleadInfo').style.display = isMislead ? "block" : "none";
+
+            let yMin = 0;
+            let yMax = maxVal;
+
+            if (isMislead) {
+                // Find non-zero minimum to mislead
+                let nonZeroVals = [d11, d12, d21, d22].filter(v => v > 0);
+                if(nonZeroVals.length > 0) {
+                    let actualMin = Math.min(...nonZeroVals);
+                    // Start Y axis slightly below the minimum value
+                    yMin = Math.max(0, actualMin - (actualMin * 0.1)); // e.g. if min is 40, start at 36
+                    yMax = Math.max(...[d11, d12, d21, d22]);
+                    yMax = yMax + (yMax * 0.05); // Give a little headroom
+                    
+                    if(yMax - yMin < 1) yMax = yMin + 5; // prevent division by zero in height calc
+                }
+            }
+
+            // Generate Y-Axis labels based on Min/Max
+            yLabels.innerHTML = `
+                <span>${currentMode==='freq' ? Math.round(yMax) : yMax.toFixed(1)+suffix}</span>
+                <span>${currentMode==='freq' ? Math.round(yMin + (yMax-yMin)*0.75) : (yMin + (yMax-yMin)*0.75).toFixed(1)+suffix}</span>
+                <span>${currentMode==='freq' ? Math.round(yMin + (yMax-yMin)*0.5) : (yMin + (yMax-yMin)*0.5).toFixed(1)+suffix}</span>
+                <span>${currentMode==='freq' ? Math.round(yMin + (yMax-yMin)*0.25) : (yMin + (yMax-yMin)*0.25).toFixed(1)+suffix}</span>
+                <span>${currentMode==='freq' ? Math.round(yMin) : yMin.toFixed(1)+suffix}</span>
+            `;
+
+            // Calculate Heights (0 to 100%)
+            function getH(val) {
+                if (val < yMin) return 0; // clipped
+                let h = ((val - yMin) / (yMax - yMin)) * 100;
+                return Math.max(0, Math.min(100, h));
+            }
+
+            bar11.style.height = getH(d11) + "%"; val11.innerText = currentMode==='freq' ? Math.round(d11) : d11.toFixed(1)+suffix;
+            bar12.style.height = getH(d12) + "%"; val12.innerText = currentMode==='freq' ? Math.round(d12) : d12.toFixed(1)+suffix;
+            bar21.style.height = getH(d21) + "%"; val21.innerText = currentMode==='freq' ? Math.round(d21) : d21.toFixed(1)+suffix;
+            bar22.style.height = getH(d22) + "%"; val22.innerText = currentMode==='freq' ? Math.round(d22) : d22.toFixed(1)+suffix;
+            
+            // Text color logic for bars that are too short
+            [ {b: bar11, v: val11}, {b: bar12, v: val12}, {b: bar21, v: val21}, {b: bar22, v: val22} ].forEach(item => {
+                let h = parseFloat(item.b.style.height);
+                if(h < 15) { item.v.style.top = "-25px"; item.v.style.color = "var(--text-main)"; }
+                else { item.v.style.top = "5px"; item.v.style.color = "rgba(0,0,0,0.7)"; }
+            });
+        }
+
+        // Event Listeners
+        [i11, i12, i21, i22].forEach(inp => inp.addEventListener('input', updateData));
+        [col1N, col2N, row1N, row2N].forEach(inp => inp.addEventListener('input', updateData));
+        chkMislead.addEventListener('change', updateData);
+
+        window.onload = updateData;
+    </script>
+</body>
+</html>

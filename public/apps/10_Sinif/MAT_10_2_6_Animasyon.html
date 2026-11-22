@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10.2.6 - Ters Fonksiyon Aynası Animasyonu</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0F172A;
+            --panel-bg: #1E293B;
+            --primary: #0EA5E9; /* Light Blue */
+            --secondary: #8B5CF6; /* Violet */
+            --accent: #F43F5E; /* Rose */
+            --neon-grid: rgba(56, 189, 248, 0.1);
+            --neon-axis: rgba(56, 189, 248, 0.4);
+            --mirror: rgba(251, 191, 36, 0.8); /* Amber */
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        
+        body { background-color: var(--bg-color); color: var(--text-main); display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; overflow-x: hidden; }
+
+        .header { width: 100%; max-width: 1000px; display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 800; color: var(--primary); }
+        .kazanim { background: rgba(139, 92, 246, 0.1); padding: 8px 15px; border-radius: 12px; color: var(--secondary); font-weight: 600; font-size: 0.9rem; }
+
+        h1 { font-size: 2.5rem; font-weight: 900; margin-bottom: 10px; text-align: center; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .subtitle { color: var(--text-muted); font-size: 1.1rem; margin-bottom: 30px; text-align: center; max-width: 800px; }
+
+        .workspace { display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 1000px; align-items: center; }
+
+        .controls { display: flex; gap: 20px; align-items: center; justify-content: center; background: var(--panel-bg); padding: 15px 25px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 5px 15px rgba(0,0,0,0.2); width: 100%; flex-wrap: wrap; }
+
+        .btn-select { background: rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.1); color: var(--text-muted); padding: 10px 20px; border-radius: 10px; font-weight: 800; cursor: pointer; transition: all 0.3s; }
+        .btn-select.active { background: rgba(14, 165, 233, 0.2); border-color: var(--primary); color: var(--primary); }
+        
+        .btn-action { background: linear-gradient(135deg, var(--secondary), var(--accent)); border: none; color: white; padding: 10px 25px; border-radius: 10px; font-weight: 800; font-size: 1.1rem; cursor: pointer; transition: all 0.3s; margin-left: auto; }
+        .btn-action:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(244, 63, 94, 0.4); }
+        .btn-action:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .graph-container { width: 100%; max-width: 800px; height: 500px; position: relative; background: #080C16; border-radius: 20px; border: 2px solid rgba(139, 92, 246, 0.3); overflow: hidden; box-shadow: 0 0 40px rgba(139, 92, 246, 0.15) inset; }
+
+        svg { width: 100%; height: 100%; display: block; }
+        .grid-line { stroke: var(--neon-grid); stroke-width: 1; }
+        .axis-line { stroke: var(--neon-axis); stroke-width: 2; }
+        .axis-label { fill: var(--neon-axis); font-size: 12px; font-weight: 800; }
+        
+        .mirror-path { fill: none; stroke: var(--mirror); stroke-width: 2; stroke-dasharray: 8,4; vector-effect: non-scaling-stroke; opacity: 0; transition: opacity 1s; }
+        .fx-path { fill: none; stroke: var(--primary); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 5px var(--primary)); vector-effect: non-scaling-stroke; transition: d 0.5s; }
+        .inv-path { fill: none; stroke: var(--accent); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 5px var(--accent)); vector-effect: non-scaling-stroke; opacity: 0; transition: opacity 1s; }
+        
+        .point { fill: white; stroke: var(--primary); stroke-width: 2; transition: all 1s ease-in-out; opacity: 0; }
+        .point-line { fill: none; stroke: rgba(255,255,255,0.3); stroke-width: 1; stroke-dasharray: 2,2; opacity: 0; transition: opacity 0.5s; }
+        
+        .math-rule-box { background: rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.1); padding: 15px 25px; border-radius: 15px; font-size: 1.4rem; font-weight: 600; color: white; display: flex; gap: 40px; justify-content: center; width: 100%; min-height: 80px; align-items: center; }
+        .math-col { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left"><span>@mufithocailematematik</span></div>
+        <div class="kazanim">MAT.10.2.6. Ters Fonksiyonlar (Animasyon)</div>
+    </div>
+    
+    <h1>Ters Fonksiyon Aynası</h1>
+    <p class="subtitle">Bir fonksiyonun tersi ile kendisinin grafikleri her zaman \( y = x \) doğrusuna (aynaya) göre simetriktir. \( (x, y) \to (y, x) \) noktasal geçişini animasyonla görelim.</p>
+    
+    <div class="workspace">
+        <div class="controls">
+            <button class="btn-select active" onclick="selectFunc('linear', this)">Doğrusal f(x)=2x-4</button>
+            <button class="btn-select" onclick="selectFunc('quad', this)">Karesel f(x)=x² (x≥0)</button>
+            <button class="btn-select" onclick="selectFunc('cubic', this)">Kübik f(x)=x³</button>
+            
+            <button class="btn-action" id="btnAnim" onclick="playAnim()">Simetriyi Oluştur</button>
+        </div>
+        
+        <div class="graph-container">
+            <svg viewBox="-10 -10 20 20" preserveAspectRatio="xMidYMid meet" id="graphSvg">
+                <g transform="scale(1, -1)">
+                    <g id="gridGroup"></g>
+                    
+                    <line x1="-10" y1="0" x2="10" y2="0" class="axis-line" />
+                    <line x1="0" y1="-10" x2="0" y2="10" class="axis-line" />
+                    
+                    <line x1="-10" y1="-10" x2="10" y2="10" class="mirror-path" id="mirrorLine" />
+                    
+                    <path id="fxPath" class="fx-path" d="" />
+                    <path id="invPath" class="inv-path" d="" />
+                    
+                    <g id="pointsGroup"></g>
+                </g>
+                <g id="labelsGroup"></g>
+            </svg>
+        </div>
+        
+        <div class="math-rule-box">
+            <div class="math-col">
+                <span style="color:var(--primary); font-size:1rem;">Orijinal Fonksiyon</span>
+                <span id="fxMath">\( f(x) = 2x - 4 \)</span>
+            </div>
+            <div class="math-col">
+                <span style="color:var(--mirror); font-size:1rem;">Ayna</span>
+                <span id="mirrorMath" style="opacity:0.3; transition:0.5s;">\( y = x \)</span>
+            </div>
+            <div class="math-col">
+                <span style="color:var(--accent); font-size:1rem;">Ters Fonksiyon</span>
+                <span id="invMath" style="opacity:0.3; transition:0.5s;">\( f^{-1}(x) = \frac{x+4}{2} \)</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        
+        const fxPath = document.getElementById('fxPath');
+        const invPath = document.getElementById('invPath');
+        const mirrorLine = document.getElementById('mirrorLine');
+        const pointsGroup = document.getElementById('pointsGroup');
+        const btnAnim = document.getElementById('btnAnim');
+        
+        const mirrorMath = document.getElementById('mirrorMath');
+        const invMath = document.getElementById('invMath');
+        
+        let currentType = 'linear';
+        let debounceTimer;
+
+        const funcs = {
+            linear: { f: x => 2*x - 4, domain: [-3, 7], texF: "\\( f(x) = 2x - 4 \\)", texInv: "\\( f^{-1}(x) = \\frac{x + 4}{2} \\)", testPoints: [0, 2, 4] },
+            quad: { f: x => x*x, domain: [0, 3.5], texF: "\\( f(x) = x^2 \\quad (x \\ge 0) \\)", texInv: "\\( f^{-1}(x) = \\sqrt{x} \\)", testPoints: [0, 1, 2, 3] },
+            cubic: { f: x => x*x*x, domain: [-2.15, 2.15], texF: "\\( f(x) = x^3 \\)", texInv: "\\( f^{-1}(x) = \\sqrt[3]{x} \\)", testPoints: [-2, -1, 0, 1, 2] }
+        };
+
+        function updateMathjax() {
+            let data = funcs[currentType];
+            document.getElementById('fxMath').innerHTML = data.texF;
+            document.getElementById('invMath').innerHTML = data.texInv;
+            
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => { MathJax.typesetPromise([document.getElementById('fxMath'), document.getElementById('invMath')]); }, 50);
+        }
+
+        function drawGrid() {
+            let gridHtml = ''; let labelHtml = '';
+            for(let i = -10; i <= 10; i++) {
+                gridHtml += `<line x1="${i}" y1="-10" x2="${i}" y2="10" class="grid-line" />`;
+                gridHtml += `<line x1="-10" y1="${i}" x2="10" y2="${i}" class="grid-line" />`;
+                if (i !== 0 && i % 2 === 0) {
+                    labelHtml += `<text x="${i}" y="0.8" class="axis-label" text-anchor="middle" dominant-baseline="hanging">${i}</text>`;
+                    labelHtml += `<text x="-0.4" y="${-i}" class="axis-label" text-anchor="end" dominant-baseline="middle">${i}</text>`;
+                }
+            }
+            document.getElementById('gridGroup').innerHTML = gridHtml;
+            document.getElementById('labelsGroup').innerHTML = labelHtml;
+        }
+
+        function generatePath(fn, bounds) {
+            let d = ''; let isFirst = true;
+            for(let t = bounds[0]; t <= bounds[1]; t += 0.1) {
+                let x = t; let y = fn(t);
+                if(y > 10) y = 10; if(y < -10) y = -10;
+                if(x > 10) x = 10; if(x < -10) x = -10;
+                if(isFirst) { d += `M ${x} ${y} `; isFirst = false; } else { d += `L ${x} ${y} `; }
+            }
+            return d;
+        }
+
+        function generateInversePathBySymmetry(fn, bounds) {
+            let d = ''; let isFirst = true;
+            for(let t = bounds[0]; t <= bounds[1]; t += 0.1) {
+                let x = fn(t); let y = t;
+                if(isFirst) { d += `M ${x} ${y} `; isFirst = false; } else { d += `L ${x} ${y} `; }
+            }
+            return d;
+        }
+
+        function selectFunc(type, btn) {
+            document.querySelectorAll('.btn-select').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active'); currentType = type; resetScene();
+        }
+
+        function resetScene() {
+            let data = funcs[currentType];
+            fxPath.setAttribute('d', generatePath(data.f, data.domain));
+            invPath.setAttribute('d', generateInversePathBySymmetry(data.f, data.domain));
+            invPath.style.opacity = '0';
+            mirrorLine.style.opacity = '0'; mirrorMath.style.opacity = '0.3'; invMath.style.opacity = '0.3';
+            pointsGroup.innerHTML = '';
+            btnAnim.disabled = false; btnAnim.innerText = "Simetriyi Oluştur";
+            updateMathjax();
+        }
+
+        async function playAnim() {
+            btnAnim.disabled = true; btnAnim.innerText = "Animasyon Oynatılıyor...";
+            let data = funcs[currentType];
+            
+            mirrorLine.style.opacity = '1'; mirrorMath.style.opacity = '1';
+            await sleep(1500);
+            
+            let html = '';
+            data.testPoints.forEach((px, i) => {
+                let py = data.f(px);
+                html += `<circle cx="${px}" cy="${py}" r="0.3" class="point" id="pt_${i}" />
+                         <line x1="${px}" y1="${py}" x2="${py}" y2="${px}" class="point-line" id="ln_${i}" />
+                         <circle cx="${px}" cy="${py}" r="0.3" class="point" id="pt_inv_${i}" style="fill:var(--accent); stroke:white;" />`;
+            });
+            pointsGroup.innerHTML = html;
+            
+            for(let i=0; i<data.testPoints.length; i++) { document.getElementById(`pt_${i}`).style.opacity = '1'; }
+            await sleep(1000);
+            
+            for(let i=0; i<data.testPoints.length; i++) {
+                let px = data.testPoints[i]; let py = data.f(px);
+                let ln = document.getElementById(`ln_${i}`); let pInv = document.getElementById(`pt_inv_${i}`);
+                ln.style.opacity = '1'; pInv.style.opacity = '1';
+                void pInv.offsetWidth;
+                pInv.setAttribute('cx', py); pInv.setAttribute('cy', px);
+                await sleep(500);
+            }
+            await sleep(1000);
+            
+            invPath.style.opacity = '1'; invMath.style.opacity = '1';
+            for(let i=0; i<data.testPoints.length; i++) { document.getElementById(`ln_${i}`).style.opacity = '0'; }
+            
+            btnAnim.innerText = "Tamamlandı";
+            setTimeout(() => { btnAnim.disabled = false; btnAnim.innerText = "Tekrar Oynat"; btnAnim.onclick = resetScene; }, 2000);
+        }
+
+        window.onload = () => { drawGrid(); resetScene(); };
+    </script>
+</body>
+</html>

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10.1.1 - Bölen Makinesi Animasyonu</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0F172A; /* Slate 900 */
+            --panel-bg: #1E293B; /* Slate 800 */
+            --primary: #38BDF8; /* Sky 400 */
+            --secondary: #A78BFA; /* Violet 400 */
+            --accent: #F472B6; /* Pink 400 */
+            --danger: #F43F5E; /* Rose 500 */
+            --success: #10B981; /* Emerald 500 */
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background-color: var(--bg-color); color: var(--text-main);
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 900px; display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 25px; background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px); border-radius: 20px; border: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 800; color: var(--primary); }
+        .header-left img { width: 40px; height: 40px; border-radius: 10px; }
+        .kazanim { background: rgba(56, 189, 248, 0.1); padding: 8px 15px; border-radius: 12px; color: var(--primary); font-weight: 600; font-size: 0.9rem; }
+
+        h1 { font-size: 2.5rem; font-weight: 900; margin-bottom: 10px; text-align: center; 
+             background: linear-gradient(135deg, var(--primary), var(--secondary)); 
+             -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+             
+        .subtitle { color: var(--text-muted); font-size: 1.1rem; margin-bottom: 30px; text-align: center; max-width: 700px; }
+
+        .workspace { display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 900px; align-items: center; }
+
+        .expl-text {
+            background: rgba(167, 139, 250, 0.1); color: var(--secondary); padding: 15px 25px;
+            border-radius: 15px; border: 1px solid rgba(167, 139, 250, 0.3);
+            font-size: 1.2rem; font-weight: 600; text-align: center; width: 100%;
+            transition: all 0.5s; min-height: 50px;
+        }
+
+        .math-rule-box {
+            background: rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.1);
+            padding: 20px; border-radius: 15px; font-size: 1.5rem; font-weight: 600; color: white;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5); width: 100%; min-height: 80px; transition: 0.5s;
+        }
+
+        .svg-board {
+            width: 100%; height: 450px; background: rgba(255,255,255,0.02);
+            border-radius: 20px; border: 2px dashed rgba(255,255,255,0.1);
+            position: relative; overflow: hidden;
+        }
+
+        /* Machine Elements */
+        .gear { transform-origin: center; transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .gear-path { fill: rgba(56, 189, 248, 0.2); stroke: var(--primary); stroke-width: 3; }
+        .gear-text { fill: white; font-weight: 900; font-size: 24px; text-anchor: middle; dominant-baseline: middle; }
+        
+        .gear2-path { fill: rgba(167, 139, 250, 0.2); stroke: var(--secondary); stroke-width: 3; }
+        
+        .machine-body { fill: none; stroke: rgba(255,255,255,0.1); stroke-width: 4; stroke-linejoin: round; }
+        
+        .divisor-orb { fill: rgba(16, 185, 129, 0.8); stroke: var(--success); stroke-width: 2; transition: all 1s; opacity: 0; }
+        .orb-text { fill: white; font-weight: 800; font-size: 16px; text-anchor: middle; dominant-baseline: middle; opacity: 0; transition: all 1s; }
+        
+        .btn-action {
+            background: linear-gradient(135deg, var(--primary), var(--secondary)); border: none;
+            color: white; padding: 12px 25px; border-radius: 10px; font-weight: 800; font-size: 1.2rem;
+            cursor: pointer; transition: all 0.3s; margin-bottom: 20px;
+        }
+        .btn-action:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(167, 139, 250, 0.4); }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=38BDF8&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.10.1.1. Asal Çarpanlar ve Bölenler (Animasyon)</div>
+    </div>
+    
+    <h1>Bölen Kombinasyon Makinesi</h1>
+    <p class="subtitle">Bir sayının bölen sayısı formülü (üsleri 1 artırıp çarpma) nereden gelir? 12 sayısının bölenleri üzerinden makineyi çalıştırarak formülün mantığını görelim.</p>
+    
+    <div class="workspace">
+        <div class="expl-text" id="explText">12 sayısını inceleyelim: 12 = 2² · 3¹</div>
+        
+        <div class="svg-board">
+            <svg width="100%" height="100%" viewBox="0 0 800 450" preserveAspectRatio="xMidYMid meet" id="machineSvg">
+                
+                <!-- Machine Housing -->
+                <path class="machine-body" d="M 200 50 L 600 50 L 600 200 L 450 300 L 450 400 L 350 400 L 350 300 L 200 200 Z" />
+                
+                <text x="400" y="30" fill="var(--text-muted)" font-weight="800" font-size="20" text-anchor="middle">Kombinasyon Jeneratörü</text>
+                
+                <!-- Gear 1 (Base 2) -->
+                <g class="gear" id="gear1" transform="translate(300, 130)">
+                    <circle cx="0" cy="0" r="50" class="gear-path" />
+                    <!-- 3 states: 2^0, 2^1, 2^2 -->
+                    <text x="0" y="-30" class="gear-text" id="g1_0">2⁰</text>
+                    <text x="25" y="25" class="gear-text" id="g1_1" style="font-size:16px; opacity:0.5;">2¹</text>
+                    <text x="-25" y="25" class="gear-text" id="g1_2" style="font-size:16px; opacity:0.5;">2²</text>
+                </g>
+                <text x="300" y="200" fill="var(--primary)" font-weight="800" text-anchor="middle">Üs: 0, 1, 2 (3 Durum)</text>
+                
+                <!-- Gear 2 (Base 3) -->
+                <g class="gear" id="gear2" transform="translate(500, 130)">
+                    <circle cx="0" cy="0" r="40" class="gear2-path" />
+                    <!-- 2 states: 3^0, 3^1 -->
+                    <text x="0" y="-20" class="gear-text" id="g2_0">3⁰</text>
+                    <text x="0" y="20" class="gear-text" id="g2_1" style="font-size:16px; opacity:0.5;">3¹</text>
+                </g>
+                <text x="500" y="200" fill="var(--secondary)" font-weight="800" text-anchor="middle">Üs: 0, 1 (2 Durum)</text>
+                
+                <!-- Output Pipe -->
+                <path d="M 380 300 L 420 300 L 420 380 L 380 380 Z" fill="rgba(255,255,255,0.05)" />
+                
+                <!-- Divisors falling out -->
+                <g id="orbsGroup"></g>
+            </svg>
+        </div>
+        
+        <div class="math-rule-box" id="ruleBox">
+            <span id="mathOutput"></span>
+        </div>
+    </div>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        const explText = document.getElementById('explText');
+        const ruleBox = document.getElementById('ruleBox');
+        const mathOutput = document.getElementById('mathOutput');
+        const orbsGroup = document.getElementById('orbsGroup');
+        
+        const gear1 = document.getElementById('gear1');
+        const gear2 = document.getElementById('gear2');
+        
+        let debounceTimer;
+        function updateMath(texString) {
+            mathOutput.innerHTML = texString;
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                MathJax.typesetPromise([mathOutput]);
+            }, 50);
+        }
+
+        async function runSequence() {
+            updateMath(`\\( 12 = 2^2 \\cdot 3^1 \\)`);
+            
+            await sleep(2000);
+            
+            explText.innerHTML = "2'nin kuvvetleri için 3 farklı seçimimiz var: 2⁰, 2¹, 2²";
+            updateMath(`Seçenekler: \\( 2^0, 2^1, 2^2 \\) \\implies 3 Adet`);
+            
+            await sleep(4000);
+            
+            explText.innerHTML = "3'ün kuvvetleri için ise 2 farklı seçimimiz var: 3⁰, 3¹";
+            updateMath(`Seçenekler: \\( 3^0, 3^1 \\) \\implies 2 Adet`);
+            
+            await sleep(4000);
+            
+            explText.innerHTML = "Şimdi makine tüm olası eşleşmeleri (kombinasyonları) üretecek...";
+            updateMath(`Toplam Çarpan = \\( 3 \\times 2 = 6 \\) Adet`);
+            
+            await sleep(3000);
+            
+            let combinations = [
+                { p1: 0, p2: 0, val: 1 },
+                { p1: 1, p2: 0, val: 2 },
+                { p1: 2, p2: 0, val: 4 },
+                { p1: 0, p2: 1, val: 3 },
+                { p1: 1, p2: 1, val: 6 },
+                { p1: 2, p2: 1, val: 12 }
+            ];
+            
+            // Layout for output orbs
+            let startX = 150;
+            
+            for(let i=0; i<combinations.length; i++) {
+                let combo = combinations[i];
+                
+                // Rotate gears
+                gear1.style.transform = `translate(300px, 130px) rotate(${combo.p1 * 120}deg)`;
+                gear2.style.transform = `translate(500px, 130px) rotate(${combo.p2 * 180}deg)`;
+                
+                // Emphasize current texts (Reset all first)
+                document.querySelectorAll('#gear1 .gear-text').forEach(el => { el.style.opacity = '0.5'; el.style.fontSize = '16px'; });
+                document.querySelectorAll('#gear2 .gear-text').forEach(el => { el.style.opacity = '0.5'; el.style.fontSize = '16px'; });
+                
+                let activeG1 = document.getElementById(`g1_${combo.p1}`);
+                let activeG2 = document.getElementById(`g2_${combo.p2}`);
+                activeG1.style.opacity = '1'; activeG1.style.fontSize = '24px';
+                activeG2.style.opacity = '1'; activeG2.style.fontSize = '24px';
+                
+                explText.innerHTML = `Eşleşme: \\( 2^{${combo.p1}} \\cdot 3^{${combo.p2}} = ${combo.val} \\)`;
+                MathJax.typesetPromise([explText]);
+                
+                // Create Orb
+                let orbId = `orb_${i}`;
+                let orbHtml = `
+                    <circle cx="400" cy="300" r="20" class="divisor-orb" id="${orbId}" />
+                    <text x="400" y="300" class="orb-text" id="txt_${orbId}">${combo.val}</text>
+                `;
+                orbsGroup.innerHTML += orbHtml;
+                
+                // Animate drop
+                setTimeout(() => {
+                    let orb = document.getElementById(orbId);
+                    let txt = document.getElementById(`txt_${orbId}`);
+                    orb.style.opacity = '1'; txt.style.opacity = '1';
+                    
+                    // Move to final position
+                    orb.setAttribute('cx', startX + i * 100);
+                    orb.setAttribute('cy', 400);
+                    txt.setAttribute('x', startX + i * 100);
+                    txt.setAttribute('y', 400);
+                }, 50);
+                
+                await sleep(1500);
+            }
+            
+            await sleep(1000);
+            explText.innerHTML = "Gördüğünüz gibi, her bir asal çarpanın üssünün 1 fazlası kadar seçim hakkımız var.";
+            ruleBox.style.borderColor = "var(--accent)";
+            ruleBox.style.boxShadow = "0 0 30px rgba(244,114,182,0.4)";
+            
+            updateMath(`\\( PBS = (2+1) \\cdot (1+1) = 3 \\cdot 2 = 6 \\) \\quad <span style="color:#10B981;">(İspatlandı!)</span>`);
+        }
+
+        window.onload = runSequence;
+    </script>
+</body>
+</html>

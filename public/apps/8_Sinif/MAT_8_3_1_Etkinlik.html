@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Açı Kenar İlişkisi Laboratuvarı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F0E17; --surface: #1A1A24; --text: #F8FAFC;
+            --primary: #8B5CF6; --secondary: #10B981;
+            --tertiary: #06B6D4; --danger: #F43F5E;
+            --accent: #F59E0B;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, #161625 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(139, 92, 246, 0.2); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; margin-bottom: 20px;}
+        h1 { font-size: 2.2rem; color: var(--tertiary); font-weight: 900;}
+        .subtitle { color: #94A3B8; font-size: 1.1rem; margin-top: 5px;}
+
+        .main-container {
+            display: flex; gap: 30px; width: 100%; max-width: 1000px; flex-wrap: wrap; justify-content: center;
+        }
+
+        .panel {
+            background: #11111A; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.4); 
+            padding: 30px; display: flex; width: 100%; gap: 30px; align-items: center; justify-content: center; flex-wrap: wrap;
+        }
+
+        /* SVG Canvas */
+        .canvas-container {
+            width: 500px; height: 400px; background: #161625; border: 2px dashed #334155; border-radius: 15px;
+            position: relative; touch-action: none;
+        }
+
+        svg { width: 100%; height: 100%; overflow: visible; }
+        
+        .triangle-path { fill: rgba(139, 92, 246, 0.1); stroke: white; stroke-width: 3; stroke-linejoin: round;}
+        
+        .side-lbl { fill: white; font-weight: 800; font-family: 'Outfit'; font-size: 16px; pointer-events: none;}
+        .angle-lbl { fill: var(--accent); font-weight: 900; font-family: 'Outfit'; font-size: 16px; pointer-events: none;}
+        
+        .vertex {
+            width: 30px; height: 30px; background: var(--primary); border-radius: 50%; position: absolute;
+            transform: translate(-50%, -50%); cursor: grab; display: flex; align-items: center; justify-content: center;
+            font-weight: 900; color: white; box-shadow: 0 0 15px rgba(139, 92, 246, 0.5); z-index: 10;
+        }
+        .vertex:active { cursor: grabbing; transform: translate(-50%, -50%) scale(1.1); }
+
+        .vertex[data-id="B"], .vertex[data-id="C"] { cursor: default; background: #334155; box-shadow: none; }
+
+        /* Data Panel */
+        .data-panel {
+            display: flex; flex-direction: column; gap: 20px; width: 350px;
+        }
+
+        .data-card {
+            background: rgba(255,255,255,0.02); padding: 20px; border-radius: 15px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .d-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 1.2rem; font-weight: 800;}
+        .d-val { color: var(--tertiary); }
+        .d-angle { color: var(--accent); }
+
+        .rule-box {
+            background: rgba(16, 185, 129, 0.1); border: 2px solid var(--secondary);
+            padding: 20px; border-radius: 15px; color: white; font-weight: 600; font-size: 1.1rem;
+        }
+
+        .highlight { color: var(--secondary); font-weight: 900; }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.8.3.1. Üçgende Açı - Kenar İlişkisi (Etkinlik)</div>
+    </div>
+
+    <div class="title-area">
+        <h1>Dinamik Üçgen Laboratuvarı</h1>
+        <p class="subtitle">A köşesini sürükleyin. Büyük açının karşısında her zaman büyük kenarın olduğunu keşfedin.</p>
+    </div>
+
+    <div class="main-container">
+        
+        <div class="panel">
+            
+            <div class="canvas-container" id="canvas">
+                <svg id="svgGraph">
+                    <!-- Angle arcs -->
+                    <path id="arcA" fill="rgba(245, 158, 11, 0.2)" stroke="var(--accent)"/>
+                    <path id="arcB" fill="rgba(245, 158, 11, 0.2)" stroke="var(--accent)"/>
+                    <path id="arcC" fill="rgba(245, 158, 11, 0.2)" stroke="var(--accent)"/>
+                    
+                    <path id="triPath" class="triangle-path" d=""/>
+                    
+                    <text id="lblSideA" class="side-lbl">a</text>
+                    <text id="lblSideB" class="side-lbl">b</text>
+                    <text id="lblSideC" class="side-lbl">c</text>
+
+                    <text id="lblAngleA" class="angle-lbl">A</text>
+                    <text id="lblAngleB" class="angle-lbl">B</text>
+                    <text id="lblAngleC" class="angle-lbl">C</text>
+                </svg>
+                
+                <div class="vertex" id="vA" data-id="A" style="left: 250px; top: 100px;">A</div>
+                <div class="vertex" id="vB" data-id="B" style="left: 100px; top: 350px;">B</div>
+                <div class="vertex" id="vC" data-id="C" style="left: 400px; top: 350px;">C</div>
+            </div>
+
+            <div class="data-panel">
+                <div class="data-card">
+                    <div class="d-row"><span>m(A) = <span class="d-angle" id="valAngA"></span>°</span> <span>a = <span class="d-val" id="valSideA"></span></span></div>
+                    <div class="d-row"><span>m(B) = <span class="d-angle" id="valAngB"></span>°</span> <span>b = <span class="d-val" id="valSideB"></span></span></div>
+                    <div class="d-row"><span>m(C) = <span class="d-angle" id="valAngC"></span>°</span> <span>c = <span class="d-val" id="valSideC"></span></span></div>
+                </div>
+
+                <div class="rule-box" id="ruleBox">
+                    Kurallar burada belirecek...
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const vA = document.getElementById('vA');
+        const vB = document.getElementById('vB');
+        const vC = document.getElementById('vC');
+        const triPath = document.getElementById('triPath');
+        
+        const arcA = document.getElementById('arcA');
+        const arcB = document.getElementById('arcB');
+        const arcC = document.getElementById('arcC');
+        
+        const lblSideA = document.getElementById('lblSideA');
+        const lblSideB = document.getElementById('lblSideB');
+        const lblSideC = document.getElementById('lblSideC');
+        
+        const lblAngleA = document.getElementById('lblAngleA');
+        const lblAngleB = document.getElementById('lblAngleB');
+        const lblAngleC = document.getElementById('lblAngleC');
+
+        const valAngA = document.getElementById('valAngA');
+        const valAngB = document.getElementById('valAngB');
+        const valAngC = document.getElementById('valAngC');
+        const valSideA = document.getElementById('valSideA');
+        const valSideB = document.getElementById('valSideB');
+        const valSideC = document.getElementById('valSideC');
+        
+        const ruleBox = document.getElementById('ruleBox');
+
+        let isDragging = false;
+
+        vA.addEventListener('pointerdown', () => isDragging = true);
+        window.addEventListener('pointerup', () => isDragging = false);
+        window.addEventListener('pointermove', (e) => {
+            if(!isDragging) return;
+            const rect = canvas.getBoundingClientRect();
+            let x = e.clientX - rect.left;
+            let y = e.clientY - rect.top;
+            
+            // Constrain
+            x = Math.max(20, Math.min(x, 480));
+            y = Math.max(20, Math.min(y, 330)); // Don't let it go below base
+            
+            vA.style.left = x + 'px';
+            vA.style.top = y + 'px';
+            
+            updateTri();
+        });
+
+        function getDist(p1, p2) {
+            return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
+        }
+
+        function getAngle(pCenter, p1, p2) {
+            let a = getDist(pCenter, p1);
+            let b = getDist(pCenter, p2);
+            let c = getDist(p1, p2);
+            let cos = (a*a + b*b - c*c) / (2*a*b);
+            // fix float precision issues
+            if (cos > 1) cos = 1; if (cos < -1) cos = -1;
+            return Math.acos(cos) * (180 / Math.PI);
+        }
+
+        function getArcPath(cx, cy, angStart, angEnd, radius) {
+            // simplified arc approximation for visual only. Since we have arbitrary triangles,
+            // calculating exact start/end angles in coordinate space is tricky. 
+            // We will just draw a small circle segment or skip it and just place text.
+            // Let's just skip drawing arcs for now to keep it bug-free and focus on text placement.
+            return ""; 
+        }
+
+        function updateTri() {
+            let A = { x: parseFloat(vA.style.left), y: parseFloat(vA.style.top) };
+            let B = { x: parseFloat(vB.style.left), y: parseFloat(vB.style.top) };
+            let C = { x: parseFloat(vC.style.left), y: parseFloat(vC.style.top) };
+
+            triPath.setAttribute('d', `M ${A.x} ${A.y} L ${B.x} ${B.y} L ${C.x} ${C.y} Z`);
+
+            let sideC_len = getDist(A, B);
+            let sideA_len = getDist(B, C);
+            let sideB_len = getDist(A, C);
+
+            let angA = getAngle(A, B, C);
+            let angB = getAngle(B, A, C);
+            let angC = getAngle(C, A, B);
+
+            // Labels for sides (midpoints)
+            lblSideA.setAttribute('x', (B.x + C.x)/2); lblSideA.setAttribute('y', (B.y + C.y)/2 + 20);
+            lblSideB.setAttribute('x', (A.x + C.x)/2 + 10); lblSideB.setAttribute('y', (A.y + C.y)/2 - 10);
+            lblSideC.setAttribute('x', (A.x + B.x)/2 - 20); lblSideC.setAttribute('y', (A.y + B.y)/2 - 10);
+
+            lblSideA.textContent = sideA_len.toFixed(1);
+            lblSideB.textContent = sideB_len.toFixed(1);
+            lblSideC.textContent = sideC_len.toFixed(1);
+
+            // Labels for angles (slightly inset)
+            lblAngleA.setAttribute('x', A.x - 5); lblAngleA.setAttribute('y', A.y + 30);
+            lblAngleB.setAttribute('x', B.x + 20); lblAngleB.setAttribute('y', B.y - 10);
+            lblAngleC.setAttribute('x', C.x - 30); lblAngleC.setAttribute('y', C.y - 10);
+
+            lblAngleA.textContent = angA.toFixed(1) + "°";
+            lblAngleB.textContent = angB.toFixed(1) + "°";
+            lblAngleC.textContent = angC.toFixed(1) + "°";
+
+            // Update Dashboard
+            valAngA.textContent = angA.toFixed(1); valSideA.textContent = sideA_len.toFixed(1);
+            valAngB.textContent = angB.toFixed(1); valSideB.textContent = sideB_len.toFixed(1);
+            valAngC.textContent = angC.toFixed(1); valSideC.textContent = sideC_len.toFixed(1);
+
+            // Logic logic
+            let angles = [
+                {name: 'A', val: angA, side: 'a', sval: sideA_len},
+                {name: 'B', val: angB, side: 'b', sval: sideB_len},
+                {name: 'C', val: angC, side: 'c', sval: sideC_len}
+            ];
+            
+            angles.sort((a,b) => b.val - a.val); // Descending
+
+            ruleBox.innerHTML = `
+                Sıralama (Açılar):<br>
+                <span class="highlight">m(${angles[0].name}) > m(${angles[1].name}) > m(${angles[2].name})</span>
+                <br><br>
+                Sıralama (Kenarlar):<br>
+                <span class="highlight">${angles[0].side} > ${angles[1].side} > ${angles[2].side}</span>
+                <br><br>
+                En büyük açı <b>m(${angles[0].name})</b> olduğu için, karşısındaki <b>${angles[0].side}</b> kenarı en uzundur!
+            `;
+        }
+
+        // Global spam click prevention for Etkinlik files
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'BUTTON' && !e.target.hasAttribute('data-spam-locked')) {
+                e.target.setAttribute('data-spam-locked', 'true');
+                let originalOpacity = e.target.style.opacity || '1';
+                e.target.style.opacity = '0.7';
+                e.target.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    e.target.removeAttribute('data-spam-locked');
+                    e.target.style.opacity = originalOpacity;
+                    e.target.style.pointerEvents = 'auto';
+                }, 400);
+            }
+        });
+
+        updateTri();
+    </script>
+</body>
+</html>

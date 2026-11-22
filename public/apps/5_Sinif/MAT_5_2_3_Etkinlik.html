@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tasarruf Kumbarası - Örüntüler</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #F8FAFC;
+            --text: #0F172A;
+            --primary: #F59E0B; /* Amber */
+            --primary-hover: #D97706;
+            --secondary: #10B981; /* Emerald */
+            --card: #FFFFFF;
+            --border: #E2E8F0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 900px;
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--card); padding: 15px 25px; border-radius: 50px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 30px; margin-top: 10px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; color: #92400E;}
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; }
+        .kazanim { background: #FEF3C7; color: #92400E; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .container {
+            width: 100%; max-width: 900px;
+            background: var(--card); border-radius: 24px; padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            display: flex; flex-direction: column; align-items: center; gap: 30px;
+        }
+
+        h1 { color: #92400E; font-size: 2.2rem; text-align: center; }
+        
+        .story-box {
+            background: #FFFBEB; border: 2px dashed #FCD34D; padding: 20px 30px; border-radius: 16px;
+            font-size: 1.2rem; color: #B45309; font-weight: 600; text-align: center; width: 100%;
+        }
+
+        /* Piggy Bank Visual */
+        .visual-area {
+            display: flex; justify-content: center; align-items: flex-end; gap: 20px; height: 120px; margin: 10px 0;
+        }
+        .piggy { font-size: 5rem; line-height: 1; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.2)); transition: transform 0.3s;}
+        .coin-stack { display: flex; flex-direction: column-reverse; gap: 2px; }
+        .coin { width: 40px; height: 12px; background: linear-gradient(to right, #FCD34D, #F59E0B); border-radius: 50%; border: 1px solid #D97706; box-shadow: 0 2px 0 #B45309;}
+
+        /* Table Area */
+        table {
+            width: 100%; border-collapse: separate; border-spacing: 0;
+            border: 2px solid var(--border); border-radius: 12px; overflow: hidden;
+        }
+        th, td { padding: 15px; text-align: center; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); font-size: 1.2rem;}
+        th:last-child, td:last-child { border-right: none; }
+        tr:last-child td { border-bottom: none; }
+        th { background: #F8FAFC; color: #475569; font-weight: 800; }
+        td { font-weight: 600; color: #1E293B; }
+        
+        .highlight-col { background: #F0FDF4; color: #065F46; }
+
+        input {
+            width: 80px; padding: 8px; border: 2px solid #CBD5E1; border-radius: 8px;
+            font-size: 1.2rem; font-weight: 800; text-align: center; color: var(--primary);
+            outline: none; transition: all 0.3s;
+        }
+        input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2); }
+        input.correct { border-color: var(--secondary); background: #D1FAE5; color: #065F46; }
+        input.wrong { border-color: var(--error); animation: shake 0.5s; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .rule-builder {
+            display: flex; align-items: center; justify-content: center; gap: 15px;
+            background: #F1F5F9; padding: 20px; border-radius: 16px; width: 100%;
+            font-size: 1.5rem; font-weight: 800; flex-wrap: wrap;
+        }
+        
+        button.btn-check {
+            background: var(--primary); color: white; border: none; padding: 12px 25px; border-radius: 12px; font-size: 1.2rem; font-weight: 800; cursor: pointer; transition: all 0.3s;
+        }
+        button.btn-check:hover { background: var(--primary-hover); transform: translateY(-2px);}
+
+        .feedback { font-size: 1.3rem; font-weight: 800; min-height: 2rem; text-align: center; }
+
+        #confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 999; }
+
+        @media (max-width: 768px) {
+            .header { flex-direction: column; gap: 10px; padding: 15px;}
+            .container { padding: 20px; }
+            table { font-size: 1rem; }
+            th, td { padding: 10px; }
+            input { width: 60px; font-size: 1rem; }
+            h1 { font-size: 1.8rem; }
+            .rule-builder { font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="confetti"></canvas>
+    
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.5.2.3. Sayı ve Şekil Örüntüleri</div>
+    </div>
+
+    <div class="container">
+        <h1>Tasarruf Kumbarası - Örüntü Kuralı</h1>
+        
+        <div class="story-box" id="storyText">
+            Kumbaramda başlangıçta 10 TL var. Tasarruf yapmak için her hafta kumbaraya 5 TL atıyorum. 
+        </div>
+
+        <div class="visual-area">
+            <div class="piggy" id="piggy">🐖</div>
+            <div class="coin-stack" id="coins">
+                <!-- Coins added via JS -->
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Hafta (Adım Sayısı)</th>
+                    <th>Biriken Para (Terim)</th>
+                    <th class="highlight-col">Örüntü Kuralı (İlişki)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>15</td>
+                    <td class="highlight-col">1 x 5 + 10 = 15</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>20</td>
+                    <td class="highlight-col">2 x 5 + 10 = 20</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>25</td>
+                    <td class="highlight-col">3 x <input type="text" id="i1" data-ans="5"> + <input type="text" id="i2" data-ans="10"> = 25</td>
+                </tr>
+                <tr>
+                    <td>4</td>
+                    <td><input type="text" id="i3" data-ans="30"></td>
+                    <td class="highlight-col"><input type="text" id="i4" data-ans="4"> x 5 + 10 = 30</td>
+                </tr>
+                <tr style="background: #FFFBEB;">
+                    <td style="color:#D97706; font-weight:800;">50. Hafta</td>
+                    <td><input type="text" id="i5" data-ans="260" style="width:100px;"></td>
+                    <td class="highlight-col" style="color:#D97706; font-weight:800;">
+                        50 x 5 + 10 = 260
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="rule-builder">
+            <span>Genel Kural:</span>
+            <span>Biriken Para = </span>
+            <span>Hafta x </span>
+            <input type="text" id="i6" data-ans="5">
+            <span>+</span>
+            <input type="text" id="i7" data-ans="10">
+        </div>
+
+        <button class="btn-check" onclick="checkAnswers()">Cevapları Kontrol Et</button>
+        <div class="feedback" id="feedback"></div>
+
+    </div>
+
+    <script>
+        // Init visual coins
+        const coinsDiv = document.getElementById('coins');
+        for(let i=0; i<3; i++) {
+            coinsDiv.innerHTML += '<div class="coin"></div>';
+        }
+
+        function checkAnswers() {
+            let allCorrect = true;
+            for(let i=1; i<=7; i++) {
+                let input = document.getElementById('i'+i);
+                if(input.value.trim() === input.getAttribute('data-ans')) {
+                    input.classList.remove('wrong');
+                    input.classList.add('correct');
+                } else {
+                    input.classList.remove('correct');
+                    input.classList.add('wrong');
+                    allCorrect = false;
+                }
+            }
+
+            const fb = document.getElementById('feedback');
+            const piggy = document.getElementById('piggy');
+            
+            if (allCorrect) {
+                fb.innerText = "Mükemmel! Tabloyu kullanarak kuralı buldun ve 50. adımı tek tek saymadan hesapladın. 🎉";
+                fb.style.color = "var(--secondary)";
+                piggy.style.transform = "scale(1.2)";
+                
+                // Add more coins visually
+                coinsDiv.innerHTML = '';
+                for(let i=0; i<8; i++) {
+                    coinsDiv.innerHTML += '<div class="coin"></div>';
+                }
+
+                fireConfetti();
+            } else {
+                fb.innerText = "Bazı boşluklar hatalı. Sabit artış miktarını ve başlangıç parasını düşünerek tekrar dene!";
+                fb.style.color = "var(--error)";
+                piggy.style.transform = "scale(0.9)";
+            }
+        }
+
+        // Confetti
+        function fireConfetti() {
+            const canvas = document.getElementById('confetti');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const pieces = [];
+            const colors = ['#F59E0B', '#10B981', '#3B82F6', '#EC4899'];
+            for (let i = 0; i < 100; i++) {
+                pieces.push({
+                    x: canvas.width / 2, y: canvas.height / 2,
+                    vx: (Math.random() - 0.5) * 20, vy: (Math.random() - 0.5) * 20 - 5,
+                    size: Math.random() * 10 + 5, color: colors[Math.floor(Math.random() * colors.length)],
+                    rot: Math.random() * 360, rotSpeed: (Math.random() - 0.5) * 10
+                });
+            }
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                let active = false;
+                pieces.forEach(p => {
+                    p.x += p.vx; p.y += p.vy; p.vy += 0.5; p.rot += p.rotSpeed;
+                    if (p.y < canvas.height) active = true;
+                    ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot * Math.PI / 180);
+                    ctx.fillStyle = p.color; ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+                    ctx.restore();
+                });
+                if (active) requestAnimationFrame(animate);
+                else ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+            animate();
+        }
+    </script>
+</body>
+</html>

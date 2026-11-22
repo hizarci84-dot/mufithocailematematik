@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10.1.1 - Asal Çarpan Ağacı</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0F172A; /* Slate 900 */
+            --panel-bg: #1E293B; /* Slate 800 */
+            --primary: #38BDF8; /* Sky 400 */
+            --secondary: #A78BFA; /* Violet 400 */
+            --accent: #F472B6; /* Pink 400 */
+            --prime: #10B981; /* Emerald 500 */
+            --composite: #FBBF24; /* Amber 400 */
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background-color: var(--bg-color); color: var(--text-main);
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 900px; display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 25px; background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px); border-radius: 20px; border: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 800; color: var(--primary); }
+        .header-left img { width: 40px; height: 40px; border-radius: 10px; }
+        .kazanim { background: rgba(56, 189, 248, 0.1); padding: 8px 15px; border-radius: 12px; color: var(--primary); font-weight: 600; font-size: 0.9rem; }
+
+        h1 { font-size: 2.5rem; font-weight: 900; margin-bottom: 10px; text-align: center; 
+             background: linear-gradient(135deg, var(--primary), var(--secondary)); 
+             -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+             
+        .subtitle { color: var(--text-muted); font-size: 1.1rem; margin-bottom: 30px; text-align: center; max-width: 700px; }
+
+        .workspace {
+            display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 900px; align-items: center;
+        }
+
+        .controls {
+            display: flex; gap: 15px; align-items: center; background: var(--panel-bg);
+            padding: 15px 25px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .input-group { display: flex; align-items: center; gap: 10px; }
+        .input-group label { font-weight: 600; color: var(--text-muted); }
+        .input-group input { 
+            width: 100px; background: rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.1); 
+            color: white; font-size: 1.2rem; font-weight: 800; padding: 8px 12px; border-radius: 10px; text-align: center;
+            transition: all 0.3s;
+        }
+        .input-group input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 10px rgba(56, 189, 248, 0.3); }
+
+        .btn-action {
+            background: linear-gradient(135deg, var(--primary), var(--secondary)); border: none;
+            color: white; padding: 10px 20px; border-radius: 10px; font-weight: 800; font-size: 1.1rem;
+            cursor: pointer; transition: all 0.3s;
+        }
+        .btn-action:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(167, 139, 250, 0.4); }
+        .btn-action:active { transform: translateY(0); }
+
+        .svg-board {
+            width: 100%; height: 500px; background: rgba(255,255,255,0.02);
+            border-radius: 20px; border: 2px dashed rgba(255,255,255,0.1);
+            position: relative; overflow: hidden;
+        }
+
+        .math-rule-box {
+            background: rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.1);
+            padding: 20px; border-radius: 15px; font-size: 1.4rem; font-weight: 600; color: white;
+            display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center;
+            width: 100%; transition: all 0.5s; min-height: 80px;
+        }
+        
+        .prime-factors-result { color: var(--accent); font-weight: 900; font-size: 1.8rem; }
+        .divisors-result { color: var(--prime); font-weight: 800; font-size: 1.3rem; margin-top: 10px; }
+
+        /* SVG Styles */
+        .node circle {
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            stroke-width: 3; cursor: pointer;
+        }
+        .node.composite circle { fill: rgba(251, 191, 36, 0.1); stroke: var(--composite); }
+        .node.composite:hover circle { fill: rgba(251, 191, 36, 0.3); transform: scale(1.1); }
+        
+        .node.prime circle { fill: rgba(16, 185, 129, 0.2); stroke: var(--prime); filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.4)); }
+        
+        .node text {
+            fill: white; font-family: Outfit; font-weight: 900; font-size: 22px;
+            text-anchor: middle; dominant-baseline: middle; pointer-events: none;
+        }
+        
+        .link {
+            fill: none; stroke: rgba(255,255,255,0.2); stroke-width: 3;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=38BDF8&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.10.1.1. Asal Çarpanlar ve Bölenler (Etkinlik)</div>
+    </div>
+    
+    <h1>İnteraktif Çarpan Ağacı</h1>
+    <p class="subtitle">Bir sayıyı asal çarpanlarına ayırmak için sarı renkli sayılara tıklayın. Tüm uçlar yeşil (asal) olduğunda çarpan formülünü keşfedin.</p>
+    
+    <div class="workspace">
+        <div class="controls">
+            <div class="input-group">
+                <label for="numInput">İncelenecek Sayı:</label>
+                <input type="number" id="numInput" min="2" max="9999" value="360">
+            </div>
+            <button class="btn-action" onclick="startTree()">Ağacı Oluştur</button>
+        </div>
+        
+        <div class="svg-board">
+            <svg width="100%" height="100%" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid meet" id="treeSvg">
+                <g id="linksGroup"></g>
+                <g id="nodesGroup"></g>
+            </svg>
+        </div>
+        
+        <div class="math-rule-box" id="ruleBox">
+            <div id="instructionText">Sayıyı parçalamak için üzerine tıklayın.</div>
+            <div class="prime-factors-result" id="primeResult"></div>
+            <div class="divisors-result" id="divisorsResult"></div>
+        </div>
+    </div>
+
+    <script>
+        let debounceTimer;
+        function updateMath(elId, texString) {
+            document.getElementById(elId).innerHTML = texString;
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                MathJax.typesetPromise([document.getElementById(elId)]);
+            }, 50);
+        }
+
+        const nodesGroup = document.getElementById('nodesGroup');
+        const linksGroup = document.getElementById('linksGroup');
+        
+        let nodes = [];
+        let links = [];
+        let idCounter = 0;
+
+        function isPrime(n) {
+            if (n <= 1) return false;
+            if (n <= 3) return true;
+            if (n % 2 === 0 || n % 3 === 0) return false;
+            for (let i = 5; i * i <= n; i += 6) {
+                if (n % i === 0 || n % (i + 2) === 0) return false;
+            }
+            return true;
+        }
+
+        function getSmallestFactor(n) {
+            if (n % 2 === 0) return 2;
+            for (let i = 3; i * i <= n; i += 2) {
+                if (n % i === 0) return i;
+            }
+            return n;
+        }
+
+        function startTree() {
+            let val = parseInt(document.getElementById('numInput').value);
+            if (isNaN(val) || val < 2) {
+                val = 2; document.getElementById('numInput').value = 2;
+            }
+            
+            nodesGroup.innerHTML = '';
+            linksGroup.innerHTML = '';
+            nodes = [];
+            links = [];
+            idCounter = 0;
+            
+            document.getElementById('primeResult').innerHTML = '';
+            document.getElementById('divisorsResult').innerHTML = '';
+            document.getElementById('instructionText').style.display = 'block';
+            document.getElementById('ruleBox').style.borderColor = 'rgba(255,255,255,0.1)';
+            document.getElementById('ruleBox').style.boxShadow = 'none';
+
+            addNode(val, 400, 50, null, 0);
+            render();
+            checkCompletion();
+        }
+
+        // Add a node to the data structure
+        function addNode(val, x, y, parentId, level) {
+            let prime = isPrime(val);
+            let node = { id: idCounter++, val: val, x: x, y: y, isPrime: prime, split: false, level: level, parent: parentId };
+            nodes.push(node);
+            
+            if (parentId !== null) {
+                links.push({ source: parentId, target: node.id });
+            }
+            return node;
+        }
+
+        // Handle click to split a composite node
+        function splitNode(id) {
+            let node = nodes.find(n => n.id === id);
+            if (!node || node.isPrime || node.split) return;
+            
+            let factor1 = getSmallestFactor(node.val);
+            let factor2 = node.val / factor1;
+            
+            node.split = true;
+            
+            // Calculate child positions based on level to prevent overlap
+            let verticalSpacing = 70;
+            let horizontalSpread = 120 / (node.level + 1);
+            
+            addNode(factor1, node.x - horizontalSpread, node.y + verticalSpacing, node.id, node.level + 1);
+            addNode(factor2, node.x + horizontalSpread, node.y + verticalSpacing, node.id, node.level + 1);
+            
+            render();
+            checkCompletion();
+        }
+
+        function render() {
+            // Draw links
+            linksGroup.innerHTML = links.map(l => {
+                let source = nodes.find(n => n.id === l.source);
+                let target = nodes.find(n => n.id === l.target);
+                return `<line class="link" x1="${source.x}" y1="${source.y}" x2="${target.x}" y2="${target.y}" />`;
+            }).join('');
+            
+            // Draw nodes
+            nodesGroup.innerHTML = nodes.map(n => {
+                let cls = n.isPrime ? 'node prime' : 'node composite';
+                let cursor = (!n.isPrime && !n.split) ? 'pointer' : 'default';
+                let clickAction = (!n.isPrime && !n.split) ? `onclick="splitNode(${n.id})"` : '';
+                let opacity = (n.split && !n.isPrime) ? '0.4' : '1';
+                
+                return `
+                <g class="${cls}" transform="translate(${n.x}, ${n.y})" style="opacity:${opacity}; cursor:${cursor};" ${clickAction}>
+                    <circle cx="0" cy="0" r="25" />
+                    <text x="0" y="0">${n.val}</text>
+                </g>`;
+            }).join('');
+        }
+
+        function checkCompletion() {
+            let allSplit = nodes.every(n => n.isPrime || n.split);
+            if (allSplit) {
+                document.getElementById('instructionText').style.display = 'none';
+                document.getElementById('ruleBox').style.borderColor = 'var(--accent)';
+                document.getElementById('ruleBox').style.boxShadow = '0 0 30px rgba(244,114,182,0.3)';
+                
+                // Collect primes
+                let primes = nodes.filter(n => n.isPrime).map(n => n.val);
+                
+                // Count frequencies
+                let counts = {};
+                primes.forEach(p => { counts[p] = (counts[p] || 0) + 1; });
+                
+                // Sort keys
+                let uniquePrimes = Object.keys(counts).map(Number).sort((a,b)=>a-b);
+                
+                let texArr = [];
+                let pbs = 1; // Pozitif bölen sayısı
+                
+                uniquePrimes.forEach(p => {
+                    let pwr = counts[p];
+                    texArr.push(`${p}^${pwr}`);
+                    pbs *= (pwr + 1);
+                });
+                
+                let texStr = `\\( ${nodes[0].val} = ` + texArr.join(' \\cdot ') + ` \\)`;
+                updateMath('primeResult', texStr);
+                
+                let divStr = `Pozitif Bölen Sayısı (PBS) = ` + uniquePrimes.map(p => `(${counts[p]}+1)`).join(' \\cdot ') + ` = ${pbs}`;
+                document.getElementById('divisorsResult').innerText = divStr;
+            }
+        }
+
+        window.onload = startTree;
+    </script>
+</body>
+</html>

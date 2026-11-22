@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Çarpanlar ve Katlar - Animasyon</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A;
+            --text: #F8FAFC;
+            --primary: #3B82F6; /* Blue */
+            --secondary: #10B981; /* Green */
+            --tertiary: #F59E0B; /* Amber */
+            --danger: #F43F5E; /* Rose */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 900px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; width: 100%; max-width: 800px; margin-bottom: 20px; height: 120px;}
+        h1 { font-size: 2.2rem; color: var(--primary); text-shadow: 0 5px 15px rgba(0,0,0,0.5); line-height: 1.3;}
+        .subtitle { font-size: 1.2rem; color: #94A3B8; margin-top: 10px; line-height: 1.5; min-height: 55px;}
+        .subtitle span { color: white; font-weight: 800; background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 5px;}
+
+        .canvas-area {
+            position: relative; width: 100%; max-width: 800px; height: 450px; 
+            background: #0B1120; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.3); 
+            overflow: hidden; display: flex; align-items: center; justify-content: center;
+        }
+
+        .scene { position: absolute; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.8s; pointer-events: none;}
+        .scene.active { opacity: 1; z-index: 10; }
+
+        /* Scene Elements */
+        .number-box {
+            font-size: 5rem; font-weight: 900; color: white; background: var(--primary);
+            width: 120px; height: 120px; display: flex; align-items: center; justify-content: center;
+            border-radius: 30px; box-shadow: 0 15px 30px rgba(59, 130, 246, 0.5); margin-bottom: 20px;
+            transform: scale(0); transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .scene.active .number-box { transform: scale(1); }
+
+        .equation-row {
+            display: flex; gap: 20px; font-size: 2.5rem; font-weight: 800; color: white;
+            opacity: 0; transform: translateY(20px); transition: all 0.5s; margin-top: 10px;
+        }
+        .eq-part { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 15px;}
+        .eq-part span { color: var(--tertiary); }
+
+        .big-text { font-size: 1.8rem; font-weight: 900; color: white; text-align: center; padding: 0 20px;}
+        
+        .multiples-container {
+            display: flex; gap: 15px; margin-top: 30px;
+        }
+        .m-box {
+            background: var(--secondary); color: white; font-size: 2rem; font-weight: 900;
+            width: 80px; height: 80px; border-radius: 15px; display: flex; align-items: center; justify-content: center;
+            opacity: 0; transform: scale(0); transition: all 0.3s;
+        }
+
+        .btn-start {
+            margin-top: 30px; background: var(--primary); color: white; border: none; padding: 15px 40px; border-radius: 50px;
+            font-size: 1.2rem; font-weight: 800; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4);
+        }
+        .btn-start:hover { transform: scale(1.05); }
+
+        @media (max-width: 768px) {
+            .header { flex-direction: column; gap: 10px; }
+            h1 { font-size: 1.5rem; }
+            .canvas-area { height: 350px; }
+            .title-area { height: 140px; }
+            .equation-row { flex-direction: column; gap: 10px; font-size: 1.5rem; }
+            .m-box { width: 50px; height: 50px; font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=3B82F6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.6.1.1. Çarpan ve Kat Kavramı</div>
+    </div>
+
+    <div class="title-area">
+        <h1 id="mTitle">Sayıların Gizli Yapı Taşları</h1>
+        <p class="subtitle" id="mSub">Her sayı aslında başka sayıların <span>çarpımından</span> doğar.</p>
+    </div>
+
+    <div class="canvas-area">
+        
+        <!-- SCENE 1 -->
+        <div class="scene active" id="sc1">
+            <div class="number-box" id="n12">12</div>
+        </div>
+
+        <!-- SCENE 2 -->
+        <div class="scene" id="sc2">
+            <div class="big-text" style="color:var(--tertiary); margin-bottom:20px;">12 sayısını nasıl elde ederiz?</div>
+            <div class="equation-row" id="eqRow">
+                <div class="eq-part" id="e1">1 <span>x</span> 12</div>
+                <div class="eq-part" id="e2">2 <span>x</span> 6</div>
+                <div class="eq-part" id="e3">3 <span>x</span> 4</div>
+            </div>
+        </div>
+
+        <!-- SCENE 3 -->
+        <div class="scene" id="sc3">
+            <div class="big-text" id="tCharpan">1, 2, 3, 4, 6, 12</div>
+            <div class="big-text" style="color:#94A3B8; margin-top:10px; font-size:1.2rem;">Bu sayılara 12'nin <b>ÇARPANLARI</b> (Bölenleri) denir. Çarpanlar <b>SONLUDUR.</b></div>
+        </div>
+
+        <!-- SCENE 4 -->
+        <div class="scene" id="sc4">
+            <div class="big-text">Peki ya 12'nin "Katları"?</div>
+            <div class="multiples-container">
+                <div class="m-box" id="mb1">12</div>
+                <div class="m-box" id="mb2">24</div>
+                <div class="m-box" id="mb3">36</div>
+                <div class="m-box" id="mb4">48</div>
+                <div class="m-box" id="mb5">...</div>
+            </div>
+            <div class="big-text" style="color:#94A3B8; margin-top:20px; font-size:1.2rem;" id="tKat">Katlar, ritmik sayma gibi büyür ve <b>SONSUZDUR.</b></div>
+        </div>
+
+    </div>
+
+    <button class="btn-start" id="startBtn" onclick="runTimeline()">Animasyonu Başlat</button>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        
+        const mTitle = document.getElementById('mTitle');
+        const mSub = document.getElementById('mSub');
+        const startBtn = document.getElementById('startBtn');
+        
+        async function runTimeline() {
+            startBtn.style.display = 'none';
+
+            // SCENE 1
+            document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+            document.getElementById('sc1').classList.add('active');
+            mTitle.innerText = "Hedef Sayımız: 12";
+            mSub.innerHTML = "12 sayısını sanki bir yapboz gibi <span>parçalarına ayıralım.</span>";
+            await sleep(3500);
+
+            // SCENE 2
+            document.getElementById('sc1').classList.remove('active');
+            document.getElementById('sc2').classList.add('active');
+            
+            mTitle.innerText = "Çarpanlar (Bölenler)";
+            mSub.innerHTML = "Hangi iki tam sayıyı çarparsak 12 eder?";
+            
+            document.getElementById('eqRow').style.opacity = 1;
+            document.getElementById('eqRow').style.transform = 'translateY(0)';
+            
+            const eqs = ['e1','e2','e3'];
+            for(let i=0; i<eqs.length; i++) {
+                document.getElementById(eqs[i]).style.opacity = 0;
+            }
+            for(let i=0; i<eqs.length; i++) {
+                await sleep(1000);
+                document.getElementById(eqs[i]).style.opacity = 1;
+            }
+            await sleep(3000);
+
+            // SCENE 3
+            document.getElementById('sc2').classList.remove('active');
+            document.getElementById('sc3').classList.add('active');
+            mTitle.innerText = "Altın Kural 1";
+            mSub.innerHTML = "Bir sayının ÇARPANLARI aynı zamanda o sayıyı tam bölen <span>BÖLENLERİDİR.</span>";
+            await sleep(4000);
+
+            // SCENE 4
+            document.getElementById('sc3').classList.remove('active');
+            document.getElementById('sc4').classList.add('active');
+            mTitle.innerText = "Altın Kural 2";
+            mSub.innerHTML = "Çarpanlar küçüktür ve biter, <span>Katlar ise büyür ve hiç bitmez!</span>";
+            
+            const mboxes = ['mb1','mb2','mb3','mb4','mb5'];
+            for(let i=0; i<mboxes.length; i++) {
+                await sleep(800);
+                document.getElementById(mboxes[i]).style.opacity = 1;
+                document.getElementById(mboxes[i]).style.transform = 'scale(1)';
+            }
+
+            setTimeout(() => {
+                startBtn.style.display = 'block';
+                startBtn.innerText = "Tekrar İzle";
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

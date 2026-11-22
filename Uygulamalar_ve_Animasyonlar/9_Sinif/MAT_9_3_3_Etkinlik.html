@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doğruluk Tablosu Motoru</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    
+    <!-- MATHJAX -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root { --bg:#0F0E17; --primary:#8B5CF6; --secondary:#10B981; --tertiary:#06B6D4; --danger:#F43F5E; --accent:#F59E0B; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Outfit',sans-serif; }
+        body { background:linear-gradient(135deg,var(--bg),#161625); color:#F8FAFC; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:20px; overflow-x:hidden; }
+        
+        .header { width:100%; max-width:1100px; display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); padding:15px 25px; border-radius:20px; border:1px solid rgba(139,92,246,0.2); margin-bottom:20px; backdrop-filter:blur(10px); }
+        .header-left { display:flex; align-items:center; gap:15px; font-weight:600; font-size:1.2rem; }
+        .header-left img { width:50px; height:50px; border-radius:50%; background:white; padding:2px; }
+        .kazanim { background:var(--primary); color:white; padding:8px 20px; border-radius:20px; font-weight:800; font-size:1rem; box-shadow: 0 0 20px rgba(139,92,246,0.4); }
+        
+        h1 { font-size:2.5rem; color:var(--tertiary); font-weight:900; text-align:center; margin-bottom:5px; }
+        .subtitle { color:#94A3B8; font-size:1.15rem; text-align:center; margin-bottom:25px; font-weight:600; max-width:800px; }
+        
+        .workspace { width:100%; max-width:1100px; background:#11111A; border:1px solid rgba(255,255,255,0.1); border-radius:24px; padding:30px; box-shadow:inset 0 0 50px rgba(0,0,0,0.5); display:flex; flex-direction:column; align-items:center; min-height:500px; }
+        
+        .expl-text { background:rgba(139,92,246,0.15); border:1px solid rgba(139,92,246,0.4); padding:15px 25px; border-radius:15px; font-size:1.3rem; color:white; font-weight:800; text-align:center; width:100%; margin-bottom:40px; }
+        
+        table { border-collapse:collapse; width:100%; max-width:600px; margin-bottom:30px; border-radius:15px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.5); }
+        th, td { border:2px solid #334155; padding:20px; text-align:center; font-size:1.5rem; font-weight:800; }
+        th { background:rgba(255,255,255,0.05); color:var(--tertiary); }
+        td { background:rgba(0,0,0,0.4); color:white; }
+        
+        .btn-toggle { background:transparent; border:2px solid var(--accent); color:var(--accent); width:60px; height:60px; border-radius:10px; font-size:1.5rem; font-weight:900; cursor:pointer; transition:0.3s; }
+        .btn-toggle:hover { background:rgba(245,158,11,0.2); }
+        .btn-toggle.val-1 { border-color:var(--secondary); color:var(--secondary); background:rgba(16,185,129,0.1); }
+        .btn-toggle.val-0 { border-color:var(--danger); color:var(--danger); background:rgba(244,63,94,0.1); }
+        
+        .btn-check { background:var(--primary); color:white; border:none; padding:15px 40px; border-radius:50px; font-size:1.2rem; font-weight:900; cursor:pointer; box-shadow:0 10px 20px rgba(139,92,246,0.4); transition:0.3s; }
+        .btn-check:hover { transform:translateY(-3px); box-shadow:0 15px 25px rgba(139,92,246,0.6); }
+
+        .feedback { margin-top:20px; font-size:1.5rem; font-weight:900; padding:15px 30px; border-radius:10px; opacity:0; transition:0.3s; text-align:center; width:100%; max-width:600px; }
+        .feedback.success { background:rgba(16,185,129,0.2); color:var(--secondary); opacity:1; box-shadow:0 0 30px rgba(16,185,129,0.4); }
+        .feedback.error { background:rgba(244,63,94,0.2); color:var(--danger); opacity:1; box-shadow:0 0 30px rgba(244,63,94,0.4); }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.9.3.3. Doğruluk Tablosu (Etkinlik)</div>
+    </div>
+    
+    <h1>Doğruluk Tablosu Motoru</h1>
+    <p class="subtitle">"İSE" (\(\Rightarrow\)) bağlacının kuralını hatırlayın: Sadece "Doğru \(\Rightarrow\) Yanlış" durumunda sonuç Yanlıştır, diğer tüm durumlarda Doğrudur.</p>
+    
+    <div class="workspace">
+        <div class="expl-text">Görev: Soru işaretli butonlara tıklayarak \( p \Rightarrow q \) (p ise q) önermesinin sonuçlarını (1 veya 0) doğru bir şekilde belirleyin.</div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>\( p \)</th>
+                    <th>\( q \)</th>
+                    <th>\( p \Rightarrow q \)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>1</td>
+                    <td><button class="btn-toggle" id="btn0" onclick="toggleBtn(0)">?</button></td>
+                </tr>
+                <tr>
+                    <td>1</td>
+                    <td>0</td>
+                    <td><button class="btn-toggle" id="btn1" onclick="toggleBtn(1)">?</button></td>
+                </tr>
+                <tr>
+                    <td>0</td>
+                    <td>1</td>
+                    <td><button class="btn-toggle" id="btn2" onclick="toggleBtn(2)">?</button></td>
+                </tr>
+                <tr>
+                    <td>0</td>
+                    <td>0</td>
+                    <td><button class="btn-toggle" id="btn3" onclick="toggleBtn(3)">?</button></td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <button class="btn-check" onclick="checkAnswers()">Tabloyu Kontrol Et</button>
+        
+        <div class="feedback" id="feedback">Tebrikler! Tablo tamamen doğru.</div>
+    </div>
+
+    <script>
+        // Answers for p => q
+        // 1=>1 is 1
+        // 1=>0 is 0
+        // 0=>1 is 1
+        // 0=>0 is 1
+        const correctAnswers = [1, 0, 1, 1];
+        const userAnswers = [null, null, null, null];
+        const feedback = document.getElementById('feedback');
+
+        function toggleBtn(index) {
+            let btn = document.getElementById('btn' + index);
+            if (userAnswers[index] === null) {
+                userAnswers[index] = 1;
+            } else if (userAnswers[index] === 1) {
+                userAnswers[index] = 0;
+            } else {
+                userAnswers[index] = 1;
+            }
+            
+            btn.textContent = userAnswers[index];
+            btn.className = "btn-toggle val-" + userAnswers[index];
+            
+            feedback.className = "feedback"; // hide feedback on change
+        }
+
+        function checkAnswers() {
+            for(let i=0; i<4; i++) {
+                if(userAnswers[i] === null) {
+                    feedback.className = "feedback error";
+                    feedback.textContent = "Lütfen tablodaki tüm soru işaretlerini doldurun!";
+                    return;
+                }
+            }
+            
+            let isAllCorrect = true;
+            for(let i=0; i<4; i++) {
+                if(userAnswers[i] !== correctAnswers[i]) {
+                    isAllCorrect = false;
+                    break;
+                }
+            }
+            
+            if(isAllCorrect) {
+                feedback.className = "feedback success";
+                feedback.textContent = "Tebrikler! İSE (\(\Rightarrow\)) bağlacının algoritmasını mükemmel çözdünüz.";
+                MathJax.typesetPromise([feedback]);
+            } else {
+                feedback.className = "feedback error";
+                feedback.textContent = "Tabloda hatalar var. Kuralı hatırlayın: Sadece '1 \(\Rightarrow\) 0' durumu '0' verir.";
+                MathJax.typesetPromise([feedback]);
+            }
+        }
+    </script>
+</body>
+</html>

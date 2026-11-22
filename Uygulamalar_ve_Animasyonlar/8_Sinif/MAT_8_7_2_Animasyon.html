@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Olay Çeşitleri ve Venn Diyagramı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg:#0F0E17; --primary:#8B5CF6; --secondary:#10B981; --tertiary:#06B6D4; --danger:#F43F5E; --accent:#F59E0B; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Outfit',sans-serif; }
+        body { background:linear-gradient(135deg,var(--bg),#161625); color:#F8FAFC; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:20px; overflow-x:hidden; }
+        
+        .header { width:100%; max-width:1000px; display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); padding:15px 25px; border-radius:20px; border:1px solid rgba(139,92,246,0.2); margin-bottom:20px; backdrop-filter:blur(10px); }
+        .header-left { display:flex; align-items:center; gap:15px; font-weight:600; font-size:1.2rem; }
+        .header-left img { width:50px; height:50px; border-radius:50%; background:white; padding:2px; }
+        .kazanim { background:var(--primary); color:white; padding:5px 15px; border-radius:20px; font-weight:800; font-size:0.9rem; }
+        
+        h1 { font-size:2.4rem; color:var(--tertiary); font-weight:900; text-align:center; text-shadow:0 0 20px rgba(6,182,212,0.3); }
+        .subtitle { color:#94A3B8; font-size:1.1rem; margin-top:5px; text-align:center; margin-bottom:20px; font-weight:600; }
+        
+        .expl-text { background:rgba(139,92,246,0.15); border:1px solid rgba(139,92,246,0.3); padding:15px 25px; border-radius:15px; font-size:1.3rem; color:white; font-weight:800; text-align:center; width:100%; max-width:900px; margin-bottom:20px; transition:all 0.5s; backdrop-filter:blur(5px); box-shadow:0 8px 32px rgba(0,0,0,0.3); min-height:80px; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:5px; }
+        
+        .btn-row { display:flex; gap:15px; margin-bottom:25px; flex-wrap:wrap; justify-content:center; }
+        .btn-mode { background:rgba(255,255,255,0.05); color:white; border:2px solid transparent; padding:15px 30px; border-radius:50px; font-size:1.1rem; font-weight:900; cursor:pointer; transition:all 0.3s; box-shadow:0 10px 20px rgba(0,0,0,0.2); }
+        .btn-mode:hover { background:rgba(255,255,255,0.1); transform:translateY(-2px); }
+        
+        #btnMut.active { border-color:var(--danger); background:rgba(244,63,94,0.15); box-shadow:0 0 20px rgba(244,63,94,0.3); }
+        #btnComp.active { border-color:var(--secondary); background:rgba(16,185,129,0.15); box-shadow:0 0 20px rgba(16,185,129,0.3); }
+        #btnInt.active { border-color:var(--primary); background:rgba(139,92,246,0.15); box-shadow:0 0 20px rgba(139,92,246,0.3); }
+        
+        /* Venn Stage */
+        .venn-stage { position:relative; width:100%; max-width:800px; height:450px; background:rgba(17,17,26,0.8); border-radius:24px; border:2px dashed rgba(255,255,255,0.2); box-shadow:inset 0 0 50px rgba(0,0,0,0.5); overflow:hidden; transition:all 1s; display:flex; align-items:center; justify-content:center; }
+        .sample-space-label { position:absolute; top:20px; left:20px; font-size:1.5rem; font-weight:900; color:rgba(255,255,255,0.3); }
+        
+        /* Venn Circles */
+        .circle { position:absolute; width:220px; height:220px; border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:all 1s cubic-bezier(0.4, 0, 0.2, 1); mix-blend-mode:screen; }
+        
+        .circle-a { background:rgba(139,92,246,0.4); border:3px solid var(--primary); transform:translateX(-120px); }
+        .circle-b { background:rgba(6,182,212,0.4); border:3px solid var(--tertiary); transform:translateX(120px); }
+        
+        .circle-title { font-size:3rem; font-weight:900; color:white; line-height:1; }
+        .circle-desc { font-size:1.1rem; font-weight:700; color:white; margin-top:5px; text-align:center; padding:0 10px; }
+        
+        /* Intersection Icon / Glow */
+        .intersection-glow { position:absolute; width:120px; height:200px; border-radius:50%; background:var(--accent); filter:blur(20px); opacity:0; transition:all 1s; }
+        
+        /* Complement Background */
+        .complement-bg { position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(244,63,94,0.3); opacity:0; transition:all 1s; pointer-events:none; }
+        .complement-label { position:absolute; bottom:30px; left:30px; font-size:2rem; font-weight:900; color:var(--danger); opacity:0; transition:all 1s; text-shadow:0 2px 10px rgba(0,0,0,0.5); }
+        
+        /* Rule Box */
+        .math-rule { position:absolute; bottom:20px; right:20px; background:rgba(15,14,23,0.95); border:2px solid var(--accent); padding:15px 25px; border-radius:20px; font-size:1.2rem; font-weight:900; color:white; text-align:center; opacity:0; transition:all 0.5s; box-shadow:0 10px 30px rgba(245,158,11,0.2); }
+        .math-rule span { color:var(--accent); font-size:1.4rem; }
+        
+        /* States */
+        .state-mut .circle-a { transform:translateX(-200px); }
+        .state-mut .circle-b { transform:translateX(200px); }
+        
+        .state-comp .circle-a { transform:translateX(0) scale(1.2); border-width:5px; }
+        .state-comp .circle-b { transform:translateX(0) scale(0); opacity:0; }
+        .state-comp .complement-bg { opacity:1; }
+        .state-comp .complement-label { opacity:1; }
+        .state-comp .venn-stage { border-color:var(--danger); border-style:solid; box-shadow:inset 0 0 100px rgba(244,63,94,0.2); }
+        
+        .state-int .circle-a { transform:translateX(-70px); }
+        .state-int .circle-b { transform:translateX(70px); }
+        .state-int .intersection-glow { opacity:0.6; }
+        
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.8.7.2. Olasılık Kuralları (Etkileşimli)</div>
+    </div>
+    
+    <h1>Olasılık Kuralları: Venn Diyagramları</h1>
+    <p class="subtitle">Birbirini dışlayan, tamamlayıcı ve kesişen olayları görsel olarak keşfedin.</p>
+    
+    <div class="btn-row">
+        <button class="btn-mode" id="btnMut" onclick="setMode('mut')">🚫 Birbirini Dışlayan (Ayrık)</button>
+        <button class="btn-mode" id="btnComp" onclick="setMode('comp')">🔄 Tamamlayıcı Olaylar</button>
+        <button class="btn-mode" id="btnInt" onclick="setMode('int')">🔗 Kesişen Olaylar</button>
+    </div>
+    
+    <div class="expl-text" id="explText">
+        <div style="font-size:1.1rem; color:var(--accent); margin-bottom:5px;">Yukarıdan bir olay çeşidi seçerek başlayın.</div>
+    </div>
+    
+    <div class="venn-stage" id="stage">
+        <div class="sample-space-label">S (Örnek Uzay)</div>
+        
+        <div class="complement-bg"></div>
+        <div class="complement-label">A' (A'nın Tümleyeni)</div>
+        
+        <div class="intersection-glow"></div>
+        
+        <div class="circle circle-a">
+            <div class="circle-title">A</div>
+            <div class="circle-desc" id="descA">Olay A</div>
+        </div>
+        
+        <div class="circle circle-b">
+            <div class="circle-title">B</div>
+            <div class="circle-desc" id="descB">Olay B</div>
+        </div>
+        
+        <div class="math-rule" id="mathRule"></div>
+    </div>
+
+    <script>
+        const stage = document.getElementById('stage');
+        const explText = document.getElementById('explText');
+        const mathRule = document.getElementById('mathRule');
+        const descA = document.getElementById('descA');
+        const descB = document.getElementById('descB');
+        
+        function resetBtns() {
+            document.querySelectorAll('.btn-mode').forEach(b => b.classList.remove('active'));
+        }
+
+        function setMode(mode) {
+            resetBtns();
+            stage.className = 'venn-stage'; // reset
+            mathRule.style.opacity = '0';
+            
+            setTimeout(() => {
+                stage.classList.add('state-' + mode);
+                mathRule.style.opacity = '1';
+                
+                if(mode === 'mut') {
+                    document.getElementById('btnMut').classList.add('active');
+                    descA.textContent = "Çift Sayı Gelmesi";
+                    descB.textContent = "Tek Sayı Gelmesi";
+                    explText.innerHTML = `<div><b>Birbirini Dışlayan (Ayrık) Olaylar</b></div><div style="font-size:1.1rem; color:#E2E8F0; font-weight:600;">İki olay aynı anda gerçekleşemez (Örn: Zarın hem tek hem çift gelmesi). Kesişimleri boştur (∅).</div>`;
+                    mathRule.innerHTML = `P(A ∩ B) = 0<br><span style="font-size:1.1rem; color:white;">P(A ∪ B) = P(A) + P(B)</span>`;
+                    mathRule.style.borderColor = "var(--danger)";
+                } 
+                else if(mode === 'comp') {
+                    document.getElementById('btnComp').classList.add('active');
+                    descA.textContent = "Yağmur Yağması";
+                    descB.textContent = "";
+                    explText.innerHTML = `<div><b>Tamamlayıcı Olaylar</b></div><div style="font-size:1.1rem; color:#E2E8F0; font-weight:600;">Bir olayın gerçekleşmesi (A) ile gerçekleşmemesi (A') durumlarının toplamı kesinliği (1) verir. Örnek uzayın tamamını kapsarlar.</div>`;
+                    mathRule.innerHTML = `P(A) + P(A') = <span>1</span><br><span style="font-size:1.1rem; color:white;">Kesin Olay</span>`;
+                    mathRule.style.borderColor = "var(--secondary)";
+                }
+                else if(mode === 'int') {
+                    document.getElementById('btnInt').classList.add('active');
+                    descA.textContent = "Gözlüklü Öğrenciler";
+                    descB.textContent = "Kız Öğrenciler";
+                    explText.innerHTML = `<div><b>Kesişen Olaylar</b></div><div style="font-size:1.1rem; color:#E2E8F0; font-weight:600;">Aynı anda gerçekleşebilen olaylardır. Ortadaki kesişim (Gözlüklü Kızlar), birleşim hesaplanırken iki kez sayılmamak için toplamdan bir kez çıkartılır.</div>`;
+                    mathRule.innerHTML = `P(A ∪ B) = P(A) + P(B) - <span>P(A ∩ B)</span>`;
+                    mathRule.style.borderColor = "var(--primary)";
+                }
+            }, 100);
+        }
+    </script>
+</body>
+</html>

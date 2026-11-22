@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10.5.2 - Doğru Denklemi ve Eğim Simülatörü</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #051008; 
+            --panel-bg: rgba(5, 30, 15, 0.85); 
+            --radar-grid: rgba(57, 255, 20, 0.15);
+            --radar-axis: rgba(57, 255, 20, 0.5);
+            
+            --primary: #39FF14; /* Neon Green */
+            --accent-pink: #FF00FF; /* For perpendicular line */
+            --accent-yellow: #FFFF33;
+            
+            --text-main: #E0FFE0;
+            --text-muted: #559955;
+            
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            background-color: var(--bg-color); color: var(--text-main);
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; padding: 20px; overflow-x: hidden;
+            background-image: linear-gradient(rgba(0,0,0,0) 50%, rgba(0,0,0,0.2) 50%);
+            background-size: 100% 4px;
+        }
+
+        .header {
+            width: 100%; max-width: 1200px; display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 25px; background: var(--panel-bg);
+            border-radius: 10px; border: 1px solid var(--primary);
+            margin-bottom: 20px; box-shadow: 0 0 20px rgba(57, 255, 20, 0.2);
+        }
+        
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: bold; color: var(--primary); font-size: 1.2rem; }
+        .header-left img { width: 40px; height: 40px; border-radius: 10px; filter: grayscale(100%) sepia(100%) hue-rotate(80deg) saturate(300%) contrast(150%); }
+        .kazanim { background: rgba(57, 255, 20, 0.1); padding: 5px 15px; border-radius: 5px; color: var(--primary); border: 1px solid var(--radar-grid); }
+
+        h1 { font-size: 2rem; margin-bottom: 10px; text-align: center; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 10px var(--primary); }
+        .subtitle { color: var(--text-muted); font-size: 1rem; margin-bottom: 20px; text-align: center; max-width: 800px; }
+
+        .workspace { display: flex; flex-direction: row; gap: 20px; width: 100%; max-width: 1200px; }
+        @media (max-width: 900px) { .workspace { flex-direction: column; } }
+
+        .controls {
+            flex: 1; display: flex; flex-direction: column; gap: 15px; background: var(--panel-bg);
+            padding: 20px; border-radius: 10px; border: 1px solid var(--radar-axis);
+            box-shadow: inset 0 0 20px rgba(57, 255, 20, 0.05);
+        }
+
+        .eq-display {
+            font-size: 2rem; font-weight: bold; color: var(--primary); text-align: center;
+            border: 2px dashed var(--primary); padding: 15px; border-radius: 10px;
+            text-shadow: 0 0 10px var(--primary); background: rgba(0,20,0,0.5);
+        }
+
+        .slider-group { margin-top: 10px; }
+        .slider-header { display: flex; justify-content: space-between; margin-bottom: 5px; color: var(--accent-yellow); font-size: 1.1rem; }
+        
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: var(--radar-axis); }
+        input[type=range]::-webkit-slider-thumb { height: 16px; width: 8px; background: var(--accent-yellow); cursor: pointer; -webkit-appearance: none; margin-top: -6px; box-shadow: 0 0 5px var(--accent-yellow); }
+
+        .btn-action {
+            background: rgba(255, 0, 255, 0.2); border: 1px solid var(--accent-pink); color: var(--accent-pink);
+            padding: 12px; border-radius: 5px; font-weight: bold; cursor: pointer; font-family: 'Share Tech Mono';
+            font-size: 1.1rem; transition: 0.3s; margin-top: 10px; text-transform: uppercase;
+        }
+        .btn-action:hover { background: var(--accent-pink); color: #000; box-shadow: 0 0 15px var(--accent-pink); }
+        
+        .btn-action.active { background: var(--accent-pink); color: #000; }
+
+        .math-box {
+            margin-top: auto; padding: 15px; background: rgba(0,0,0,0.8);
+            border-left: 4px solid var(--accent-pink); font-size: 1.1rem; display: none;
+        }
+
+        .graph-container {
+            flex: 2; position: relative; background: #010a05;
+            border-radius: 10px; border: 2px solid var(--primary);
+            overflow: hidden; min-height: 550px;
+            box-shadow: 0 0 30px rgba(57, 255, 20, 0.2), inset 0 0 50px rgba(0,0,0,1);
+            touch-action: none; display: flex; justify-content: center; align-items: center;
+        }
+
+        .radar-sweep {
+            position: absolute; top: 50%; left: 50%; width: 200%; height: 200%;
+            background: conic-gradient(from 0deg, transparent 70%, rgba(57, 255, 20, 0.1) 100%);
+            transform-origin: 0 0; animation: sweep 6s linear infinite; pointer-events: none;
+        }
+        @keyframes sweep { from { transform: rotate(0deg) translate(-50%, -50%); } to { transform: rotate(360deg) translate(-50%, -50%); } }
+
+        /* SVG Graph Styling */
+        svg { width: 100%; height: 100%; display: block; position: relative; z-index: 10; }
+        
+        .svg-grid { stroke: var(--radar-grid); stroke-width: 0.5; }
+        .svg-axis { stroke: var(--radar-axis); stroke-width: 1.5; }
+        .svg-label { fill: var(--text-muted); font-size: 12px; font-family: 'Share Tech Mono'; }
+        
+        .main-line { stroke: var(--primary); stroke-width: 3; filter: drop-shadow(0 0 5px var(--primary)); transition: 0.1s; }
+        .perp-line { stroke: var(--accent-pink); stroke-width: 3; filter: drop-shadow(0 0 5px var(--accent-pink)); opacity: 0; transition: opacity 0.3s; }
+        .perp-line.show { opacity: 1; }
+        
+        .angle-arc { fill: rgba(57, 255, 20, 0.2); stroke: var(--primary); stroke-width: 1; }
+        .angle-text { fill: var(--primary); font-size: 14px; font-weight: bold; }
+        
+        .point-n { fill: var(--primary); stroke: #000; stroke-width: 2; r: 5; }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=39FF14&color=000'">
+            <span>@mufithocailematematik [RADAR_SYS]</span>
+        </div>
+        <div class="kazanim">MAT.10.5.2. Doğru Denklemi ve Eğim</div>
+    </div>
+    
+    <h1>Doğru Denklemi Simülatörü</h1>
+    <p class="subtitle">Eğim (m) ve y-eksenini kestiği nokta (n) değerlerini değiştirerek doğrunun hareketini izleyin. Dik doğruların eğimleri çarpımının neden -1 olduğunu keşfedin.</p>
+    
+    <div class="workspace">
+        <div class="controls">
+            
+            <div class="eq-display" id="eqDisplay">y = 1x + 2</div>
+            
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span>Eğim (m) = tan(α)</span>
+                    <span id="valM">1.0</span>
+                </div>
+                <input type="range" id="slideM" min="-5" max="5" step="0.1" value="1">
+            </div>
+            
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span>Y-Kesen (n)</span>
+                    <span id="valN">2.0</span>
+                </div>
+                <input type="range" id="slideN" min="-8" max="8" step="0.5" value="2">
+            </div>
+            
+            <div style="font-size: 1.2rem; color: var(--accent-yellow); text-align: center; margin-top: 10px;">
+                Eğim Açısı (α): <span id="valAlpha">45°</span>
+            </div>
+
+            <button class="btn-action" id="btnPerp">Buna Dik Doğru Çiz (90°)</button>
+            
+            <div class="math-box" id="mathBox">
+                <div id="mathEq1" style="color:var(--primary); margin-bottom:10px;">\( d_1: y = 1x + 2 \implies m_1 = 1 \)</div>
+                <div id="mathEq2" style="color:var(--accent-pink); margin-bottom:10px;">\( d_2: y = -1x + 2 \implies m_2 = -1 \)</div>
+                <div id="mathMult" style="font-size: 1.3rem; text-align:center; margin-top:15px; padding:10px; border:1px solid var(--accent-pink);">
+                    \( m_1 \cdot m_2 = (1) \cdot (-1) = -1 \)
+                </div>
+            </div>
+        </div>
+        
+        <div class="graph-container">
+            <div class="radar-sweep"></div>
+            <svg id="graphSvg" viewBox="-10 -10 20 20" preserveAspectRatio="xMidYMid meet">
+                <g id="transformGroup" transform="scale(1, -1)"> <!-- Invert Y -->
+                    
+                    <!-- Grid -->
+                    <g id="gridGroup"></g>
+                    
+                    <!-- Axes -->
+                    <line x1="-10" y1="0" x2="10" y2="0" class="svg-axis" />
+                    <line x1="0" y1="-10" x2="0" y2="10" class="svg-axis" />
+                    
+                    <!-- Angle Arc -->
+                    <path id="angleArc" class="angle-arc" d="" />
+                    
+                    <!-- Perpendicular Line -->
+                    <line id="perpLine" class="perp-line" x1="-10" y1="0" x2="10" y2="0" />
+                    
+                    <!-- Main Line -->
+                    <line id="mainLine" class="main-line" x1="-10" y1="0" x2="10" y2="0" />
+                    
+                    <!-- Intersection with Y axis (n) -->
+                    <circle id="pointN" class="point-n" cx="0" cy="2" />
+                    
+                </g>
+                
+                <!-- Labels (Outside inverted group) -->
+                <g id="labelsGroup"></g>
+                <text id="angleLabel" class="angle-text" x="0" y="0"></text>
+            </svg>
+        </div>
+    </div>
+
+    <script>
+        const slideM = document.getElementById('slideM');
+        const slideN = document.getElementById('slideN');
+        const eqDisplay = document.getElementById('eqDisplay');
+        const valM = document.getElementById('valM');
+        const valN = document.getElementById('valN');
+        const valAlpha = document.getElementById('valAlpha');
+        
+        const mainLine = document.getElementById('mainLine');
+        const perpLine = document.getElementById('perpLine');
+        const pointN = document.getElementById('pointN');
+        const angleArc = document.getElementById('angleArc');
+        const angleLabel = document.getElementById('angleLabel');
+        
+        const btnPerp = document.getElementById('btnPerp');
+        const mathBox = document.getElementById('mathBox');
+        
+        let showPerp = false;
+        let debounceTimer;
+
+        function drawGrid() {
+            let gridHtml = '';
+            let labelHtml = '';
+            for(let i = -10; i <= 10; i++) {
+                if(i !== 0) {
+                    gridHtml += `<line x1="${i}" y1="-10" x2="${i}" y2="10" class="svg-grid" />`;
+                    gridHtml += `<line x1="-10" y1="${i}" x2="10" y2="${i}" class="svg-grid" />`;
+                    if(i % 2 === 0) {
+                        labelHtml += `<text x="${i}" y="0.8" class="svg-label" text-anchor="middle">${i}</text>`;
+                        labelHtml += `<text x="-0.2" y="${-i + 0.3}" class="svg-label" text-anchor="end">${i}</text>`;
+                    }
+                }
+            }
+            document.getElementById('gridGroup').innerHTML = gridHtml;
+            document.getElementById('labelsGroup').innerHTML = labelHtml;
+        }
+
+        function getArcPath(m) {
+            if(m === 0) return "";
+            
+            // Intersection with x-axis is when y=0 -> mx + n = 0 -> x = -n/m
+            let n = parseFloat(slideN.value);
+            let x0 = -n/m;
+            
+            // Angle in radians
+            let rad = Math.atan(m);
+            if(rad < 0) rad += Math.PI; // Always take positive angle from positive X axis
+            
+            let radius = 2; // arc radius
+            // SVG coordinates are standard math inside the group (Y is up)
+            let endX = x0 + radius * Math.cos(rad);
+            let endY = radius * Math.sin(rad); // y0 is 0
+            
+            let largeArc = rad > Math.PI ? 1 : 0;
+            
+            return `M ${x0+radius} 0 A ${radius} ${radius} 0 ${largeArc} 0 ${endX} ${endY} L ${x0} 0 Z`;
+        }
+
+        function updateMathjax(m, n, mPerp) {
+            let mStr = m.toFixed(1);
+            let nStr = n < 0 ? `- ${Math.abs(n).toFixed(1)}` : `+ ${n.toFixed(1)}`;
+            if(n===0) nStr = "";
+            
+            let pStr = mPerp.toFixed(2);
+            
+            let str1 = `\\( d_1: y = ${mStr}x ${nStr} \\implies m_1 = ${mStr} \\)`;
+            let str2 = `\\( d_2: y = ${pStr}x ${nStr} \\implies m_2 = ${pStr} \\)`;
+            if(m===0) {
+                str2 = `\\( d_2: x = 0 \\implies m_2 = \\infty \\text{ (Tanımsız)} \\)`;
+            }
+            let str3 = `\\( m_1 \\cdot m_2 = (${mStr}) \\cdot (${pStr}) = -1 \\)`;
+            if(m===0) {
+                str3 = `\\( m_1 \\cdot m_2 = 0 \\cdot \\infty \\text{ (Tanımsız, eksenlere paralel)} \\)`;
+            }
+            
+            document.getElementById('mathEq1').innerHTML = str1;
+            document.getElementById('mathEq2').innerHTML = str2;
+            document.getElementById('mathMult').innerHTML = str3;
+            
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                MathJax.typesetPromise([mathBox]);
+            }, 100);
+        }
+
+        function updateGraph() {
+            let m = parseFloat(slideM.value);
+            let n = parseFloat(slideN.value);
+            
+            valM.innerText = m.toFixed(1);
+            valN.innerText = n.toFixed(1);
+            
+            let eqStr = `y = ${m.toFixed(1)}x`;
+            if(n > 0) eqStr += ` + ${n.toFixed(1)}`;
+            else if(n < 0) eqStr += ` - ${Math.abs(n).toFixed(1)}`;
+            eqDisplay.innerText = eqStr;
+            
+            let rad = Math.atan(m);
+            if(rad < 0) rad += Math.PI;
+            let deg = Math.round(rad * 180 / Math.PI);
+            valAlpha.innerText = `${deg}°`;
+            
+            // Main Line coords (for x=-10 and x=10)
+            let y1 = m * (-10) + n;
+            let y2 = m * (10) + n;
+            mainLine.setAttribute('x1', -10); mainLine.setAttribute('y1', y1);
+            mainLine.setAttribute('x2', 10); mainLine.setAttribute('y2', y2);
+            
+            pointN.setAttribute('cy', n);
+            
+            angleArc.setAttribute('d', getArcPath(m));
+            
+            // Angle Label Position
+            if(m !== 0) {
+                let x0 = -n/m;
+                let midRad = rad / 2;
+                let lx = x0 + 1.2 * Math.cos(midRad);
+                let ly = 1.2 * Math.sin(midRad);
+                angleLabel.setAttribute('x', lx);
+                angleLabel.setAttribute('y', -ly + 0.2); // invert Y for text outside group
+                angleLabel.textContent = `${deg}°`;
+            } else {
+                angleLabel.textContent = "";
+            }
+            
+            // Perpendicular Line
+            let mPerp = 0;
+            if(showPerp) {
+                if(m === 0) {
+                    // Vertical line at x=0
+                    perpLine.setAttribute('x1', 0); perpLine.setAttribute('y1', -15);
+                    perpLine.setAttribute('x2', 0); perpLine.setAttribute('y2', 15);
+                    mPerp = Infinity;
+                } else {
+                    mPerp = -1 / m;
+                    let py1 = mPerp * (-10) + n; // passing through same n for visual simplicity, or (0,n)
+                    let py2 = mPerp * (10) + n;
+                    perpLine.setAttribute('x1', -10); perpLine.setAttribute('y1', py1);
+                    perpLine.setAttribute('x2', 10); perpLine.setAttribute('y2', py2);
+                }
+                updateMathjax(m, n, mPerp);
+            }
+        }
+
+        btnPerp.addEventListener('click', () => {
+            showPerp = !showPerp;
+            if(showPerp) {
+                perpLine.classList.add('show');
+                btnPerp.classList.add('active');
+                mathBox.style.display = 'block';
+                btnPerp.innerText = "Dik Doğruyu Gizle";
+            } else {
+                perpLine.classList.remove('show');
+                btnPerp.classList.remove('active');
+                mathBox.style.display = 'none';
+                btnPerp.innerText = "Buna Dik Doğru Çiz (90°)";
+            }
+            updateGraph();
+        });
+
+        slideM.addEventListener('input', updateGraph);
+        slideN.addEventListener('input', updateGraph);
+
+        window.onload = () => { drawGrid(); updateGraph(); };
+    </script>
+</body>
+</html>

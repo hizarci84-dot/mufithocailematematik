@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uzunluk Ölçüleri - Animasyon</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A; --text: #F8FAFC;
+            --primary: #3B82F6; --secondary: #10B981;
+            --tertiary: #F59E0B; --danger: #F43F5E;
+            --purple: #8B5CF6; --cyan: #06B6D4;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 900px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--purple); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; width: 100%; max-width: 800px; margin-bottom: 20px; height: 110px;}
+        h1 { font-size: 2.2rem; color: var(--purple); text-shadow: 0 5px 15px rgba(0,0,0,0.5); line-height: 1.3;}
+        .subtitle { font-size: 1.2rem; color: #94A3B8; margin-top: 10px; line-height: 1.5; min-height: 55px;}
+        .subtitle span { color: white; font-weight: 800; background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 5px;}
+
+        .canvas-area {
+            position: relative; width: 100%; max-width: 800px; height: 450px; 
+            background: #0B1120; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.3); 
+            overflow: hidden; display: flex; align-items: center; justify-content: center;
+        }
+
+        .scene { position: absolute; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.8s; pointer-events: none;}
+        .scene.active { opacity: 1; z-index: 10; }
+
+        /* SCENE 1: Metric Staircase */
+        .staircase { display: flex; flex-direction: column; align-items: flex-end; position: relative;}
+        .step-row { display: flex; align-items: flex-end; height: 60px;}
+        .step { 
+            background: rgba(255,255,255,0.1); border-top: 4px solid var(--purple); border-left: 4px solid var(--purple);
+            width: 120px; height: 100%; display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; font-weight: 900; color: white; opacity: 0; transition: all 0.5s; position: relative;
+        }
+        .step-m { border-color: var(--secondary); background: rgba(16, 185, 129, 0.2);}
+        
+        .s-desc { position: absolute; left: 130px; font-size: 1rem; color: #94A3B8; white-space: nowrap; font-weight: 600;}
+
+        /* Ball */
+        .ball {
+            width: 30px; height: 30px; background: var(--tertiary); border-radius: 50%;
+            position: absolute; left: 45px; bottom: 300px; opacity: 0;
+            box-shadow: 0 0 15px var(--tertiary); transition: all 0.5s ease-in-out; z-index: 20;
+        }
+
+        .info-panel {
+            position: absolute; right: 20px; top: 20px; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1);
+            opacity: 0; transition: all 0.5s;
+        }
+        .info-panel h3 { color: var(--purple); margin-bottom: 10px;}
+
+        .btn-start {
+            margin-top: 30px; background: var(--purple); color: white; border: none; padding: 15px 40px; border-radius: 50px;
+            font-size: 1.2rem; font-weight: 800; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 20px rgba(139, 92, 246, 0.4);
+        }
+        .btn-start:hover { transform: scale(1.05); }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=3B82F6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.6.1.7. Uzunluk Ölçme Birimleri</div>
+    </div>
+
+    <div class="title-area">
+        <h1 id="mTitle">Uzunluk Merdiveni</h1>
+        <p class="subtitle" id="mSub">Birimler arasında dönüşüm yaparken merdiven basamaklarını kullanırız.</p>
+    </div>
+
+    <div class="canvas-area">
+        
+        <div class="scene active" id="sc1">
+            
+            <div class="info-panel" id="infoPanel">
+                <h3>Kural:</h3>
+                <div style="font-size: 1.1rem; color: white;">Aşağı inerken: <b>x 10</b></div>
+                <div style="font-size: 1.1rem; color: #94A3B8; margin-top:5px;">(Sayı büyür)</div>
+            </div>
+
+            <div style="position:relative; width: 100%; height:100%; display:flex; justify-content:center; align-items:center; padding-left: 200px;">
+                <div class="staircase">
+                    <!-- Ball -->
+                    <div class="ball" id="ball"></div>
+
+                    <div class="step-row">
+                        <div class="step" id="st1">km <div class="s-desc">Kilometre (Şehirler Arası)</div></div>
+                    </div>
+                    <!-- skipped hm, dam as per curriculum note -->
+                    <div class="step-row">
+                        <div style="width: 120px;"></div>
+                        <div class="step step-m" id="st2">m <div class="s-desc">Metre (Temel Birim - Örn: Boyumuz)</div></div>
+                    </div>
+                    <div class="step-row">
+                        <div style="width: 240px;"></div>
+                        <div class="step" id="st3">dm <div class="s-desc">Desimetre</div></div>
+                    </div>
+                    <div class="step-row">
+                        <div style="width: 360px;"></div>
+                        <div class="step" id="st4">cm <div class="s-desc">Santimetre (Kalem, Defter)</div></div>
+                    </div>
+                    <div class="step-row">
+                        <div style="width: 480px;"></div>
+                        <div class="step" id="st5">mm <div class="s-desc">Milimetre (Karınca)</div></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="position:absolute; bottom: 20px; font-size:1.5rem; font-weight:900; color:var(--tertiary);" id="calcResult"></div>
+        </div>
+
+    </div>
+
+    <button class="btn-start" id="startBtn" onclick="runTimeline()">Animasyonu Başlat</button>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        const mTitle = document.getElementById('mTitle');
+        const mSub = document.getElementById('mSub');
+        const startBtn = document.getElementById('startBtn');
+        const ball = document.getElementById('ball');
+        const calcResult = document.getElementById('calcResult');
+        
+        async function runTimeline() {
+            startBtn.style.display = 'none';
+            calcResult.innerText = "";
+            ball.style.opacity = 0;
+            document.getElementById('infoPanel').style.opacity = 0;
+
+            // Show steps sequentially
+            for(let i=1; i<=5; i++) {
+                document.getElementById('st'+i).style.opacity = 1;
+                await sleep(400);
+            }
+
+            await sleep(1000);
+            mTitle.innerText = "Aşağı İnmek: Çarpmak";
+            mSub.innerHTML = "Merdivenden <span>AŞAĞI</span> inerken, her basamakta sayıyı <span>10 ile çarparız.</span>";
+            document.getElementById('infoPanel').style.opacity = 1;
+
+            // Start Ball at Meter (st2)
+            // Initial position over 'm'
+            // In the grid, m is offset by 120px right and 60px down from km
+            // Let's hardcode ball animation for visual effect based on current layout
+            ball.style.opacity = 1;
+            ball.style.left = "165px"; // Over 'm' step
+            ball.style.bottom = "200px";
+            calcResult.innerText = "Başlangıç: 1 Metre (m)";
+            
+            await sleep(2500);
+
+            // Move to dm
+            calcResult.innerText = "1 m = 1 x 10 = 10 dm";
+            ball.style.left = "285px";
+            ball.style.bottom = "140px";
+            await sleep(2000);
+
+            // Move to cm
+            calcResult.innerText = "1 m = 10 x 10 = 100 cm";
+            ball.style.left = "405px";
+            ball.style.bottom = "80px";
+            await sleep(2000);
+
+            // Move to mm
+            calcResult.innerText = "1 m = 100 x 10 = 1000 mm";
+            ball.style.left = "525px";
+            ball.style.bottom = "20px";
+            await sleep(3000);
+
+            // Upward
+            mTitle.innerText = "Yukarı Çıkmak: Bölmek";
+            mSub.innerHTML = "Merdivenden <span>YUKARI</span> çıkarken, her basamakta sayıyı <span>10'a böleriz.</span>";
+            document.getElementById('infoPanel').innerHTML = `
+                <h3 style="color:var(--secondary)">Kural:</h3>
+                <div style="font-size: 1.1rem; color: white;">Yukarı çıkarken: <b>÷ 10</b></div>
+                <div style="font-size: 1.1rem; color: #94A3B8; margin-top:5px;">(Sayı küçülür/Virgül kayar)</div>
+            `;
+            
+            calcResult.innerText = "Başlangıç: 1000 mm";
+            await sleep(2500);
+
+            // Move back to cm
+            calcResult.innerText = "1000 ÷ 10 = 100 cm";
+            ball.style.left = "405px";
+            ball.style.bottom = "80px";
+            await sleep(2000);
+
+            // Move to m
+            calcResult.innerText = "100 ÷ 100 = 1 m";
+            ball.style.left = "165px";
+            ball.style.bottom = "200px";
+            await sleep(2500);
+
+            mTitle.innerText = "Dönüşümlerin Mantığı";
+            mSub.innerHTML = "Birim küçüldükçe içindeki miktar artar (Çarpma). Birim büyüdükçe miktar azalır (Bölme).";
+            
+            setTimeout(() => {
+                startBtn.style.display = 'block';
+                startBtn.innerText = "Tekrar İzle";
+            }, 4000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10.2.4 - Parabol (Karesel Fonksiyon) Dönüşümleri</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0F172A;
+            --panel-bg: #1E293B;
+            --primary: #0EA5E9; /* Light Blue */
+            --secondary: #8B5CF6; /* Violet */
+            --accent: #EC4899; /* Pink */
+            --neon-grid: rgba(56, 189, 248, 0.15);
+            --neon-axis: rgba(56, 189, 248, 0.6);
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        
+        body { background-color: var(--bg-color); color: var(--text-main); display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; }
+
+        .header { width: 100%; max-width: 1000px; display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px; }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 800; color: var(--primary); }
+        .kazanim { background: rgba(14, 165, 233, 0.1); padding: 8px 15px; border-radius: 12px; color: var(--primary); font-weight: 600; font-size: 0.9rem; }
+
+        h1 { font-size: 2.5rem; font-weight: 900; margin-bottom: 10px; text-align: center; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .subtitle { color: var(--text-muted); font-size: 1.1rem; margin-bottom: 30px; text-align: center; max-width: 800px; }
+
+        .workspace { display: flex; gap: 20px; width: 100%; max-width: 1000px; }
+        @media (max-width: 800px) { .workspace { flex-direction: column; } }
+
+        .controls { flex: 1; display: flex; flex-direction: column; gap: 20px; background: var(--panel-bg); padding: 25px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); }
+
+        .slider-group { display: flex; flex-direction: column; gap: 8px; }
+        .slider-header { display: flex; justify-content: space-between; font-weight: 600; }
+        .val-badge { background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 6px; font-weight: 800; color: var(--accent); }
+        input[type=range] { width: 100%; accent-color: var(--primary); }
+
+        .math-rule-box { background: rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; font-size: 1.3rem; font-weight: 600; color: white; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; }
+
+        .graph-container { flex: 2; position: relative; background: #080C16; border-radius: 20px; border: 2px solid rgba(56, 189, 248, 0.3); overflow: hidden; }
+
+        svg { width: 100%; height: 100%; display: block; min-height: 400px; }
+        .grid-line { stroke: var(--neon-grid); stroke-width: 1; }
+        .axis-line { stroke: var(--neon-axis); stroke-width: 2; }
+        .axis-label { fill: var(--neon-axis); font-size: 14px; font-weight: 800; }
+        
+        .ref-path { fill: none; stroke: rgba(255,255,255,0.2); stroke-width: 2; stroke-dasharray: 5,5; vector-effect: non-scaling-stroke; }
+        .main-path { fill: none; stroke: var(--accent); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 8px var(--accent)); vector-effect: non-scaling-stroke; transition: d 0.1s linear; }
+        
+        .vertex-point { fill: var(--bg-color); stroke: var(--accent); stroke-width: 3; filter: drop-shadow(0 0 5px var(--accent)); transition: cx 0.1s, cy 0.1s; }
+        .vertex-label { fill: white; font-size: 16px; font-weight: 800; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8)); transition: x 0.1s, y 0.1s; }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left"><span>@mufithocailematematik</span></div>
+        <div class="kazanim">MAT.10.2.4. İkinci Dereceden Fonksiyonlar (Parabol)</div>
+    </div>
+    
+    <h1>Parabol Dönüşüm Laboratuvarı</h1>
+    <p class="subtitle">Bir karesel fonksiyonun standart formu olan \( f(x) = a(x - r)^2 + k \) üzerindeki katsayıların grafiği nasıl etkilediğini keşfedin.</p>
+    
+    <div class="workspace">
+        <div class="controls">
+            <div class="slider-group">
+                <div class="slider-header"><span>Yön ve Genişlik (a)</span><span class="val-badge" id="valA">1</span></div>
+                <input type="range" id="slideA" min="-5" max="5" step="0.5" value="1">
+            </div>
+            <div class="slider-group">
+                <div class="slider-header"><span>Yatay Öteleme (r)</span><span class="val-badge" id="valR">0</span></div>
+                <input type="range" id="slideR" min="-10" max="10" step="1" value="0">
+            </div>
+            <div class="slider-group">
+                <div class="slider-header"><span>Düşey Öteleme (k)</span><span class="val-badge" id="valK">0</span></div>
+                <input type="range" id="slideK" min="-10" max="10" step="1" value="0">
+            </div>
+            
+            <div class="math-rule-box">
+                <div style="font-size: 1rem; color: var(--text-muted);">Fonksiyon Denklemi</div>
+                <span id="mathEq">\( f(x) = 1(x - 0)^2 + 0 \)</span>
+                <div style="font-size: 1rem; color: var(--text-muted); margin-top:5px;">Tepe Noktası T(r, k)</div>
+                <span id="mathVertex" style="color:var(--accent);">\( T(0, 0) \)</span>
+            </div>
+        </div>
+        
+        <div class="graph-container">
+            <svg viewBox="-15 -15 30 30" preserveAspectRatio="xMidYMid meet" id="graphSvg">
+                <g transform="scale(1, -1)">
+                    <g id="gridGroup"></g>
+                    <line x1="-15" y1="0" x2="15" y2="0" class="axis-line" />
+                    <line x1="0" y1="-15" x2="0" y2="15" class="axis-line" />
+                    
+                    <path id="refPath" class="ref-path" d="" />
+                    <path id="mainPath" class="main-path" d="" />
+                    
+                    <circle id="vertexPoint" class="vertex-point" cx="0" cy="0" r="0.4" />
+                </g>
+                <g id="labelsGroup"></g>
+                <text id="vertexLabel" class="vertex-label" x="0" y="0">T</text>
+            </svg>
+        </div>
+    </div>
+
+    <script>
+        const slideA = document.getElementById('slideA'); const slideR = document.getElementById('slideR'); const slideK = document.getElementById('slideK');
+        const valA = document.getElementById('valA'); const valR = document.getElementById('valR'); const valK = document.getElementById('valK');
+        const mainPath = document.getElementById('mainPath'); const refPath = document.getElementById('refPath');
+        const vertexPoint = document.getElementById('vertexPoint'); const vertexLabel = document.getElementById('vertexLabel');
+        const gridGroup = document.getElementById('gridGroup'); const labelsGroup = document.getElementById('labelsGroup');
+        
+        function drawGrid() {
+            let gridHtml = ''; let labelHtml = '';
+            for(let i = -15; i <= 15; i++) {
+                gridHtml += `<line x1="${i}" y1="-15" x2="${i}" y2="15" class="grid-line" />`;
+                gridHtml += `<line x1="-15" y1="${i}" x2="15" y2="${i}" class="grid-line" />`;
+                
+                if (i !== 0 && i % 5 === 0) {
+                    labelHtml += `<text x="${i}" y="1.2" class="axis-label" text-anchor="middle" dominant-baseline="hanging">${i}</text>`;
+                    labelHtml += `<text x="-0.5" y="${-i}" class="axis-label" text-anchor="end" dominant-baseline="middle">${i}</text>`;
+                }
+            }
+            gridGroup.innerHTML = gridHtml; labelsGroup.innerHTML = labelHtml;
+        }
+
+        function getParabolaPath(a, r, k) {
+            if(a === 0) a = 0.001; 
+            let d = ''; let isFirst = true;
+            for(let x = -15; x <= 15; x += 0.5) {
+                let y = a * Math.pow(x - r, 2) + k;
+                if(y > 30) y = 30; if(y < -30) y = -30;
+                if(isFirst) { d += `M ${x} ${y} `; isFirst = false; } else { d += `L ${x} ${y} `; }
+            }
+            return d;
+        }
+
+        let debounceTimer;
+        function updateMathjax(a, r, k) {
+            let signR = r > 0 ? `-${r}` : (r < 0 ? `+${Math.abs(r)}` : `-0`);
+            let signK = k >= 0 ? `+${k}` : `-${Math.abs(k)}`;
+            
+            let eqStr = `\\( f(x) = ${a}(x ${signR})^2 ${signK} \\)`;
+            let tStr = `\\( T(${r}, ${k}) \\)`;
+            
+            document.getElementById('mathEq').innerHTML = eqStr;
+            document.getElementById('mathVertex').innerHTML = tStr;
+            
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                MathJax.typesetPromise([document.getElementById('mathEq'), document.getElementById('mathVertex')]);
+            }, 100);
+        }
+
+        function updateGraph() {
+            let a = parseFloat(slideA.value); let r = parseInt(slideR.value); let k = parseInt(slideK.value);
+            valA.innerText = a; valR.innerText = r; valK.innerText = k;
+            
+            mainPath.setAttribute('d', getParabolaPath(a, r, k));
+            vertexPoint.setAttribute('cx', r); vertexPoint.setAttribute('cy', k);
+            
+            // Adjust label position dynamically based on opening direction
+            vertexLabel.setAttribute('x', r + 0.5);
+            let labelY = a > 0 ? -k + 1.2 : -k - 0.8;
+            vertexLabel.setAttribute('y', labelY);
+            vertexLabel.textContent = `T(${r}, ${k})`;
+            
+            updateMathjax(a, r, k);
+        }
+
+        slideA.addEventListener('input', updateGraph); slideR.addEventListener('input', updateGraph); slideK.addEventListener('input', updateGraph);
+
+        window.onload = () => { drawGrid(); refPath.setAttribute('d', getParabolaPath(1, 0, 0)); updateGraph(); };
+    </script>
+</body>
+</html>

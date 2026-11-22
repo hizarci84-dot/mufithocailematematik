@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10.2.6 - Ters Fonksiyon Makinesi</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --panel-bg: #1e293b;
+            --f-color: #0ea5e9; /* Sky Blue */
+            --inv-color: #f43f5e; /* Rose */
+            --input-color: #10b981; /* Emerald */
+            --text-main: #f8fafc;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        
+        body { background-color: var(--bg-color); color: var(--text-main); display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; overflow-x: hidden; }
+
+        .header { width: 100%; max-width: 1000px; display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background: var(--panel-bg); border-radius: 12px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1); }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 800; font-size: 1.2rem; }
+        .kazanim { background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 6px; font-weight: 600; }
+
+        h1 { font-size: 2.2rem; margin-bottom: 10px; text-align: center; }
+        .subtitle { color: #94a3b8; font-size: 1.05rem; margin-bottom: 30px; text-align: center; max-width: 800px; }
+
+        .container { display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 1000px; }
+
+        .controls { background: var(--panel-bg); padding: 25px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; gap: 20px; }
+
+        .slider-group label { display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 8px; font-size: 1rem; }
+        input[type=range] { width: 100%; accent-color: var(--f-color); }
+        .val-badge { font-weight: 800; background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 4px; color: var(--f-color); }
+
+        .eq-display { display: flex; justify-content: space-around; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; font-size: 1.4rem; font-weight: 800; }
+        
+        .factory-area {
+            position: relative; height: 350px; background: #0b1120; border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-around; align-items: center;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.8); overflow: hidden; margin-top: 10px;
+        }
+
+        .conveyor { position: absolute; height: 12px; background: repeating-linear-gradient(90deg, #334155, #334155 10px, #475569 10px, #475569 20px); width: 100%; top: 70%; left: 0; }
+
+        .machine {
+            position: relative; width: 220px; height: 220px; border-radius: 20px; border: 4px solid;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10;
+            background: #1e293b; box-shadow: 0 10px 20px rgba(0,0,0,0.5); gap: 10px;
+        }
+        .m-f { border-color: var(--f-color); box-shadow: 0 0 20px rgba(14, 165, 233, 0.3); }
+        .m-inv { border-color: var(--inv-color); box-shadow: 0 0 20px rgba(244, 63, 94, 0.3); }
+        
+        .m-title { font-size: 2rem; font-weight: 900; }
+        .m-f .m-title { color: var(--f-color); }
+        .m-inv .m-title { color: var(--inv-color); }
+        
+        .m-step { background: rgba(0,0,0,0.3); padding: 5px 15px; border-radius: 6px; font-family: monospace; font-size: 1.1rem; width: 80%; text-align: center; border: 1px solid rgba(255,255,255,0.1); opacity: 0.5; transition: 0.3s; }
+        .m-step.active { opacity: 1; border-color: white; transform: scale(1.05); }
+
+        .block {
+            position: absolute; width: 60px; height: 60px; border-radius: 8px;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 1.4rem; font-weight: 800; color: white;
+            top: calc(70% - 60px); left: -80px; z-index: 20;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5); transition: left 1s linear;
+        }
+
+        .input-panel {
+            background: rgba(0,0,0,0.4); padding: 20px; border-radius: 12px;
+            display: flex; gap: 20px; align-items: center; justify-content: center;
+            border-bottom: 4px solid var(--input-color); margin-top: -10px; z-index: 30; position: relative;
+        }
+        .input-panel input { width: 100px; padding: 10px; font-size: 1.3rem; text-align: center; border-radius: 6px; border: none; font-weight: 800; }
+        .btn-run { background: var(--input-color); color: white; border: none; padding: 12px 30px; border-radius: 6px; font-weight: 800; cursor: pointer; font-size: 1.2rem; }
+        .btn-run:hover { filter: brightness(1.2); }
+        .btn-run:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left"><span>@mufithocailematematik</span></div>
+        <div class="kazanim">MAT.10.2.6. Ters Fonksiyonlar</div>
+    </div>
+    
+    <h1>Geri Dönüşüm (Ters Fonksiyon) Makinesi</h1>
+    <p class="subtitle">Ters fonksiyon \( f^{-1}(x) \), bir makinenin yaptığı işlemleri <strong>sondan başa doğru ters işlemlerle</strong> geri alır ve çıktıyı tekrar orijinal girdiye dönüştürür.</p>
+    
+    <div class="container">
+        
+        <div class="controls">
+            <div style="display:flex; gap:20px; width:100%;">
+                <div class="slider-group" style="flex:1;">
+                    <label>Çarpım (a) <span class="val-badge" id="valA">2</span></label>
+                    <input type="range" id="slA" min="1" max="5" step="1" value="2">
+                </div>
+                <div class="slider-group" style="flex:1;">
+                    <label>Toplam (b) <span class="val-badge" id="valB">6</span></label>
+                    <input type="range" id="slB" min="-10" max="10" step="1" value="6">
+                </div>
+            </div>
+            
+            <div class="eq-display">
+                <div id="eqF" style="color:var(--f-color);">\( f(x) = 2x + 6 \)</div>
+                <div id="eqInv" style="color:var(--inv-color);">\( f^{-1}(x) = \frac{x - 6}{2} \)</div>
+            </div>
+        </div>
+
+        <div class="factory-area" id="factArea">
+            <div class="conveyor"></div>
+            
+            <div class="machine m-f" id="machF">
+                <div class="m-title">f(x)</div>
+                <div class="m-step" id="fStep1">1. Çarp (×a)</div>
+                <div class="m-step" id="fStep2">2. Ekle (+b)</div>
+            </div>
+            
+            <div class="machine m-inv" id="machInv">
+                <div class="m-title">f⁻¹(x)</div>
+                <div class="m-step" id="invStep1">1. Çıkar (-b)</div>
+                <div class="m-step" id="invStep2">2. Böl (÷a)</div>
+            </div>
+            
+            <div class="block" id="animBlock" style="background:var(--input-color); opacity:0;"></div>
+        </div>
+
+        <div class="input-panel">
+            <label style="font-weight:800; color:var(--text-muted); font-size:1.2rem;">GİRDİ (x):</label>
+            <input type="number" id="inpX" value="5">
+            <button class="btn-run" id="btnRun">Sistemi Başlat</button>
+        </div>
+
+    </div>
+
+    <script>
+        const slA = document.getElementById('slA'); const slB = document.getElementById('slB');
+        const valA = document.getElementById('valA'); const valB = document.getElementById('valB');
+        const eqF = document.getElementById('eqF'); const eqInv = document.getElementById('eqInv');
+        
+        const fStep1 = document.getElementById('fStep1'); const fStep2 = document.getElementById('fStep2');
+        const invStep1 = document.getElementById('invStep1'); const invStep2 = document.getElementById('invStep2');
+        
+        const btnRun = document.getElementById('btnRun');
+        const inpX = document.getElementById('inpX');
+        const animBlock = document.getElementById('animBlock');
+        const machF = document.getElementById('machF');
+        const machInv = document.getElementById('machInv');
+        
+        let a = 2, b = 6;
+        let debounceTimer;
+
+        function updateParams() {
+            a = parseInt(slA.value);
+            b = parseInt(slB.value);
+            valA.innerText = a;
+            valB.innerText = b;
+            
+            fStep1.innerText = `1. Çarp (×${a})`;
+            
+            let termB = b>=0 ? `+${b}` : `${b}`;
+            fStep2.innerText = `2. Ekle (${termB})`;
+            
+            let invTerm1 = b>=0 ? `-${b}` : `+${Math.abs(b)}`;
+            invStep1.innerText = `1. Çıkar (${invTerm1})`;
+            invStep2.innerText = `2. Böl (÷${a})`;
+            
+            let eqF_str = `\\( f(x) = ${a}x ${b>=0 ? '+ '+b : '- '+Math.abs(b)} \\)`;
+            let eqInv_str = `\\( f^{-1}(x) = \\frac{x ${b>=0 ? '- '+b : '+ '+Math.abs(b)}}{${a}} \\)`;
+            
+            eqF.innerHTML = eqF_str;
+            eqInv.innerHTML = eqInv_str;
+            
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => { MathJax.typesetPromise([eqF, eqInv]); }, 50);
+        }
+
+        slA.addEventListener('input', updateParams);
+        slB.addEventListener('input', updateParams);
+
+        btnRun.addEventListener('click', () => {
+            let x = parseFloat(inpX.value);
+            if(isNaN(x)) return;
+            
+            btnRun.disabled = true;
+            
+            let fRect = machF.getBoundingClientRect();
+            let invRect = machInv.getBoundingClientRect();
+            let parentRect = document.getElementById('factArea').getBoundingClientRect();
+            
+            let fX = fRect.left - parentRect.left + fRect.width/2 - 30;
+            let invX = invRect.left - parentRect.left + invRect.width/2 - 30;
+            
+            animBlock.style.transition = 'none';
+            animBlock.style.left = '-80px';
+            animBlock.style.opacity = '1';
+            animBlock.style.background = 'var(--input-color)';
+            animBlock.innerText = x;
+            
+            setTimeout(() => {
+                animBlock.style.transition = 'left 1s linear';
+                animBlock.style.left = `${fX}px`; // Into F
+            }, 50);
+            
+            // F Step 1
+            setTimeout(() => {
+                fStep1.classList.add('active');
+                animBlock.innerText = x * a;
+            }, 1050);
+            
+            // F Step 2
+            setTimeout(() => {
+                fStep1.classList.remove('active');
+                fStep2.classList.add('active');
+                animBlock.innerText = (x * a) + b;
+                animBlock.style.background = 'var(--f-color)';
+            }, 2000);
+            
+            // Out of F, to Inv
+            setTimeout(() => {
+                fStep2.classList.remove('active');
+                animBlock.style.left = `${invX}px`;
+            }, 3000);
+            
+            // Inv Step 1 (Reverse of +b)
+            setTimeout(() => {
+                invStep1.classList.add('active');
+                animBlock.innerText = ((x * a) + b) - b; // back to x*a
+            }, 4000);
+            
+            // Inv Step 2 (Reverse of *a)
+            setTimeout(() => {
+                invStep1.classList.remove('active');
+                invStep2.classList.add('active');
+                animBlock.innerText = (((x * a) + b) - b) / a; // back to x
+                animBlock.style.background = 'var(--inv-color)';
+            }, 5000);
+            
+            // Out of Inv
+            setTimeout(() => {
+                invStep2.classList.remove('active');
+                animBlock.style.background = 'var(--input-color)'; // returned to original
+                animBlock.style.left = `110%`;
+            }, 6000);
+            
+            setTimeout(() => {
+                btnRun.disabled = false;
+            }, 7050);
+        });
+
+        window.onload = () => updateParams();
+    </script>
+</body>
+</html>

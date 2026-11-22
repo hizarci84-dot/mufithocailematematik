@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>11.1.2 - Temel Trigonometrik Denklemler Etkinliği</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0A0A12;
+            --panel-bg: #151522;
+            --primary: #00F0FF; /* Neon Cyan */
+            --secondary: #FF00E4; /* Neon Pink */
+            --accent: #FFE600; /* Neon Yellow */
+            --text-main: #FFFFFF;
+            --text-muted: #8A8A9E;
+            --grid-line: rgba(0, 240, 255, 0.12);
+            --axis-line: rgba(0, 240, 255, 0.5);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background-color: var(--bg-color); color: var(--text-main);
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; padding: 20px; overflow-x: hidden;
+            background-image: 
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        .header {
+            width: 100%; max-width: 1200px; display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 25px; background: rgba(21, 21, 34, 0.85); backdrop-filter: blur(10px);
+            border-radius: 16px; border: 1px solid rgba(0, 240, 255, 0.3);
+            margin-bottom: 20px; box-shadow: 0 0 20px rgba(0, 240, 255, 0.15);
+        }
+        
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 800; color: var(--primary); font-size: 1.1rem; }
+        .header-left img { width: 45px; height: 45px; border-radius: 10px; border: 1px solid var(--primary); }
+        .kazanim { background: rgba(0, 240, 255, 0.1); padding: 8px 15px; border-radius: 8px; color: var(--primary); font-weight: 600; font-size: 0.85rem; border: 1px solid rgba(0, 240, 255, 0.3); }
+
+        h1 { font-size: 2rem; font-weight: 900; margin-bottom: 8px; text-align: center; text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 0 10px rgba(0, 240, 255, 0.5); }
+        .subtitle { color: var(--text-muted); font-size: 1rem; margin-bottom: 25px; text-align: center; max-width: 900px; }
+
+        .workspace { display: flex; flex-direction: row; gap: 20px; width: 100%; max-width: 1200px; }
+        @media (max-width: 900px) { .workspace { flex-direction: column; } }
+
+        .controls {
+            flex: 1; display: flex; flex-direction: column; gap: 16px; background: var(--panel-bg);
+            padding: 22px; border-radius: 16px; border: 1px solid rgba(255, 0, 228, 0.3);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5); min-width: 320px;
+        }
+
+        .function-selector { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 5px; }
+        .btn-func {
+            padding: 12px 5px; background: rgba(255,255,255,0.05); border: 1px solid var(--text-muted);
+            color: var(--text-muted); font-weight: 800; border-radius: 8px; cursor: pointer; transition: 0.3s;
+            font-size: 1.1rem; text-align: center;
+        }
+        .btn-func:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-func.active { background: rgba(0, 240, 255, 0.2); border-color: var(--primary); color: var(--primary); box-shadow: 0 0 10px rgba(0, 240, 255, 0.3); }
+
+        .slider-group { background: rgba(0,0,0,0.4); padding: 16px; border-radius: 8px; border-left: 4px solid var(--secondary); margin-bottom: 10px; }
+        .slider-header { display: flex; justify-content: space-between; margin-bottom: 12px; font-weight: 600; color: var(--text-main); font-size: 1rem; }
+        .slider-val { color: var(--secondary); font-family: monospace; font-size: 1.2rem; font-weight: bold; }
+        
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; }
+        input[type=range]::-webkit-slider-thumb { height: 20px; width: 20px; border-radius: 50%; background: var(--secondary); cursor: pointer; -webkit-appearance: none; margin-top: -6px; box-shadow: 0 0 12px var(--secondary); }
+        
+        .math-box {
+            background: rgba(0,0,0,0.6); border: 1px dashed var(--accent); padding: 20px;
+            border-radius: 12px; font-size: 1.1rem; text-align: center; margin-top: auto; color: var(--text-main);
+            line-height: 1.8; min-height: 140px; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            overflow-x: auto;
+        }
+
+        .visual-container {
+            flex: 2.2; display: flex; flex-direction: column; gap: 15px;
+        }
+        
+        .anim-container {
+            display: flex; width: 100%; height: 450px; position: relative;
+            background: #0A0A12; border-radius: 16px; border: 2px solid var(--primary);
+            overflow: hidden; box-shadow: 0 0 30px rgba(0, 240, 255, 0.15) inset;
+        }
+
+        .unit-circle-area { flex: 1; position: relative; border-right: 1px dashed rgba(0, 240, 255, 0.3); }
+        .graph-area { flex: 1.5; position: relative; }
+
+        svg { width: 100%; height: 100%; display: block; }
+        
+        .svg-grid { stroke: rgba(255,255,255,0.06); stroke-width: 0.03; }
+        .svg-axis { stroke: var(--axis-line); stroke-width: 0.06; }
+        
+        .unit-circle { fill: rgba(0, 240, 255, 0.05); stroke: var(--primary); stroke-width: 0.05; filter: drop-shadow(0 0 5px var(--primary)); }
+        .path-func { fill: none; stroke: var(--primary); stroke-width: 0.08; stroke-linecap: round; filter: drop-shadow(0 0 5px var(--primary)); }
+        .line-a { stroke: var(--secondary); stroke-width: 0.06; stroke-dasharray: 0.2, 0.2; filter: drop-shadow(0 0 5px var(--secondary)); }
+        
+        .root-point { fill: var(--accent); stroke: var(--bg-color); stroke-width: 0.04; r: 0.15; filter: drop-shadow(0 0 8px var(--accent)); }
+        .root-line { stroke: rgba(255, 230, 0, 0.6); stroke-width: 0.04; stroke-dasharray: 0.1, 0.1; }
+        
+        .radius-line { stroke: var(--primary); stroke-width: 0.03; stroke-dasharray: 0.05, 0.05; }
+        .angle-arc { fill: rgba(0, 240, 255, 0.2); stroke: var(--primary); stroke-width: 0.02; }
+        
+        .svg-label { fill: var(--text-muted); font-size: 0.25px; font-weight: 600; font-family: 'Outfit', sans-serif; }
+        .svg-title { fill: var(--text-muted); font-size: 0.25px; font-weight: 800; opacity: 0.8; font-family: 'Outfit', sans-serif; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=00F0FF&color=000'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.11.1.2. Trigonometrik Fonksiyonlarla Denklemler</div>
+    </div>
+    
+    <h1>Temel Trigonometrik Denklemler</h1>
+    <p class="subtitle"><strong>f(x) = a</strong> denkleminin birim çember ve grafik üzerindeki kök (çözüm) dağılımını inceleyin.</p>
+    
+    <div class="workspace">
+        <div class="controls">
+            <div class="function-selector">
+                <button class="btn-func active" onclick="setFunc('sin')" id="btnSin">sin(x) = a</button>
+                <button class="btn-func" onclick="setFunc('cos')" id="btnCos">cos(x) = a</button>
+                <button class="btn-func" onclick="setFunc('tan')" id="btnTan">tan(x) = a</button>
+                <button class="btn-func" onclick="setFunc('cot')" id="btnCot">cot(x) = a</button>
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span>a Değeri</span>
+                    <span class="slider-val" id="valA">0.5</span>
+                </div>
+                <input type="range" id="slideA" min="-2.5" max="2.5" step="0.1" value="0.5">
+            </div>
+
+            <div class="math-box" id="mathOutput">
+                <!-- Double buffered MathJax rendered Tex -->
+            </div>
+        </div>
+        
+        <div class="visual-container">
+            <div class="anim-container">
+                <!-- Left: Unit Circle -->
+                <div class="unit-circle-area">
+                    <svg id="circleSvg" viewBox="-2 -2 4 4" preserveAspectRatio="xMidYMid meet">
+                        <g transform="scale(1, -1)">
+                        <circle cx="0" cy="0" r="1" class="unit-circle" />
+                        <line x1="-2" y1="0" x2="2" y2="0" class="svg-axis" />
+                        <line x1="0" y1="-2" x2="0" y2="2" class="svg-axis" />
+                        
+                        <g id="circleDynamicGroup"></g>
+                    </g>
+                    <text x="-1.9" y="-1.5" class="svg-title">Birim Çember (R=1)</text>
+                    </svg>
+                </div>
+                
+                <!-- Right: Wave Graph -->
+                <div class="graph-area">
+                    <!-- X: -2PI to 2PI => -6.5 to 6.5, Y: -2.5 to 2.5 -->
+                    <svg id="graphSvg" viewBox="-6.5 -2.5 13 5" preserveAspectRatio="xMidYMid meet">
+                        <g transform="scale(1, -1)">
+                            <g id="gridGroup"></g>
+                            
+                            <line x1="-6.5" y1="0" x2="6.5" y2="0" class="svg-axis" />
+                            <line x1="0" y1="-2.5" x2="0" y2="2.5" class="svg-axis" />
+                            
+                            <g id="asymptotesGroup"></g>
+                            
+                            <!-- Graph Curve -->
+                            <g id="pathGroup"></g>
+                            
+                            <!-- Target horizontal line -->
+                            <line id="lineA" class="line-a" x1="-6.5" y1="0" x2="6.5" y2="0" />
+                            
+                            <g id="rootsGroup"></g>
+                        </g>
+                        <g id="labelsGroup"></g>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const slideA = document.getElementById('slideA'); 
+        const valA = document.getElementById('valA');
+        const mathOutput = document.getElementById('mathOutput');
+        
+        const circleDynamicGroup = document.getElementById('circleDynamicGroup');
+        const pathGroup = document.getElementById('pathGroup');
+        const lineA = document.getElementById('lineA');
+        const rootsGroup = document.getElementById('rootsGroup');
+        const asymptotesGroup = document.getElementById('asymptotesGroup');
+        
+        let activeFunc = 'sin';
+        let isTypesetting = false;
+        let pendingTex = null;
+
+        function setFunc(func) {
+            activeFunc = func;
+            ['sin', 'cos', 'tan', 'cot'].forEach(f => {
+                document.getElementById('btn' + f.charAt(0).toUpperCase() + f.slice(1)).classList.toggle('active', f === func);
+            });
+            updateVisuals();
+        }
+
+        function drawGrid() {
+            let gridHtml = '';
+            let labelHtml = '';
+            
+            for(let y = -2; y <= 2; y += 1) {
+                if(y !== 0) {
+                    gridHtml += `<line x1="-6.5" y1="${y}" x2="6.5" y2="${y}" class="svg-grid" />`;
+                    labelHtml += `<text x="-0.3" y="${-y + 0.12}" class="svg-label" text-anchor="end">${y}</text>`;
+                }
+            }
+            
+            let piSteps = [
+                {val: -2*Math.PI, str: "-2π"},
+                {val: -Math.PI, str: "-π"},
+                {val: Math.PI, str: "π"},
+                {val: 2*Math.PI, str: "2π"}
+            ];
+            
+            piSteps.forEach(step => {
+                gridHtml += `<line x1="${step.val}" y1="-2.5" x2="${step.val}" y2="2.5" class="svg-grid" />`;
+                labelHtml += `<text x="${step.val}" y="0.5" class="svg-label" text-anchor="middle">${step.str}</text>`;
+            });
+
+            document.getElementById('gridGroup').innerHTML = gridHtml;
+            document.getElementById('labelsGroup').innerHTML = labelHtml;
+        }
+
+        function renderMathClean(texString) {
+            if (isTypesetting) {
+                pendingTex = texString;
+                return;
+            }
+            isTypesetting = true;
+            
+            let temp = document.createElement('div');
+            temp.style.position = 'absolute';
+            temp.style.top = '-9999px';
+            temp.style.left = '-9999px';
+            temp.style.visibility = 'hidden';
+            temp.innerHTML = texString;
+            document.body.appendChild(temp);
+            
+            MathJax.typesetPromise([temp]).then(() => {
+                mathOutput.innerHTML = temp.innerHTML;
+                if (temp.parentNode) document.body.removeChild(temp);
+                isTypesetting = false;
+                
+                if (pendingTex) {
+                    let next = pendingTex;
+                    pendingTex = null;
+                    renderMathClean(next);
+                }
+            }).catch(err => {
+                if (temp.parentNode) document.body.removeChild(temp);
+                isTypesetting = false;
+            });
+        }
+
+        function evalBase(x) {
+            switch(activeFunc) {
+                case 'sin': return Math.sin(x);
+                case 'cos': return Math.cos(x);
+                case 'tan': return Math.tan(x);
+                case 'cot': return Math.cos(x)/Math.sin(x);
+            }
+        }
+
+        function solvePrincipalRoots(a) {
+            let roots = [];
+            let r1, r2;
+            switch(activeFunc) {
+                case 'sin':
+                    if(Math.abs(a) > 1) return [];
+                    r1 = Math.asin(a);
+                    r2 = Math.PI - r1;
+                    if(r2 < -Math.PI) r2 += 2*Math.PI;
+                    if(r2 > Math.PI) r2 -= 2*Math.PI;
+                    roots.push(r1);
+                    if(Math.abs(r1 - r2) > 0.01) roots.push(r2);
+                    break;
+                case 'cos':
+                    if(Math.abs(a) > 1) return [];
+                    r1 = Math.acos(a);
+                    r2 = -r1;
+                    roots.push(r1);
+                    if(Math.abs(r1 - r2) > 0.01) roots.push(r2);
+                    break;
+                case 'tan':
+                    r1 = Math.atan(a);
+                    roots.push(r1);
+                    break;
+                case 'cot':
+                    r1 = Math.atan(1/a);
+                    if(r1 < 0) r1 += Math.PI;
+                    roots.push(r1);
+                    break;
+            }
+            return roots;
+        }
+
+        function buildArc(angle, R) {
+            let largeArc = (Math.abs(angle) > Math.PI) ? 1 : 0;
+            let sweep = (angle > 0) ? 1 : 0;
+            let start = { x: R, y: 0 };
+            let end = { x: R * Math.cos(angle), y: R * Math.sin(angle) };
+            return `M 0 0 L ${start.x} ${start.y} A ${R} ${R} 0 ${largeArc} ${sweep} ${end.x} ${end.y} Z`;
+        }
+
+        function updateVisuals() {
+            let a = parseFloat(slideA.value);
+            valA.innerText = a.toFixed(1);
+            
+            let R = 1.5; // unit circle scale
+            
+            // 1. Plot Graph
+            let step = 0.05;
+            let pathsHtml = "";
+            let currentPath = "";
+            let lastY = null;
+            let isTanCot = (activeFunc === 'tan' || activeFunc === 'cot');
+            
+            for(let x = -2 * Math.PI; x <= 2 * Math.PI; x += step) {
+                let y = evalBase(x);
+                if(isNaN(y) || Math.abs(y) > 5 || (lastY !== null && Math.abs(y - lastY) > 3 && isTanCot)) {
+                    if(currentPath.length > 0) {
+                        pathsHtml += `<path class="path-func" d="${currentPath}" />`;
+                        currentPath = "";
+                    }
+                } else {
+                    currentPath += (currentPath === "" ? `M ${x.toFixed(3)} ${y.toFixed(3)}` : ` L ${x.toFixed(3)} ${y.toFixed(3)}`);
+                }
+                lastY = y;
+            }
+            if(currentPath.length > 0) {
+                pathsHtml += `<path class="path-func" d="${currentPath}" />`;
+            }
+            pathGroup.innerHTML = pathsHtml;
+            
+            // 2. Draw Target Line and Asymptotes
+            let hasSolutions = !( (activeFunc === 'sin' || activeFunc === 'cos') && Math.abs(a) > 1 );
+            
+            if(hasSolutions) {
+                lineA.setAttribute("y1", a);
+                lineA.setAttribute("y2", a);
+                lineA.style.display = 'block';
+            } else {
+                lineA.style.display = 'none';
+            }
+            
+            let asymptHtml = "";
+            if(isTanCot) {
+                let periodX = Math.PI;
+                let firstAsympt = activeFunc === 'tan' ? Math.PI/2 : 0;
+                for(let k = -3; k <= 3; k++) {
+                    let ax = firstAsympt + k * periodX;
+                    asymptHtml += `<line x1="${ax}" y1="-2.5" x2="${ax}" y2="2.5" class="svg-grid" stroke="rgba(255, 0, 228, 0.4)" stroke-dasharray="0.2,0.2" />`;
+                }
+            }
+            asymptotesGroup.innerHTML = asymptHtml;
+            
+            // 3. Find and Draw Roots
+            let roots = [];
+            let principalRoots = solvePrincipalRoots(a);
+            
+            let circleHtml = "";
+            
+            // Unit circle markers
+            if(hasSolutions) {
+                if(activeFunc === 'sin') {
+                    circleHtml += `<line x1="-2" y1="${a*R}" x2="2" y2="${a*R}" stroke="var(--secondary)" stroke-width="0.05" stroke-dasharray="0.1,0.1" />`;
+                } else if(activeFunc === 'cos') {
+                    circleHtml += `<line x1="${a*R}" y1="-2" x2="${a*R}" y2="2" stroke="var(--secondary)" stroke-width="0.05" stroke-dasharray="0.1,0.1" />`;
+                } else if(activeFunc === 'tan') {
+                    circleHtml += `<line x1="${R}" y1="-2" x2="${R}" y2="2" stroke="rgba(255,255,255,0.2)" stroke-width="0.05" />`;
+                    circleHtml += `<line x1="-2" y1="${-2*a*R}" x2="2" y2="${2*a*R}" stroke="var(--secondary)" stroke-width="0.05" stroke-dasharray="0.1,0.1" />`;
+                } else if(activeFunc === 'cot') {
+                    circleHtml += `<line x1="-2" y1="${R}" x2="2" y2="${R}" stroke="rgba(255,255,255,0.2)" stroke-width="0.05" />`;
+                    circleHtml += `<line x1="${-2*a*R}" y1="-2" x2="${2*a*R}" y2="2" stroke="var(--secondary)" stroke-width="0.05" stroke-dasharray="0.1,0.1" />`;
+                }
+                
+                principalRoots.forEach((angle, idx) => {
+                    let rx = R * Math.cos(angle);
+                    let ry = R * Math.sin(angle);
+                    circleHtml += `<line x1="0" y1="0" x2="${rx}" y2="${ry}" class="radius-line" />`;
+                    circleHtml += `<circle cx="${rx}" cy="${ry}" r="0.1" fill="var(--accent)" />`;
+                    circleHtml += `<path class="angle-arc" d="${buildArc(angle, 0.4 + idx*0.15)}" />`;
+                });
+            }
+            circleDynamicGroup.innerHTML = circleHtml;
+            
+            // Graph markers
+            let rootsHtml = "";
+            if(hasSolutions) {
+                let period = isTanCot ? Math.PI : 2*Math.PI;
+                principalRoots.forEach(pr => {
+                    for(let k = -2; k <= 2; k++) {
+                        let rx = pr + k * period;
+                        if(rx >= -2.01 * Math.PI && rx <= 2.01 * Math.PI) {
+                            rootsHtml += `<line x1="${rx}" y1="0" x2="${rx}" y2="${a}" class="root-line" />`;
+                            rootsHtml += `<circle cx="${rx}" cy="${a}" class="root-point" />`;
+                        }
+                    }
+                });
+            }
+            rootsGroup.innerHTML = rootsHtml;
+            
+            // 4. Update Math Display
+            let tex = `\\( \\mathbf{\\${activeFunc}(x) = ${a.toFixed(1)}} \\)`;
+            
+            if(!hasSolutions) {
+                tex += `<br><br><span style="color:var(--secondary); font-size:1.2rem; font-weight:bold;">Çözüm Yok (Boş Küme)</span>`;
+            } else {
+                let solTex = [];
+                let p = isTanCot ? "k\\pi" : "2k\\pi";
+                principalRoots.forEach(pr => {
+                    let deg = Math.round((pr * 180) / Math.PI);
+                    if(deg < 0) deg += 360;
+                    solTex.push(`x = ${deg}^\\circ + ${isTanCot ? "180^\\circ k" : "360^\\circ k"}`);
+                });
+                let solStr = solTex.join(` \\quad \\mathbf{\\lor} \\quad `);
+                tex += `<br><br><div style="font-size:1.1rem; color:var(--accent); width:100%; overflow-x:auto; padding-bottom:5px;">\\( \\mathbf{\\text{Ç}} = \\{ x \\in \\mathbb{R} \\mid ${solStr} \\} \\)</div>`;
+            }
+            
+            renderMathClean(tex);
+        }
+
+        slideA.addEventListener('input', updateVisuals);
+
+        window.onload = () => {
+            drawGrid();
+            updateVisuals();
+        };
+    </script>
+</body>
+</html>

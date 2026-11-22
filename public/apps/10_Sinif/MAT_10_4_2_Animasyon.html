@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10.4.2 - Üçgenin Merkezleri Simülatörü</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            /* Blueprint Style Colors */
+            --bg-color: #0A192F; 
+            --panel-bg: #112240; 
+            --grid-line: rgba(100, 255, 218, 0.15);
+            --grid-line-strong: rgba(100, 255, 218, 0.4);
+            
+            --primary: #64FFDA; /* Cyan */
+            --accent-1: #F43F5E; /* Rose - Altitudes */
+            --accent-2: #3B82F6; /* Blue - Medians */
+            --accent-3: #F59E0B; /* Amber - Angle Bisectors */
+            --accent-4: #A855F7; /* Purple - Perpendicular Bisectors */
+            
+            --text-main: #E6F1FF;
+            --text-muted: #8892B0;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background-color: var(--bg-color); color: var(--text-main);
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; padding: 20px; overflow-x: hidden;
+            background-image: 
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 1200px; display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 25px; background: rgba(17, 34, 64, 0.9);
+            backdrop-filter: blur(10px); border-radius: 20px; border: 1px solid var(--grid-line-strong);
+            margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 800; color: var(--primary); }
+        .header-left img { width: 40px; height: 40px; border-radius: 10px; }
+        .kazanim { background: rgba(100, 255, 218, 0.1); padding: 8px 15px; border-radius: 12px; color: var(--primary); font-weight: 600; font-size: 0.9rem; border: 1px solid rgba(100, 255, 218, 0.3); }
+
+        h1 { font-size: 2.5rem; font-weight: 900; margin-bottom: 10px; text-align: center; 
+             color: var(--text-main); text-shadow: 0 0 10px rgba(255,255,255,0.2); }
+             
+        .subtitle { color: var(--text-muted); font-size: 1.1rem; margin-bottom: 30px; text-align: center; max-width: 800px; }
+
+        .workspace { display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 1200px; align-items: center; }
+
+        .controls {
+            display: flex; gap: 15px; background: var(--panel-bg);
+            padding: 15px 25px; border-radius: 20px; border: 1px solid var(--grid-line-strong);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); flex-wrap: wrap; justify-content: center; width: 100%;
+        }
+
+        .btn-toggle {
+            background: rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.1); color: var(--text-muted);
+            padding: 10px 20px; border-radius: 10px; font-weight: 800; cursor: pointer; transition: all 0.3s;
+        }
+        .btn-toggle.active-1 { background: rgba(244, 63, 94, 0.2); border-color: var(--accent-1); color: var(--accent-1); }
+        .btn-toggle.active-2 { background: rgba(59, 130, 246, 0.2); border-color: var(--accent-2); color: var(--accent-2); }
+        .btn-toggle.active-3 { background: rgba(245, 158, 11, 0.2); border-color: var(--accent-3); color: var(--accent-3); }
+        .btn-toggle.active-4 { background: rgba(168, 85, 247, 0.2); border-color: var(--accent-4); color: var(--accent-4); }
+
+        .graph-container {
+            width: 100%; height: 600px; position: relative; background: #061122;
+            border-radius: 20px; border: 2px solid var(--grid-line-strong);
+            overflow: hidden; box-shadow: 0 0 40px rgba(100, 255, 218, 0.1) inset;
+            touch-action: none;
+        }
+
+        /* SVG Graph Styling */
+        svg { width: 100%; height: 100%; display: block; }
+        
+        .triangle-path { fill: rgba(100, 255, 218, 0.05); stroke: var(--primary); stroke-width: 3; stroke-linejoin: round; }
+        
+        .helper-line { fill: none; stroke-width: 2; stroke-dasharray: 6,4; opacity: 0; transition: opacity 0.3s; }
+        .helper-line.show { opacity: 0.8; }
+        
+        .altitudes { stroke: var(--accent-1); }
+        .medians { stroke: var(--accent-2); }
+        .bisectors { stroke: var(--accent-3); }
+        .perpendiculars { stroke: var(--accent-4); }
+        
+        .center-point { stroke: white; stroke-width: 2; r: 5; opacity: 0; transition: opacity 0.3s; }
+        .center-point.show { opacity: 1; }
+        
+        .c-alt { fill: var(--accent-1); filter: drop-shadow(0 0 5px var(--accent-1)); }
+        .c-med { fill: var(--accent-2); filter: drop-shadow(0 0 5px var(--accent-2)); }
+        .c-bis { fill: var(--accent-3); filter: drop-shadow(0 0 5px var(--accent-3)); }
+        .c-perp { fill: var(--accent-4); filter: drop-shadow(0 0 5px var(--accent-4)); }
+        
+        .circle-path { fill: none; stroke-width: 2; opacity: 0; transition: opacity 0.3s; }
+        .circle-path.show { opacity: 0.6; }
+        .circle-in { stroke: var(--accent-3); }
+        .circle-out { stroke: var(--accent-4); }
+
+        .drag-node { fill: var(--primary); stroke: white; stroke-width: 3; r: 12; cursor: grab; filter: drop-shadow(0 0 8px var(--primary)); }
+        .drag-node:active { cursor: grabbing; transform: scale(1.2); }
+        
+        .node-label { fill: white; font-size: 20px; font-weight: 900; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8)); pointer-events: none; }
+
+        .info-box {
+            position: absolute; bottom: 20px; left: 20px; background: rgba(0,0,0,0.7);
+            padding: 15px; border-radius: 10px; border: 1px solid var(--grid-line-strong);
+            font-size: 1.1rem; color: var(--text-main);
+            pointer-events: none;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=64FFDA&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.10.4.2. Üçgenin Yardımcı Elemanları</div>
+    </div>
+    
+    <h1>Üçgenin Kalbi: Merkezler Simülatörü</h1>
+    <p class="subtitle">A, B ve C köşelerini sürükleyerek geniş, dar ve dik açılı üçgenler oluşturun. Yardımcı elemanların kesişim noktalarının (Diklik Merkezi, Ağırlık Merkezi) üçgenin dışına nasıl çıktığını gözlemleyin.</p>
+    
+    <div class="workspace">
+        <div class="controls">
+            <button class="btn-toggle" id="btnAlt" onclick="toggleLine('alt')">Yükseklikler (Diklik Merkezi)</button>
+            <button class="btn-toggle" id="btnMed" onclick="toggleLine('med')">Kenarortaylar (Ağırlık Merkezi)</button>
+            <button class="btn-toggle" id="btnBis" onclick="toggleLine('bis')">Açıortaylar (İç Teğet Çember)</button>
+            <button class="btn-toggle" id="btnPerp" onclick="toggleLine('perp')">Kenar Orta Dikmeler (Çevrel Çember)</button>
+        </div>
+        
+        <div class="graph-container">
+            <svg viewBox="0 0 1200 600" id="graphSvg">
+                
+                <circle id="incircle" class="circle-path circle-in" cx="0" cy="0" r="0" />
+                <circle id="circumcircle" class="circle-path circle-out" cx="0" cy="0" r="0" />
+
+                <!-- Altitudes -->
+                <line id="altA" class="helper-line altitudes" />
+                <line id="altB" class="helper-line altitudes" />
+                <line id="altC" class="helper-line altitudes" />
+                
+                <!-- Medians -->
+                <line id="medA" class="helper-line medians" />
+                <line id="medB" class="helper-line medians" />
+                <line id="medC" class="helper-line medians" />
+                
+                <!-- Bisectors -->
+                <line id="bisA" class="helper-line bisectors" />
+                <line id="bisB" class="helper-line bisectors" />
+                <line id="bisC" class="helper-line bisectors" />
+                
+                <!-- Perpendiculars -->
+                <line id="perpA" class="helper-line perpendiculars" />
+                <line id="perpB" class="helper-line perpendiculars" />
+                <line id="perpC" class="helper-line perpendiculars" />
+
+                <!-- Main Triangle -->
+                <path id="mainTriangle" class="triangle-path" d="" />
+                
+                <!-- Centers -->
+                <circle id="orthocenter" class="center-point c-alt" cx="0" cy="0" />
+                <circle id="centroid" class="center-point c-med" cx="0" cy="0" />
+                <circle id="incenter" class="center-point c-bis" cx="0" cy="0" />
+                <circle id="circumcenter" class="center-point c-perp" cx="0" cy="0" />
+
+                <!-- Nodes -->
+                <circle id="nodeA" class="drag-node" cx="600" cy="100" />
+                <circle id="nodeB" class="drag-node" cx="300" cy="500" />
+                <circle id="nodeC" class="drag-node" cx="900" cy="500" />
+                
+                <text id="lblA" class="node-label" x="600" y="80">A</text>
+                <text id="lblB" class="node-label" x="270" y="520">B</text>
+                <text id="lblC" class="node-label" x="920" y="520">C</text>
+
+            </svg>
+            
+            <div class="info-box" id="infoBox">Üçgen Tipi: Dar Açılı Üçgen</div>
+        </div>
+    </div>
+
+    <script>
+        const svg = document.getElementById('graphSvg');
+        let pts = {
+            A: { x: 600, y: 100, el: document.getElementById('nodeA'), lbl: document.getElementById('lblA') },
+            B: { x: 300, y: 500, el: document.getElementById('nodeB'), lbl: document.getElementById('lblB') },
+            C: { x: 900, y: 500, el: document.getElementById('nodeC'), lbl: document.getElementById('lblC') }
+        };
+        
+        let state = { alt: false, med: false, bis: false, perp: false };
+
+        let draggedNode = null;
+
+        // Vector Math Functions
+        const dist = (p1, p2) => Math.hypot(p2.x - p1.x, p2.y - p1.y);
+        
+        // Line intersection: (p1, p2) and (p3, p4)
+        function intersect(p1, p2, p3, p4) {
+            const d = (p1.x - p2.x)*(p3.y - p4.y) - (p1.y - p2.y)*(p3.x - p4.x);
+            if (d === 0) return null;
+            const t = ((p1.x - p3.x)*(p3.y - p4.y) - (p1.y - p3.y)*(p3.x - p4.x)) / d;
+            return {
+                x: p1.x + t * (p2.x - p1.x),
+                y: p1.y + t * (p2.y - p1.y)
+            };
+        }
+
+        // Project point P onto line AB
+        function projectPointOnLine(p, a, b) {
+            const ap = { x: p.x - a.x, y: p.y - a.y };
+            const ab = { x: b.x - a.x, y: b.y - a.y };
+            const ab2 = ab.x * ab.x + ab.y * ab.y;
+            const ap_ab = ap.x * ab.x + ap.y * ab.y;
+            const t = ap_ab / ab2;
+            return { x: a.x + ab.x * t, y: a.y + ab.y * t };
+        }
+
+        function calculateCenters() {
+            const A = pts.A; const B = pts.B; const C = pts.C;
+            
+            // Triangle Path
+            document.getElementById('mainTriangle').setAttribute('d', `M ${A.x} ${A.y} L ${B.x} ${B.y} L ${C.x} ${C.y} Z`);
+            
+            // Angle Types
+            const a2 = dist(B,C)**2, b2 = dist(A,C)**2, c2 = dist(A,B)**2;
+            const cosA = (b2 + c2 - a2) / (2 * Math.sqrt(b2) * Math.sqrt(c2));
+            const cosB = (a2 + c2 - b2) / (2 * Math.sqrt(a2) * Math.sqrt(c2));
+            const cosC = (a2 + b2 - c2) / (2 * Math.sqrt(a2) * Math.sqrt(b2));
+            
+            let type = "Dar Açılı Üçgen";
+            if (cosA < -0.01 || cosB < -0.01 || cosC < -0.01) type = "Geniş Açılı Üçgen";
+            else if (Math.abs(cosA) <= 0.01 || Math.abs(cosB) <= 0.01 || Math.abs(cosC) <= 0.01) type = "Dik Açılı Üçgen";
+            
+            document.getElementById('infoBox').innerText = `Üçgen Tipi: ${type}`;
+
+            // --- MEDIANS (Centroid) ---
+            const midAB = { x: (A.x + B.x)/2, y: (A.y + B.y)/2 };
+            const midBC = { x: (B.x + C.x)/2, y: (B.y + C.y)/2 };
+            const midCA = { x: (C.x + A.x)/2, y: (C.y + A.y)/2 };
+            
+            const centroid = { x: (A.x + B.x + C.x)/3, y: (A.y + B.y + C.y)/3 };
+            
+            updateLine('medA', A, midBC); updateLine('medB', B, midCA); updateLine('medC', C, midAB);
+            updateCenter('centroid', centroid);
+
+            // --- ALTITUDES (Orthocenter) ---
+            const hA = projectPointOnLine(A, B, C);
+            const hB = projectPointOnLine(B, C, A);
+            const hC = projectPointOnLine(C, A, B);
+            
+            // Draw altitude lines passing through orthocenter
+            const orthocenter = intersect(A, hA, B, hB);
+            if(orthocenter) {
+                // To show extended altitudes if obtuse
+                updateLine('altA', A, type === "Dar Açılı Üçgen" ? hA : orthocenter); 
+                updateLine('altB', B, type === "Dar Açılı Üçgen" ? hB : orthocenter); 
+                updateLine('altC', C, type === "Dar Açılı Üçgen" ? hC : orthocenter);
+                updateCenter('orthocenter', orthocenter);
+            }
+
+            // --- BISECTORS (Incenter) ---
+            const a = dist(B,C), b = dist(A,C), c = dist(A,B);
+            const p = a + b + c;
+            const incenter = { x: (a*A.x + b*B.x + c*C.x)/p, y: (a*A.y + b*B.y + c*C.y)/p };
+            
+            const iA = intersect(A, incenter, B, C);
+            const iB = intersect(B, incenter, A, C);
+            const iC = intersect(C, incenter, A, B);
+            
+            updateLine('bisA', A, iA); updateLine('bisB', B, iB); updateLine('bisC', C, iC);
+            updateCenter('incenter', incenter);
+            
+            // Incircle radius (Area / semi-perimeter)
+            const s = p / 2;
+            const area = Math.sqrt(s * (s-a) * (s-b) * (s-c));
+            const inRadius = area / s;
+            
+            const incircle = document.getElementById('incircle');
+            incircle.setAttribute('cx', incenter.x);
+            incircle.setAttribute('cy', incenter.y);
+            incircle.setAttribute('r', inRadius);
+
+            // --- PERPENDICULAR BISECTORS (Circumcenter) ---
+            // Intersection of perpendiculars at midpoints
+            // Perpendicular to AB at midAB -> vector is (-dy, dx)
+            const dAB = { x: B.x - A.x, y: B.y - A.y };
+            const p1 = { x: midAB.x - dAB.y, y: midAB.y + dAB.x };
+            
+            const dBC = { x: C.x - B.x, y: C.y - B.y };
+            const p2 = { x: midBC.x - dBC.y, y: midBC.y + dBC.x };
+            
+            const circumcenter = intersect(midAB, p1, midBC, p2);
+            if(circumcenter) {
+                // Draw lines from midpoints to circumcenter
+                updateLine('perpA', midBC, circumcenter);
+                updateLine('perpB', midCA, circumcenter);
+                updateLine('perpC', midAB, circumcenter);
+                updateCenter('circumcenter', circumcenter);
+                
+                const circumRadius = dist(circumcenter, A);
+                const circum = document.getElementById('circumcircle');
+                circum.setAttribute('cx', circumcenter.x);
+                circum.setAttribute('cy', circumcenter.y);
+                circum.setAttribute('r', circumRadius);
+            }
+        }
+
+        function updateLine(id, p1, p2) {
+            if(!p1 || !p2) return;
+            const line = document.getElementById(id);
+            line.setAttribute('x1', p1.x); line.setAttribute('y1', p1.y);
+            line.setAttribute('x2', p2.x); line.setAttribute('y2', p2.y);
+        }
+
+        function updateCenter(id, p) {
+            if(!p) return;
+            const center = document.getElementById(id);
+            center.setAttribute('cx', p.x); center.setAttribute('cy', p.y);
+        }
+
+        function toggleLine(type) {
+            state[type] = !state[type];
+            const btn = document.getElementById('btn' + type.charAt(0).toUpperCase() + type.slice(1));
+            
+            // Remove active classes
+            btn.className = 'btn-toggle';
+            if(state[type]) {
+                if(type==='alt') btn.classList.add('active-1');
+                if(type==='med') btn.classList.add('active-2');
+                if(type==='bis') btn.classList.add('active-3');
+                if(type==='perp') btn.classList.add('active-4');
+            }
+            
+            // Toggle lines
+            let classes = { 'alt': 'altitudes', 'med': 'medians', 'bis': 'bisectors', 'perp': 'perpendiculars' };
+            document.querySelectorAll('.' + classes[type]).forEach(el => {
+                if(state[type]) el.classList.add('show'); else el.classList.remove('show');
+            });
+            
+            // Toggle centers
+            let centers = { 'alt': 'orthocenter', 'med': 'centroid', 'bis': 'incenter', 'perp': 'circumcenter' };
+            let centerEl = document.getElementById(centers[type]);
+            if(state[type]) centerEl.classList.add('show'); else centerEl.classList.remove('show');
+            
+            // Circles
+            if(type==='bis') {
+                if(state[type]) document.getElementById('incircle').classList.add('show');
+                else document.getElementById('incircle').classList.remove('show');
+            }
+            if(type==='perp') {
+                if(state[type]) document.getElementById('circumcircle').classList.add('show');
+                else document.getElementById('circumcircle').classList.remove('show');
+            }
+        }
+
+        // --- Dragging Logic ---
+        function getMousePos(evt) {
+            let CTM = svg.getScreenCTM();
+            let pt = svg.createSVGPoint();
+            if(evt.touches) {
+                pt.x = evt.touches[0].clientX; pt.y = evt.touches[0].clientY;
+            } else {
+                pt.x = evt.clientX; pt.y = evt.clientY;
+            }
+            return pt.matrixTransform(CTM.inverse());
+        }
+
+        svg.addEventListener('mousedown', startDrag);
+        svg.addEventListener('touchstart', startDrag, {passive: false});
+        
+        window.addEventListener('mousemove', drag);
+        window.addEventListener('touchmove', drag, {passive: false});
+        
+        window.addEventListener('mouseup', endDrag);
+        window.addEventListener('touchend', endDrag);
+
+        function startDrag(evt) {
+            if(evt.target.classList.contains('drag-node')) {
+                evt.preventDefault();
+                draggedNode = Object.keys(pts).find(key => pts[key].el === evt.target);
+            }
+        }
+
+        function drag(evt) {
+            if(draggedNode) {
+                evt.preventDefault();
+                let pos = getMousePos(evt);
+                // boundary check
+                if(pos.x < 50) pos.x = 50; if(pos.x > 1150) pos.x = 1150;
+                if(pos.y < 50) pos.y = 50; if(pos.y > 550) pos.y = 550;
+                
+                pts[draggedNode].x = pos.x;
+                pts[draggedNode].y = pos.y;
+                
+                pts[draggedNode].el.setAttribute('cx', pos.x);
+                pts[draggedNode].el.setAttribute('cy', pos.y);
+                
+                // Position label relative to center based on position
+                let lblY = pos.y - 20;
+                if(pos.y < 100) lblY = pos.y + 30; // if near top, move label down
+                pts[draggedNode].lbl.setAttribute('x', pos.x - 10);
+                pts[draggedNode].lbl.setAttribute('y', lblY);
+                
+                calculateCenters();
+            }
+        }
+
+        function endDrag() { draggedNode = null; }
+
+        window.onload = calculateCenters;
+    </script>
+</body>
+</html>

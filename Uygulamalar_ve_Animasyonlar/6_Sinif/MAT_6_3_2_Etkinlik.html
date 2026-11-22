@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Şekil Laboratuvarı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A; --surface: #1E293B; --text: #F8FAFC;
+            --primary: #3B82F6; --secondary: #10B981;
+            --tertiary: #F59E0B; --danger: #F43F5E;
+            --purple: #8B5CF6; --cyan: #06B6D4;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, var(--surface) 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--secondary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .container {
+            width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 20px;
+        }
+
+        .lab-panel {
+            background: rgba(255,255,255,0.03); border-radius: 20px; padding: 40px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; position: relative; overflow: hidden;
+        }
+
+        .lab-panel h2 { font-size: 2rem; color: var(--secondary); margin-bottom: 10px; font-weight: 900;}
+
+        .shape-display {
+            background: rgba(0,0,0,0.4); padding: 20px; border-radius: 15px; border: 2px dashed var(--cyan);
+            margin-bottom: 30px; display: flex; flex-direction: column; align-items: center;
+        }
+        
+        .sd-title { font-size: 1.5rem; font-weight: 900; color: white; margin-bottom: 15px; letter-spacing: 2px;}
+        
+        .shape-visual {
+            width: 150px; height: 100px; background: rgba(16, 185, 129, 0.3); border: 3px solid var(--secondary);
+            margin-bottom: 10px; transition: all 0.5s;
+        }
+        .shape-visual.paralel { transform: skewX(-20deg); }
+        .shape-visual.yamuk { clip-path: polygon(20% 0, 80% 0, 100% 100%, 0% 100%); }
+
+        .properties-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 30px;
+        }
+
+        .prop-card {
+            background: #0B1120; border: 2px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 15px;
+            font-size: 1.1rem; font-weight: 800; color: #94A3B8; cursor: pointer; transition: all 0.3s;
+            display: flex; align-items: center; justify-content: center; user-select: none;
+        }
+        .prop-card:hover { border-color: var(--primary); color: white; transform: translateY(-3px);}
+        .prop-card.selected { background: rgba(59, 130, 246, 0.2); border-color: var(--primary); color: white;}
+
+        .btn-check {
+            background: var(--secondary); color: white; border: none; padding: 15px 40px; border-radius: 50px;
+            font-size: 1.2rem; font-weight: 800; cursor: pointer; transition: all 0.3s;
+        }
+        .btn-check:hover { transform: scale(1.05); }
+
+        .feedback-area {
+            margin-top: 20px; padding: 15px; border-radius: 15px; font-size: 1.2rem; font-weight: 800; display: none;
+        }
+        .feedback-area.success { background: rgba(16, 185, 129, 0.1); color: var(--secondary); border: 1px solid var(--secondary); display: block; }
+        .feedback-area.error { background: rgba(244, 63, 94, 0.1); color: var(--danger); border: 1px solid var(--danger); display: block; }
+
+        @media (max-width: 768px) {
+            .header { flex-direction: column; gap: 10px; }
+            .properties-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=3B82F6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.6.3.2. Özellik Eşleştirme Laboratuvarı</div>
+    </div>
+
+    <div class="container">
+        
+        <div class="lab-panel">
+            <h2>🧩 Şekil Özellikleri</h2>
+            <p style="color:#94A3B8; margin-bottom:20px;">Görülen şeklin <b>TÜM</b> doğru özelliklerini seç ve onayla.</p>
+            
+            <div class="shape-display">
+                <div class="sd-title" id="sTitle">PARALELKENAR</div>
+                <div class="shape-visual paralel" id="sVis"></div>
+            </div>
+
+            <div class="properties-grid" id="pGrid">
+                <!-- Loaded via JS -->
+            </div>
+
+            <button class="btn-check" onclick="checkAnswers()" id="btnCheck">Seçimleri Onayla</button>
+
+            <div class="feedback-area" id="fb"></div>
+
+        </div>
+
+    </div>
+
+    <script>
+        const levels = [
+            {
+                title: "PARALELKENAR",
+                visualClass: "shape-visual paralel",
+                props: [
+                    { id: 1, text: "İç açıları toplamı 360°'dir", isTrue: true },
+                    { id: 2, text: "Karşılıklı açıları eşittir", isTrue: true },
+                    { id: 3, text: "Sadece iki kenarı paraleldir", isTrue: false },
+                    { id: 4, text: "Karşılıklı kenarları paraleldir", isTrue: true }
+                ]
+            },
+            {
+                title: "YAMUK",
+                visualClass: "shape-visual yamuk",
+                props: [
+                    { id: 1, text: "Karşılıklı açıları eşittir", isTrue: false },
+                    { id: 2, text: "İç açıları toplamı 360°'dir", isTrue: true },
+                    { id: 3, text: "Karşılıklı tüm kenarları paraleldir", isTrue: false },
+                    { id: 4, text: "En az bir çift paralel kenarı vardır", isTrue: true }
+                ]
+            }
+        ];
+
+        let currLvl = 0;
+        let selectedIds = new Set();
+
+        function loadLevel() {
+            let l = levels[currLvl];
+            document.getElementById('sTitle').innerText = l.title;
+            document.getElementById('sVis').className = l.visualClass;
+            
+            let grid = document.getElementById('pGrid');
+            grid.innerHTML = "";
+            selectedIds.clear();
+
+            l.props.forEach(p => {
+                let card = document.createElement('div');
+                card.className = "prop-card";
+                card.innerText = p.text;
+                card.onclick = () => toggleSelect(card, p.id);
+                grid.appendChild(card);
+            });
+
+            document.getElementById('fb').className = "feedback-area";
+            document.getElementById('btnCheck').style.display = "inline-block";
+            document.getElementById('btnCheck').innerText = "Seçimleri Onayla";
+            document.getElementById('btnCheck').onclick = checkAnswers;
+        }
+
+        function toggleSelect(el, id) {
+            if(selectedIds.has(id)) {
+                selectedIds.delete(id);
+                el.classList.remove('selected');
+            } else {
+                selectedIds.add(id);
+                el.classList.add('selected');
+            }
+        }
+
+        function checkAnswers() {
+            let l = levels[currLvl];
+            let correctIds = l.props.filter(p => p.isTrue).map(p => p.id);
+            
+            let isCorrect = (selectedIds.size === correctIds.length) && 
+                            [...selectedIds].every(id => correctIds.includes(id));
+
+            let fb = document.getElementById('fb');
+            if(isCorrect) {
+                fb.className = "feedback-area success";
+                fb.innerText = "Harika! Şeklin tüm özelliklerini doğru analiz ettin.";
+                
+                let btn = document.getElementById('btnCheck');
+                if(currLvl < levels.length - 1) {
+                    btn.innerText = "Sıradaki Şekil ➔";
+                    btn.onclick = nextLevel;
+                } else {
+                    btn.style.display = "none";
+                    fb.innerHTML = `Mükemmel! İki şekli de inceledin.<br><span style="color:white;">Ortak Çıkarım: Dörtgenlerin iç açıları toplamı DAİMA 360°'dir.</span>`;
+                }
+            } else {
+                fb.className = "feedback-area error";
+                fb.innerText = "Eksik veya hatalı seçimlerin var. Özellikleri tekrar gözden geçir.";
+            }
+        }
+
+        function nextLevel() {
+            currLvl++;
+            loadLevel();
+        }
+
+        loadLevel();
+    </script>
+</body>
+</html>

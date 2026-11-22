@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Su Yüzeyi Yansıması Animasyonu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg:#0F0E17; --primary:#8B5CF6; --secondary:#10B981; --tertiary:#06B6D4; --danger:#F43F5E; --accent:#F59E0B; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Outfit',sans-serif; }
+        body { background:linear-gradient(135deg,var(--bg),#161625); color:#F8FAFC; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:20px; }
+        .header { width:100%; max-width:1000px; display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); padding:15px 25px; border-radius:20px; border:1px solid rgba(139,92,246,0.2); margin-bottom:20px; }
+        .header-left { display:flex; align-items:center; gap:15px; font-weight:600; font-size:1.2rem; }
+        .header-left img { width:50px; height:50px; border-radius:50%; background:white; padding:2px; }
+        .kazanim { background:var(--primary); color:white; padding:5px 15px; border-radius:20px; font-weight:800; font-size:0.9rem; }
+        h1 { font-size:2.2rem; color:var(--tertiary); font-weight:900; text-align:center; }
+        .subtitle { color:#94A3B8; font-size:1.1rem; margin-top:5px; text-align:center; margin-bottom:20px; }
+        .canvas-area { position:relative; width:100%; max-width:800px; height:450px; background:#0A1628; border-radius:24px; border:1px solid rgba(6,182,212,0.3); box-shadow:0 0 60px rgba(6,182,212,0.1); overflow:hidden; }
+        canvas { position:absolute; top:0; left:0; }
+        .expl-text { background:rgba(139,92,246,0.15); border:1px solid rgba(139,92,246,0.3); padding:15px 25px; border-radius:12px; font-size:1.25rem; color:white; font-weight:800; text-align:center; width:100%; max-width:800px; margin-bottom:15px; transition:0.5s; }
+        .water-line { position:absolute; top:225px; left:0; width:100%; height:4px; background:linear-gradient(90deg,transparent,rgba(6,182,212,0.8),transparent); z-index:5; }
+        .water-lbl { position:absolute; top:220px; right:15px; font-size:1rem; font-weight:900; color:var(--tertiary); z-index:6; }
+        .btn-play { background:var(--primary); color:white; border:none; padding:15px 40px; border-radius:50px; font-size:1.2rem; font-weight:900; cursor:pointer; transition:all 0.3s; box-shadow:0 10px 20px rgba(139,92,246,0.4); margin-top:30px; }
+        .btn-play:hover { transform:translateY(-3px) scale(1.05); }
+        .rule-box { position:absolute; bottom:15px; right:15px; background:rgba(0,0,0,0.9); border:2px solid var(--tertiary); padding:10px 20px; border-radius:15px; font-size:1rem; font-weight:900; color:white; opacity:0; transition:all 1s; z-index:10; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.8.5.2. Yansıma (Animasyon)</div>
+    </div>
+    <h1>Su Yüzeyinde Yansıma</h1>
+    <p class="subtitle">Su yüzeyi mükemmel bir yansıma eksenidir. Dağın sudaki görüntüsü dağın tam simetriğidir.</p>
+    <div class="expl-text" id="explText">1. Göl kenarındaki dağ ve ağaçlar...</div>
+    <div class="canvas-area">
+        <canvas id="cvs" width="800" height="450"></canvas>
+        <div class="water-line"></div>
+        <div class="water-lbl">Su Yüzeyi (Yansıma Ekseni)</div>
+        <div class="rule-box" id="ruleBox">Her nokta P(x,y) → P'(x,-y) olarak yansır.</div>
+    </div>
+    <button class="btn-play" id="btnPlay" onclick="runAnim()">Yansımayı Göster</button>
+    <script>
+        const cvs=document.getElementById('cvs');const ctx=cvs.getContext('2d');
+        const W=800,H=450,MID=225;
+        let animPhase=0;
+
+        function drawSky(){
+            let grd=ctx.createLinearGradient(0,0,0,MID);
+            grd.addColorStop(0,'#0A1628');grd.addColorStop(1,'#152843');
+            ctx.fillStyle=grd;ctx.fillRect(0,0,W,MID);
+        }
+
+        function drawWater(opacity=1){
+            let grd=ctx.createLinearGradient(0,MID,0,H);
+            grd.addColorStop(0,`rgba(6,40,90,${opacity})`);grd.addColorStop(1,`rgba(4,25,60,${opacity})`);
+            ctx.fillStyle=grd;ctx.fillRect(0,MID,W,H-MID);
+        }
+
+        // Mountain (above water): peak at (250, 50), base from (100,MID) to (400,MID)
+        function drawMountain(yBase, flip, opacity=1){
+            ctx.save();ctx.globalAlpha=opacity;
+            if(flip){ctx.translate(0,MID*2);ctx.scale(1,-1);}
+            ctx.beginPath();
+            ctx.moveTo(100,yBase);ctx.lineTo(250,50);ctx.lineTo(400,yBase);ctx.closePath();
+            ctx.fillStyle=flip?'rgba(16,185,129,0.25)':'rgba(139,92,246,0.4)';
+            ctx.fill();
+            ctx.strokeStyle=flip?'#10B981':'#8B5CF6';ctx.lineWidth=3;ctx.stroke();
+            // Snow cap
+            ctx.beginPath();ctx.moveTo(225,75);ctx.lineTo(250,50);ctx.lineTo(275,75);ctx.closePath();
+            ctx.fillStyle='rgba(255,255,255,0.7)';ctx.fill();
+            ctx.restore();
+        }
+
+        // Trees above water
+        function drawTrees(yBase,flip,opacity=1){
+            ctx.save();ctx.globalAlpha=opacity;
+            if(flip){ctx.translate(0,MID*2);ctx.scale(1,-1);}
+            [[500,MID],[550,MID-20],[600,MID],[650,MID-15],[700,MID]].forEach(([x,y])=>{
+                // trunk
+                ctx.fillStyle='#8B4513';ctx.fillRect(x-3,y-15,6,15);
+                // canopy
+                ctx.beginPath();ctx.moveTo(x,y-60);ctx.lineTo(x-18,y-15);ctx.lineTo(x+18,y-15);ctx.closePath();
+                ctx.fillStyle=flip?'rgba(6,182,212,0.4)':'rgba(34,197,94,0.7)';ctx.fill();
+                ctx.strokeStyle=flip?'#06B6D4':'#16a34a';ctx.lineWidth=2;ctx.stroke();
+            });
+            ctx.restore();
+        }
+
+        // Stars
+        function drawStars(){
+            ctx.fillStyle='rgba(255,255,255,0.6)';
+            [[50,40],[120,20],[180,60],[300,30],[380,15],[450,50],[520,25],[700,40],[760,60]].forEach(([x,y])=>{
+                ctx.beginPath();ctx.arc(x,y,1.5,0,Math.PI*2);ctx.fill();
+            });
+        }
+
+        function render(phase){
+            ctx.clearRect(0,0,W,H);
+            drawSky();drawStars();drawWater();
+            drawMountain(MID,false,1);
+            drawTrees(MID,false,1);
+            if(phase>=1){ drawMountain(MID,true,Math.min((phase-1),1)); }
+            if(phase>=2){ drawTrees(MID,true,Math.min((phase-2),1)); }
+            // Dashed vertical lines showing symmetry (phase 3)
+            if(phase>=3){
+                ctx.strokeStyle='rgba(245,158,11,0.5)';ctx.lineWidth=1;ctx.setLineDash([4,6]);
+                [[250,60,MID*2-60],[550,MID-60,MID+60],[700,MID-30,MID+30]].forEach(([x,y1,y2])=>{
+                    ctx.beginPath();ctx.moveTo(x,y1);ctx.lineTo(x,y2);ctx.stroke();
+                });
+                ctx.setLineDash([]);
+            }
+        }
+
+        const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+        async function runAnim(){
+            document.getElementById('btnPlay').style.display='none';
+            const et=document.getElementById('explText');
+            render(0);
+            await sleep(800);
+            et.textContent='2. Su yüzeyinde dağın görüntüsü oluşuyor...';
+            // Animate mountain reflection
+            const dur=1200,start=performance.now();
+            await new Promise(res=>{
+                function f(now){let t=Math.min((now-start)/dur,1);render(t);if(t<1)requestAnimationFrame(f);else res();}
+                requestAnimationFrame(f);
+            });
+            await sleep(600);
+            et.textContent='3. Ağaçların yansıması da su yüzeyinde beliriyor...';
+            const s2=performance.now();
+            await new Promise(res=>{
+                function f(now){let t=1+Math.min((now-s2)/1200,1);render(t);if(t<2)requestAnimationFrame(f);else res();}
+                requestAnimationFrame(f);
+            });
+            await sleep(600);
+            et.textContent='4. Her nokta su yüzeyine (yansıma eksenine) eşit uzaklıkta yansıdı.';
+            render(3);
+            await sleep(1500);
+            et.style.color='var(--tertiary)';
+            et.textContent='Su yüzeyinin üstü asıl şekil, altı ise tam tersi yönde yansımış görüntüdür!';
+            document.getElementById('ruleBox').style.opacity='1';
+        }
+        render(0);
+    </script>
+</body>
+</html>

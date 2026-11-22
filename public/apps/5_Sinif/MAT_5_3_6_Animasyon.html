@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Çokgenlerin Sırları - Animasyon</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A;
+            --text: #F8FAFC;
+            --primary: #F59E0B; /* Amber */
+            --secondary: #3B82F6; /* Blue */
+            --tertiary: #10B981; /* Green */
+            --danger: #F43F5E; /* Rose */
+            --purple: #8B5CF6; /* Purple */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 900px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: #0F172A; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; width: 100%; max-width: 800px; margin-bottom: 20px; height: 120px;}
+        h1 { font-size: 2.2rem; color: var(--primary); text-shadow: 0 5px 15px rgba(0,0,0,0.5); line-height: 1.3; transition: opacity 0.5s;}
+        .subtitle { font-size: 1.2rem; color: #94A3B8; margin-top: 10px; transition: opacity 0.5s; line-height: 1.5;}
+        .subtitle span { color: white; font-weight: 800; background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 5px;}
+
+        .canvas-area {
+            position: relative; width: 100%; max-width: 800px; height: 450px; 
+            background: #0B1120; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.3); 
+            overflow: hidden; display: flex; align-items: center; justify-content: center;
+        }
+
+        svg { width: 100%; height: 100%; overflow: visible; }
+        
+        .polygon-shape { fill: rgba(59, 130, 246, 0.2); stroke: var(--secondary); stroke-width: 4; stroke-linejoin: round; transition: all 1s; opacity: 0; }
+        .vertex { fill: white; r: 0; transition: r 0.5s; stroke: var(--secondary); stroke-width: 2;}
+        .v-label { font-size: 24px; font-weight: 800; fill: white; opacity: 0; transition: opacity 0.5s; }
+        
+        .diagonal { stroke: var(--danger); stroke-width: 4; stroke-dasharray: 10 10; opacity: 0; transition: opacity 1s; }
+        .edge-highlight { stroke: var(--tertiary); stroke-width: 8; opacity: 0; transition: opacity 0.5s; fill: none; }
+        
+        .math-eq { font-size: 32px; font-weight: 900; fill: var(--primary); opacity: 0; transition: opacity 1s; text-anchor: middle;}
+
+        .btn-start {
+            margin-top: 30px; background: var(--secondary); color: white; border: none; padding: 15px 40px; border-radius: 50px;
+            font-size: 1.2rem; font-weight: 800; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4);
+        }
+        .btn-start:hover { transform: scale(1.05); }
+
+        .x-mark { stroke: var(--danger); stroke-width: 6; stroke-linecap: round; opacity: 0; transition: opacity 0.3s; }
+
+        @media (max-width: 768px) {
+            .header { flex-direction: column; gap: 10px; }
+            h1 { font-size: 1.5rem; }
+            .canvas-area { height: 300px; }
+            .title-area { height: 140px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.5.3.6. İç Açılar ve Köşegenler</div>
+    </div>
+
+    <div class="title-area">
+        <h1 id="mTitle">Çokgenlerin Sırları</h1>
+        <p class="subtitle" id="mSub">İç açılar, köşegenler ve isimlerin arkasındaki kurallar...</p>
+    </div>
+
+    <div class="canvas-area">
+        <svg viewBox="0 0 800 450" id="svgView">
+            
+            <!-- Shapes -->
+            <polygon id="tri" class="polygon-shape" points="200,100 300,300 100,300"></polygon>
+            <polygon id="quad" class="polygon-shape" points="450,100 650,150 700,300 400,300"></polygon>
+            
+            <!-- Diagonals and Highlights -->
+            <line id="hEdge" class="edge-highlight" x1="450" y1="100" x2="650" y2="150"></line>
+            
+            <line id="diag1" class="diagonal" x1="450" y1="100" x2="700" y2="300"></line>
+            <line id="diag2" class="diagonal" x1="650" y1="150" x2="400" y2="300"></line>
+            
+            <line id="failDiag" class="diagonal" x1="200" y1="100" x2="300" y2="300" style="stroke-dasharray: none;"></line>
+            <g id="xMark" style="opacity:0;">
+                <line class="x-mark" x1="220" y1="170" x2="280" y2="230"></line>
+                <line class="x-mark" x1="280" y1="170" x2="220" y2="230"></line>
+            </g>
+
+            <!-- Math Equations -->
+            <text id="mathTri" class="math-eq" x="200" y="380">m(A)+m(B)+m(C) = 180°</text>
+            <text id="mathQuad" class="math-eq" x="550" y="380">m(K)+m(L)+m(M)+m(N) = 360°</text>
+
+            <g id="verticesG"></g>
+        </svg>
+    </div>
+
+    <button class="btn-start" id="startBtn" onclick="runTimeline()">Animasyonu Başlat</button>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        
+        const mTitle = document.getElementById('mTitle');
+        const mSub = document.getElementById('mSub');
+        const startBtn = document.getElementById('startBtn');
+        const tri = document.getElementById('tri');
+        const quad = document.getElementById('quad');
+        const hEdge = document.getElementById('hEdge');
+        const diag1 = document.getElementById('diag1');
+        const diag2 = document.getElementById('diag2');
+        const failDiag = document.getElementById('failDiag');
+        const xMark = document.getElementById('xMark');
+        const mathTri = document.getElementById('mathTri');
+        const mathQuad = document.getElementById('mathQuad');
+        const verticesG = document.getElementById('verticesG');
+
+        function addPoint(x, y, label, offset = {x:0, y:-20}) {
+            let c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            c.setAttribute('cx', x); c.setAttribute('cy', y);
+            c.setAttribute('class', 'vertex');
+            verticesG.appendChild(c);
+            
+            let t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            t.setAttribute('x', x + offset.x); t.setAttribute('y', y + offset.y);
+            t.setAttribute('class', 'v-label');
+            t.setAttribute('text-anchor', 'middle');
+            t.textContent = label;
+            verticesG.appendChild(t);
+            
+            return {c, t};
+        }
+
+        async function clearScene() {
+            tri.style.opacity = 0; quad.style.opacity = 0;
+            hEdge.style.opacity = 0; diag1.style.opacity = 0; diag2.style.opacity = 0;
+            failDiag.style.opacity = 0; xMark.style.opacity = 0;
+            mathTri.style.opacity = 0; mathQuad.style.opacity = 0;
+            verticesG.innerHTML = '';
+            await sleep(1000);
+        }
+
+        async function runTimeline() {
+            startBtn.style.display = 'none';
+
+            await clearScene();
+
+            // SCENE 1: Classification
+            mTitle.innerText = "1. Sınıflandırma";
+            mSub.innerHTML = "Çokgenler daima <span>köşe ve kenar sayılarına</span> göre isimlendirilir.";
+            
+            tri.style.opacity = 1;
+            await sleep(1000);
+            
+            // Show Triangle points
+            let tp1 = addPoint(200, 100, "A", {x:0, y:-20}); setTimeout(()=> {tp1.c.style.r=8; tp1.t.style.opacity=1;}, 100); await sleep(800);
+            let tp2 = addPoint(300, 300, "B", {x:20, y:15}); setTimeout(()=> {tp2.c.style.r=8; tp2.t.style.opacity=1;}, 100); await sleep(800);
+            let tp3 = addPoint(100, 300, "C", {x:-20, y:15}); setTimeout(()=> {tp3.c.style.r=8; tp3.t.style.opacity=1;}, 100); await sleep(1000);
+            
+            mSub.innerHTML = "3 Köşe + 3 Kenar = <span>ÜÇGEN</span>";
+            await sleep(3000);
+
+            quad.style.opacity = 1;
+            await sleep(1000);
+            let qp1 = addPoint(450, 100, "K", {x:-15, y:-15}); setTimeout(()=> {qp1.c.style.r=8; qp1.t.style.opacity=1;}, 100); await sleep(500);
+            let qp2 = addPoint(650, 150, "L", {x:20, y:-10}); setTimeout(()=> {qp2.c.style.r=8; qp2.t.style.opacity=1;}, 100); await sleep(500);
+            let qp3 = addPoint(700, 300, "M", {x:20, y:20}); setTimeout(()=> {qp3.c.style.r=8; qp3.t.style.opacity=1;}, 100); await sleep(500);
+            let qp4 = addPoint(400, 300, "N", {x:-20, y:20}); setTimeout(()=> {qp4.c.style.r=8; qp4.t.style.opacity=1;}, 100); await sleep(1000);
+            
+            mSub.innerHTML = "4 Köşe + 4 Kenar = <span>DÖRTGEN</span>";
+            await sleep(3500);
+
+
+            // SCENE 2: Diagonals
+            mTitle.innerText = "2. Köşegenler";
+            mSub.innerHTML = "Komşu iki köşeyi birleştirirsek buna <span>KENAR</span> deriz.";
+            hEdge.style.opacity = 1; // K and L edge highlight
+            await sleep(3500);
+
+            hEdge.style.opacity = 0;
+            mSub.innerHTML = "Ancak komşu OLMAYAN iki köşeyi birleştirirsek buna <span>KÖŞEGEN</span> denir.";
+            diag1.style.opacity = 1; // K to M
+            await sleep(2000);
+            diag2.style.opacity = 1; // L to N
+            await sleep(3000);
+
+            // SCENE 3: Triangle Diagonal Trap
+            mTitle.innerText = "Peki Üçgenin Köşegeni Var Mıdır?";
+            mSub.innerHTML = "A noktasından komşu olmayan bir köşeye çizgi çekmeyi deneyelim...";
+            await sleep(2000);
+
+            failDiag.style.opacity = 1; // Trying to draw A to B
+            await sleep(1000);
+            xMark.style.opacity = 1;
+            mSub.innerHTML = "A noktası hem B'ye hem de C'ye zaten komşudur! Gidilecek başka köşe yoktur.";
+            
+            let xMarks = xMark.querySelectorAll('.x-mark');
+            xMarks.forEach(x => x.style.opacity = 1);
+            await sleep(4000);
+
+            mSub.innerHTML = "Bu nedenle <span>üçgenin köşegeni YOKTUR!</span>";
+            failDiag.style.opacity = 0; xMark.style.opacity = 0;
+            await sleep(4000);
+
+
+            // SCENE 4: Interior Angles Math
+            mTitle.innerText = "3. İç Açılar Toplamı";
+            mSub.innerHTML = "Üçgenin 3 iç açısının toplamı daima <span>180°</span> (Doğru Açı) eder.";
+            mathTri.style.opacity = 1;
+            await sleep(4000);
+
+            mSub.innerHTML = "Dörtgenin 4 iç açısının toplamı ise daima <span>360°</span> (Tam Açı) eder.";
+            mathQuad.style.opacity = 1;
+            await sleep(5000);
+
+
+            // END
+            mTitle.innerText = "Mükemmel!";
+            mSub.innerHTML = "Çokgenlerin en büyük sırlarını çözdünüz ve Geometrik Şekiller konusunu tamamladınız! 🎓";
+            
+            setTimeout(() => {
+                startBtn.style.display = 'block';
+                startBtn.innerText = "Tekrar İzle";
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

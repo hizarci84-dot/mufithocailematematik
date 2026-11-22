@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dikdörtgenden Üçgen Animasyonu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg:#0F0E17; --primary:#8B5CF6; --secondary:#10B981; --tertiary:#06B6D4; --danger:#F43F5E; --accent:#F59E0B; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Outfit',sans-serif; }
+        body { background:linear-gradient(135deg,var(--bg),#161625); color:#F8FAFC; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:20px; }
+        .header { width:100%; max-width:1000px; display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); padding:15px 25px; border-radius:20px; border:1px solid rgba(139,92,246,0.2); margin-bottom:20px; }
+        .header-left { display:flex; align-items:center; gap:15px; font-weight:600; font-size:1.2rem; }
+        .header-left img { width:50px; height:50px; border-radius:50%; background:white; padding:2px; }
+        .kazanim { background:var(--primary); color:white; padding:5px 15px; border-radius:20px; font-weight:800; font-size:0.9rem; }
+        .title-area { text-align:center; margin-bottom:20px; }
+        h1 { font-size:2.2rem; color:var(--tertiary); font-weight:900; }
+        .subtitle { color:#94A3B8; font-size:1.1rem; margin-top:5px; }
+        .canvas-area { position:relative; width:100%; max-width:800px; height:450px; background:#11111A; border-radius:24px; border:1px solid rgba(255,255,255,0.05); box-shadow:inset 0 0 50px rgba(0,0,0,0.5); display:flex; flex-direction:column; align-items:center; justify-content:center; overflow:hidden; }
+        .expl-text { background:rgba(139,92,246,0.15); border:1px solid rgba(139,92,246,0.3); padding:15px 25px; border-radius:12px; font-size:1.25rem; color:white; font-weight:800; text-align:center; width:100%; max-width:800px; margin-bottom:15px; transition:0.5s; }
+        svg { overflow:visible; }
+        .rect-half { transition:transform 2s cubic-bezier(0.68,-0.55,0.265,1.55), opacity 1s; }
+        .btn-play { background:var(--primary); color:white; border:none; padding:15px 40px; border-radius:50px; font-size:1.2rem; font-weight:900; cursor:pointer; transition:all 0.3s; box-shadow:0 10px 20px rgba(139,92,246,0.4); margin-top:30px; z-index:10; }
+        .btn-play:hover { transform:translateY(-3px) scale(1.05); }
+        .formula-box { position:absolute; bottom:20px; background:rgba(0,0,0,0.9); border:2px solid var(--accent); padding:10px 30px; border-radius:20px; font-size:1.5rem; font-weight:900; color:white; opacity:0; transform:translateY(20px); transition:all 1s; z-index:10; text-align:center; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.8.4.1. Üçgende Alan (Animasyon)</div>
+    </div>
+    <div class="title-area">
+        <h1>Dikdörtgenden Üçgen Çıkar!</h1>
+        <p class="subtitle">Bir dikdörtgeni köşegen boyunca ikiye böldüğünüzde iki EŞ üçgen oluşur. Her üçgenin alanı dikdörtgenin yarısıdır.</p>
+    </div>
+    <div class="expl-text" id="explText">1. Elimizde 8×6 = 48 cm² alanlı bir dikdörtgen var.</div>
+    <div class="canvas-area">
+        <svg width="500" height="300" viewBox="0 0 500 300" id="svgMain">
+            <!-- Full rectangle -->
+            <rect x="100" y="50" width="300" height="200" fill="rgba(139,92,246,0.15)" stroke="var(--primary)" stroke-width="3"/>
+            <!-- Diagonal -->
+            <line id="diag" x1="100" y1="250" x2="400" y2="50" stroke="white" stroke-width="3" stroke-dasharray="10,6" opacity="0"/>
+            <!-- Triangle 1 (stays) -->
+            <polygon id="tri1" points="100,250 400,250 400,50" fill="rgba(16,185,129,0.4)" stroke="var(--secondary)" stroke-width="3" opacity="0"/>
+            <!-- Triangle 2 (flies away) -->
+            <polygon id="tri2" points="100,250 100,50 400,50" fill="rgba(244,63,94,0.4)" stroke="var(--danger)" stroke-width="3" opacity="0"/>
+            <!-- Labels -->
+            <text x="250" y="280" text-anchor="middle" fill="var(--secondary)" font-weight="900" font-family="Outfit" font-size="18">8 cm</text>
+            <text x="75" y="155" text-anchor="middle" fill="var(--secondary)" font-weight="900" font-family="Outfit" font-size="18">6 cm</text>
+            <text x="250" y="155" text-anchor="middle" fill="white" font-weight="900" font-family="Outfit" font-size="20" id="areaLbl" opacity="0">24 cm²</text>
+        </svg>
+        <div class="formula-box" id="fBox">
+            Alan = (8 × 6) ÷ 2 = <span style="color:var(--accent)">24 cm²</span>
+        </div>
+    </div>
+    <button class="btn-play" id="btnPlay" onclick="runAnim()">Köşegeni Çiz</button>
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        async function runAnim() {
+            document.getElementById('btnPlay').style.display='none';
+            const et = document.getElementById('explText');
+            // Step 1: Show diagonal
+            et.textContent = '2. Şimdi dikdörtgeni köşegen boyunca ikiye bölelim...';
+            document.getElementById('diag').style.opacity = '1';
+            document.getElementById('diag').style.transition = 'opacity 1s';
+            await sleep(1200);
+            // Step 2: Color triangles
+            et.textContent = '3. İki EŞ üçgen oluştu! Her biri dikdörtgenin tam yarısı.';
+            document.getElementById('tri1').style.opacity = '1';
+            document.getElementById('tri1').style.transition = 'opacity 0.8s';
+            await sleep(400);
+            document.getElementById('tri2').style.opacity = '1';
+            document.getElementById('tri2').style.transition = 'opacity 0.8s';
+            await sleep(1200);
+            // Step 3: Float one away
+            et.textContent = '4. Kırmızı üçgeni kaldırıyoruz. Geriye 24 cm² kalıyor!';
+            const t2 = document.getElementById('tri2');
+            t2.style.transition = 'transform 1.5s ease-in, opacity 1s';
+            t2.style.transform = 'translate(-200px, -150px)';
+            t2.style.opacity = '0';
+            await sleep(1800);
+            document.getElementById('areaLbl').style.opacity = '1';
+            document.getElementById('areaLbl').style.transition = 'opacity 0.5s';
+            et.style.color = 'var(--secondary)';
+            et.textContent = 'Üçgenin alanı = Dikdörtgenin alanı ÷ 2 = (Taban × Yükseklik) ÷ 2';
+            document.getElementById('fBox').style.opacity = '1';
+            document.getElementById('fBox').style.transform = 'translateY(0)';
+        }
+    </script>
+</body>
+</html>

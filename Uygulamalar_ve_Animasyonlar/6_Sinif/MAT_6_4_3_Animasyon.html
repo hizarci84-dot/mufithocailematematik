@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerçek Hayatta Alanlar - Animasyon</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A; --text: #F8FAFC;
+            --primary: #3B82F6; --secondary: #10B981;
+            --tertiary: #F59E0B; --danger: #F43F5E;
+            --purple: #8B5CF6; --cyan: #06B6D4;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 900px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--cyan); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; width: 100%; max-width: 800px; margin-bottom: 20px; height: 110px;}
+        h1 { font-size: 2.2rem; color: var(--cyan); text-shadow: 0 5px 15px rgba(0,0,0,0.5); line-height: 1.3;}
+        .subtitle { font-size: 1.2rem; color: #94A3B8; margin-top: 10px; line-height: 1.5; min-height: 55px;}
+        .subtitle span { color: white; font-weight: 800; background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 5px;}
+
+        .canvas-area {
+            position: relative; width: 100%; max-width: 800px; height: 450px; 
+            background: #0B1120; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.3); 
+            overflow: hidden; display: flex; align-items: center; justify-content: center;
+        }
+
+        .garden-bg {
+            position: absolute; width: 100%; height: 100%; top:0; left:0;
+            background: repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 20px, transparent 20px, transparent 40px);
+        }
+
+        .shape-part {
+            position: absolute; stroke: white; stroke-width: 3; transition: all 1s; opacity: 0;
+        }
+        
+        .lbl { font-size: 1.2rem; font-weight: 900; fill: white; text-shadow: 0 0 5px black; opacity: 0; transition: opacity 0.5s; }
+
+        .info-panel {
+            position: absolute; right: 20px; top: 20px; background: rgba(0,0,0,0.8);
+            border: 2px solid var(--cyan); border-radius: 15px; padding: 20px; width: 250px;
+            color: white; font-size: 1.1rem; opacity: 0; transition: opacity 1s; transform: translateX(50px);
+        }
+        .info-panel.show { opacity: 1; transform: translateX(0); }
+        .ip-row { margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+        .ip-val { font-size: 1.5rem; font-weight: 900; color: var(--secondary); display: block; margin-top: 5px;}
+
+        .btn-start {
+            margin-top: 30px; background: var(--cyan); color: white; border: none; padding: 15px 40px; border-radius: 50px;
+            font-size: 1.2rem; font-weight: 800; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 20px rgba(6, 182, 212, 0.4);
+        }
+        .btn-start:hover { transform: scale(1.05); }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=3B82F6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.6.4.3. Gerçek Hayatta Alanlar</div>
+    </div>
+
+    <div class="title-area">
+        <h1 id="mTitle">Bahçeye Çim Ekelim!</h1>
+        <p class="subtitle" id="mSub">Evimizin bahçesi karmaşık bir şekil. Çim ekeceğiz, metrekaresi <span>50 TL</span>. Ne kadar öderiz?</p>
+    </div>
+
+    <div class="canvas-area">
+        <div class="garden-bg"></div>
+        
+        <svg width="800" height="450" style="position: absolute; top:0; left:0;">
+            <!-- Rectangle part (House maybe? No, the whole thing is garden) -->
+            <!-- Rectangle: 100,100 to 400,300. Triangle attached to right: 400,100 to 550,200 to 400,300 -->
+            
+            <!-- Combined stroke initially -->
+            <polygon class="shape-part" id="compShape" points="100,100 400,100 550,200 400,300 100,300" fill="rgba(255,255,255,0.1)" stroke="var(--cyan)" />
+            
+            <!-- Separated parts -->
+            <polygon class="shape-part" id="rectShape" points="100,100 400,100 400,300 100,300" fill="rgba(16, 185, 129, 0.4)" stroke="var(--secondary)" />
+            <polygon class="shape-part" id="triShape" points="400,100 550,200 400,300" fill="rgba(59, 130, 246, 0.4)" stroke="var(--primary)" />
+            
+            <!-- Cut line -->
+            <line class="shape-part" id="cutLine" x1="400" y1="100" x2="400" y2="300" stroke="white" stroke-dasharray="10 5" />
+
+            <!-- Labels -->
+            <text class="lbl" id="l1" x="220" y="330">12 m</text>
+            <text class="lbl" id="l2" x="40" y="200">8 m</text>
+            <text class="lbl" id="l3" x="430" y="190">6 m</text> <!-- Triangle height -->
+            <line class="shape-part" id="hLine" x1="400" y1="200" x2="550" y2="200" stroke="var(--danger)" stroke-dasharray="5 5" />
+        </svg>
+
+        <div class="info-panel" id="panel">
+            <div class="ip-row" id="r1" style="opacity:0; transition: 1s;">
+                Dikdörtgen Alanı
+                <span class="ip-val" id="v1">?</span>
+            </div>
+            <div class="ip-row" id="r2" style="opacity:0; transition: 1s;">
+                Üçgen Alanı
+                <span class="ip-val" id="v2" style="color:var(--primary);">?</span>
+            </div>
+            <div class="ip-row" id="r3" style="opacity:0; transition: 1s; border:none;">
+                Toplam Maliyet (x 50 TL)
+                <span class="ip-val" id="v3" style="color:var(--danger); font-size: 2rem;">?</span>
+            </div>
+        </div>
+
+    </div>
+
+    <button class="btn-start" id="startBtn" onclick="runTimeline()">Çözümü Başlat</button>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        const mTitle = document.getElementById('mTitle');
+        const mSub = document.getElementById('mSub');
+        const startBtn = document.getElementById('startBtn');
+        
+        async function runTimeline() {
+            startBtn.style.display = 'none';
+
+            // Reset
+            ['compShape','rectShape','triShape','cutLine','hLine'].forEach(id => document.getElementById(id).style.opacity = 0);
+            ['l1','l2','l3'].forEach(id => document.getElementById(id).style.opacity = 0);
+            document.getElementById('panel').classList.remove('show');
+            ['r1','r2','r3'].forEach(id => document.getElementById(id).style.opacity = 0);
+            document.getElementById('v1').innerText = "?";
+            document.getElementById('v2').innerText = "?";
+            document.getElementById('v3').innerText = "?";
+
+            // Intro
+            mTitle.innerText = "Karmaşık Şekli Parçala!";
+            mSub.innerHTML = "Böyle garip şekillerin formülü yoktur. Onları <span>bildiğimiz şekillere</span> bölmeliyiz.";
+            
+            document.getElementById('compShape').style.opacity = 1;
+            await sleep(2500);
+
+            // Splitting
+            document.getElementById('cutLine').style.opacity = 1;
+            await sleep(1000);
+            document.getElementById('compShape').style.opacity = 0;
+            document.getElementById('rectShape').style.opacity = 1;
+            document.getElementById('triShape').style.opacity = 1;
+            
+            mSub.innerHTML = "Şekli bir <span>Dikdörtgen</span> ve bir <span>Üçgen</span> olmak üzere ikiye ayırdık.";
+            await sleep(2500);
+
+            // Step 1: Rectangle Area
+            mTitle.innerText = "1. Aşama: Dikdörtgenin Alanı";
+            mSub.innerHTML = "Dikdörtgenin uzun kenarı 12 m, kısa kenarı 8 m.";
+            
+            document.getElementById('l1').style.opacity = 1;
+            document.getElementById('l2').style.opacity = 1;
+            document.getElementById('panel').classList.add('show');
+            await sleep(2000);
+
+            document.getElementById('r1').style.opacity = 1;
+            await sleep(1000);
+            document.getElementById('v1').innerText = "12 x 8 = 96 m²";
+
+            await sleep(3000);
+
+            // Step 2: Triangle Area
+            mTitle.innerText = "2. Aşama: Üçgenin Alanı";
+            mSub.innerHTML = "Üçgenin yüksekliği 6 m. Tabanı ise dikdörtgenin kısa kenarıyla aynı, yani <span>8 m</span>!";
+            
+            document.getElementById('hLine').style.opacity = 1;
+            document.getElementById('l3').style.opacity = 1;
+            await sleep(2500);
+
+            document.getElementById('r2').style.opacity = 1;
+            await sleep(1000);
+            document.getElementById('v2').innerText = "(8 x 6) / 2 = 24 m²";
+
+            await sleep(3000);
+
+            // Step 3: Total Cost
+            mTitle.innerText = "Son Aşama: Maliyet Hesabı";
+            mSub.innerHTML = "Toplam Alan = 96 + 24 = <span>120 m²</span>. Metrekaresi 50 TL olan çimi serelim!";
+            
+            document.getElementById('r3').style.opacity = 1;
+            await sleep(2000);
+            
+            // Count up effect
+            let cost = 120 * 50;
+            document.getElementById('v3').innerText = "120 x 50 = " + cost.toLocaleString('tr-TR') + " ₺";
+
+            // Visual celebration (fill garden)
+            document.getElementById('rectShape').style.fill = "rgba(16, 185, 129, 0.8)";
+            document.getElementById('triShape').style.fill = "rgba(16, 185, 129, 0.8)";
+
+            setTimeout(() => {
+                startBtn.style.display = 'block';
+                startBtn.innerText = "Tekrar İzle";
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ayrık ve Ayrık Olmayan Olaylar Laboratuvarı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F0E17; --surface: #1A1A24; --text: #F8FAFC;
+            --primary: #8B5CF6; --secondary: #10B981;
+            --tertiary: #06B6D4; --danger: #F43F5E;
+            --accent: #F59E0B;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, #161625 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(139, 92, 246, 0.2); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; margin-bottom: 20px;}
+        h1 { font-size: 2.2rem; color: var(--tertiary); font-weight: 900;}
+        .subtitle { color: #94A3B8; font-size: 1.1rem; margin-top: 5px;}
+
+        .main-container {
+            display: flex; gap: 30px; width: 100%; max-width: 1000px; flex-wrap: wrap; justify-content: center;
+        }
+
+        .panel {
+            background: #11111A; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.4); 
+            padding: 30px; display: flex; flex-direction: column; width: 100%; gap: 30px; align-items: center;
+        }
+
+        .expl-text {
+            font-size: 1.2rem; font-weight: 800; color: white; text-align: center;
+            background: rgba(139, 92, 246, 0.1); padding: 15px 30px; border-radius: 15px; border-left: 5px solid var(--primary);
+        }
+
+        /* Source Area */
+        .source-area {
+            display: flex; gap: 15px; min-height: 60px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 15px; width: 100%; justify-content: center;
+        }
+
+        .drag-num {
+            width: 50px; height: 50px; background: var(--surface); border: 2px solid white; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 900;
+            cursor: grab; user-select: none; z-index: 10;
+        }
+        .drag-num:active { cursor: grabbing; transform: scale(1.1); }
+
+        /* Venn Diagram */
+        .venn-container {
+            position: relative; width: 600px; height: 350px; display: flex; justify-content: center; align-items: center;
+        }
+
+        .circle {
+            width: 300px; height: 300px; border-radius: 50%; position: absolute;
+            display: flex; align-items: center; justify-content: center; flex-wrap: wrap; align-content: center; gap: 10px; padding: 20px;
+        }
+        .circle h3 { position: absolute; top: 20px; color: white; font-weight: 900; font-size: 1.2rem; text-align: center; width: 100%;}
+
+        #cLeft { left: 50px; border: 4px solid var(--primary); background: rgba(139, 92, 246, 0.2); }
+        #cRight { right: 50px; border: 4px solid var(--tertiary); background: rgba(6, 182, 212, 0.2); mix-blend-mode: screen; }
+
+        /* Drop Zones */
+        .drop-zone { position: absolute; overflow: auto; height: 100%; display: flex; flex-wrap: wrap; align-content: center; justify-content: center; gap: 10px; }
+        #zoneLeft { left: 60px; width: 180px; }
+        #zoneRight { right: 60px; width: 180px; }
+        #zoneCenter { left: 250px; width: 100px; z-index: 5;} /* Intersection */
+        #zoneOuter { position: absolute; bottom: -30px; width: 100%; height: 60px; display: flex; justify-content: center; gap: 10px;} /* Neither */
+
+        .status-box {
+            background: rgba(0,0,0,0.5); padding: 15px 30px; border-radius: 50px;
+            font-size: 1.5rem; font-weight: 900; color: white; border: 2px solid #334155;
+            transition: 0.5s; text-align: center; margin-top: 20px; opacity: 0;
+        }
+
+        .drop-zone > * { transform: scale(0.85); }
+</style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.7.6.3. Ayrık ve Ayrık Olmayan Olaylar (Etkinlik)</div>
+    </div>
+
+    <div class="title-area">
+        <h1>Ortak Çıktı Dedektifi</h1>
+        <p class="subtitle">Zarın sayılarını uygun kümelere sürükleyin. Eğer bir sayı her ikisine de uyuyorsa KESİŞİME (ortaya) bırakın.</p>
+    </div>
+
+    <div class="main-container">
+        
+        <div class="panel">
+            
+            <div class="expl-text" id="explText">Bir zar atıldığında "Çift gelme olayı" ile "Asal sayı gelme olayını" inceleyeceğiz. Sayıları sürükleyip doğru bölgeye bırakın.</div>
+
+            <div class="source-area" id="sourceArea">
+                <div class="drag-num" draggable="true" id="n1">1</div>
+                <div class="drag-num" draggable="true" id="n2">2</div>
+                <div class="drag-num" draggable="true" id="n3">3</div>
+                <div class="drag-num" draggable="true" id="n4">4</div>
+                <div class="drag-num" draggable="true" id="n5">5</div>
+                <div class="drag-num" draggable="true" id="n6">6</div>
+            </div>
+
+            <div class="venn-container">
+                <div class="circle" id="cLeft">
+                    <h3>Çift Sayılar</h3>
+                </div>
+                <div class="circle" id="cRight">
+                    <h3>Asal Sayılar</h3>
+                </div>
+
+                <!-- Logical Drop Zones -->
+                <div class="drop-zone" id="zoneLeft" ondragover="allowDrop(event)" ondrop="drop(event, 'left')"></div>
+                <div class="drop-zone" id="zoneRight" ondragover="allowDrop(event)" ondrop="drop(event, 'right')"></div>
+                <div class="drop-zone" id="zoneCenter" ondragover="allowDrop(event)" ondrop="drop(event, 'center')"></div>
+                
+                <p style="position:absolute; bottom: -60px; color:#94A3B8; font-weight:800;">Hiçbirine uymayanlar aşağıya (Dışarıya):</p>
+                <div class="drop-zone" id="zoneOuter" ondragover="allowDrop(event)" ondrop="drop(event, 'outer')"></div>
+            </div>
+
+            <div class="status-box" id="statusBox">AYRIK OLMAYAN OLAYLAR!</div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // Data logic
+        // Çift: 2, 4, 6
+        // Asal: 2, 3, 5
+        // Intersection: 2
+        // Outer: 1
+        const rules = {
+            "n1": "outer",
+            "n2": "center",
+            "n3": "right",
+            "n4": "left",
+            "n5": "right",
+            "n6": "left"
+        };
+
+        let correctPlacements = 0;
+
+        // Drag events
+        document.querySelectorAll('.drag-num').forEach(item => {
+            item.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', e.target.id);
+            });
+        });
+
+        function allowDrop(e) {
+            e.preventDefault();
+        }
+
+        function drop(e, zone) {
+            e.preventDefault();
+            const id = e.dataTransfer.getData('text/plain');
+            const element = document.getElementById(id);
+            const correctZone = rules[id];
+
+            if(zone === correctZone) {
+                // Success
+                element.style.background = "var(--secondary)";
+                element.style.borderColor = "var(--secondary)";
+                element.setAttribute("draggable", "false"); // lock it
+                document.getElementById('zone' + zone.charAt(0).toUpperCase() + zone.slice(1)).appendChild(element);
+                
+                correctPlacements++;
+                
+                if(correctPlacements === 6) {
+                    checkFinal();
+                }
+            } else {
+                // Fail - flash red
+                element.style.background = "var(--danger)";
+                setTimeout(() => {
+                    element.style.background = "var(--surface)";
+                }, 500);
+            }
+        }
+
+        function checkFinal() {
+            const statusBox = document.getElementById('statusBox');
+            statusBox.style.opacity = 1;
+            
+            // Because '2' is in the center, they share an outcome
+            statusBox.innerText = "ORTAK ÇIKTI (2) VAR! AYRIK OLMAYAN OLAYLARDIR.";
+            statusBox.style.borderColor = "var(--accent)";
+            statusBox.style.boxShadow = "0 0 30px rgba(245, 158, 11, 0.5)";
+            
+            document.getElementById('explText').innerText = "Kesişim bölgesinde en az 1 eleman varsa, bu olaylar aynı anda gerçekleşebilir demektir (Zarın hem çift hem asal gelmesi mümkündür). Bunlara Ayrık Olmayan Olaylar denir.";
+            document.getElementById('explText').style.borderColor = "var(--accent)";
+        }
+    </script>
+
+    <script>
+        // Global spam click prevention for Etkinlik files
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'BUTTON' && !e.target.hasAttribute('data-spam-locked')) {
+                e.target.setAttribute('data-spam-locked', 'true');
+                let originalOpacity = e.target.style.opacity || '1';
+                e.target.style.opacity = '0.7';
+                e.target.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    e.target.removeAttribute('data-spam-locked');
+                    e.target.style.opacity = originalOpacity;
+                    e.target.style.pointerEvents = 'auto';
+                }, 400);
+            }
+        });
+    </script>
+</body>
+</html>

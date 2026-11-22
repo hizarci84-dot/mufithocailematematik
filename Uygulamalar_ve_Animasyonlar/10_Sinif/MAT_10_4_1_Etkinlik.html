@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10.4.1 - Dinamik Birim Çember</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            /* Blueprint Style Colors */
+            --bg-color: #0A192F; /* Deep navy */
+            --panel-bg: #112240; 
+            --grid-line: rgba(100, 255, 218, 0.15);
+            --grid-line-strong: rgba(100, 255, 218, 0.4);
+            
+            /* Trigonometry Colors */
+            --primary: #64FFDA; /* Cyan - Base */
+            --sin-color: #EF4444; /* Rose */
+            --cos-color: #3B82F6; /* Blue */
+            --tan-color: #F59E0B; /* Amber */
+            --cot-color: #A855F7; /* Purple */
+            
+            --text-main: #E6F1FF;
+            --text-muted: #8892B0;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background-color: var(--bg-color); color: var(--text-main);
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; padding: 20px; overflow-x: hidden;
+            background-image: 
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 1200px; display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 25px; background: rgba(17, 34, 64, 0.9);
+            backdrop-filter: blur(10px); border-radius: 20px; border: 1px solid var(--grid-line-strong);
+            margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 800; color: var(--primary); }
+        .header-left img { width: 40px; height: 40px; border-radius: 10px; }
+        .kazanim { background: rgba(100, 255, 218, 0.1); padding: 8px 15px; border-radius: 12px; color: var(--primary); font-weight: 600; font-size: 0.9rem; border: 1px solid rgba(100, 255, 218, 0.3); }
+
+        h1 { font-size: 2.5rem; font-weight: 900; margin-bottom: 10px; text-align: center; 
+             color: var(--text-main); text-shadow: 0 0 10px rgba(255,255,255,0.2); }
+             
+        .subtitle { color: var(--text-muted); font-size: 1.1rem; margin-bottom: 30px; text-align: center; max-width: 800px; }
+
+        .workspace { display: flex; flex-direction: row; gap: 20px; width: 100%; max-width: 1200px; }
+        @media (max-width: 900px) { .workspace { flex-direction: column; } }
+
+        .controls {
+            flex: 1; display: flex; flex-direction: column; gap: 15px; background: var(--panel-bg);
+            padding: 25px; border-radius: 20px; border: 1px solid var(--grid-line-strong);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .angle-display {
+            font-size: 3rem; font-weight: 900; color: var(--primary); text-align: center;
+            text-shadow: 0 0 15px rgba(100, 255, 218, 0.4); margin-bottom: 10px;
+        }
+
+        .trig-card {
+            background: rgba(0,0,0,0.3); border-radius: 12px; padding: 15px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-left: 5px solid transparent; font-weight: 800; font-size: 1.3rem;
+            transition: all 0.2s;
+        }
+        
+        .trig-card.sin { border-color: var(--sin-color); color: var(--sin-color); }
+        .trig-card.cos { border-color: var(--cos-color); color: var(--cos-color); }
+        .trig-card.tan { border-color: var(--tan-color); color: var(--tan-color); }
+        .trig-card.cot { border-color: var(--cot-color); color: var(--cot-color); }
+        
+        .trig-val { color: var(--text-main); font-family: monospace; font-size: 1.5rem; }
+
+        .math-rule-box {
+            background: rgba(0,0,0,0.5); padding: 15px; border-radius: 12px;
+            font-size: 1.1rem; color: var(--text-muted); text-align: center; margin-top: auto;
+        }
+
+        .graph-container {
+            flex: 2; position: relative; background: #061122; /* Darker than bg for contrast */
+            border-radius: 20px; border: 2px solid var(--grid-line-strong);
+            overflow: hidden; box-shadow: 0 0 40px rgba(100, 255, 218, 0.1) inset;
+            display: flex; justify-content: center; align-items: center;
+            touch-action: none; /* Prevent scroll while dragging */
+        }
+
+        /* SVG Graph Styling */
+        svg { width: 100%; height: 600px; display: block; cursor: grab; }
+        svg:active { cursor: grabbing; }
+        
+        .svg-grid-line { stroke: rgba(100, 255, 218, 0.1); stroke-width: 0.02; }
+        .svg-axis-line { stroke: rgba(100, 255, 218, 0.5); stroke-width: 0.04; }
+        .svg-axis-label { fill: rgba(100, 255, 218, 0.7); font-size: 0.15px; font-weight: 600; }
+        
+        .unit-circle { fill: rgba(100, 255, 218, 0.05); stroke: var(--primary); stroke-width: 0.03; stroke-dasharray: 0.05,0.05; }
+        
+        /* Trig Lines */
+        .line-hyp { stroke: white; stroke-width: 0.04; stroke-linecap: round; }
+        .line-sin { stroke: var(--sin-color); stroke-width: 0.06; stroke-linecap: round; filter: drop-shadow(0 0 3px var(--sin-color)); }
+        .line-cos { stroke: var(--cos-color); stroke-width: 0.06; stroke-linecap: round; filter: drop-shadow(0 0 3px var(--cos-color)); }
+        
+        .line-tan-axis { stroke: var(--tan-color); stroke-width: 0.02; stroke-dasharray: 0.05, 0.05; opacity: 0.5; }
+        .line-tan { stroke: var(--tan-color); stroke-width: 0.06; stroke-linecap: round; filter: drop-shadow(0 0 3px var(--tan-color)); }
+        
+        .line-cot-axis { stroke: var(--cot-color); stroke-width: 0.02; stroke-dasharray: 0.05, 0.05; opacity: 0.5; }
+        .line-cot { stroke: var(--cot-color); stroke-width: 0.06; stroke-linecap: round; filter: drop-shadow(0 0 3px var(--cot-color)); }
+        
+        .ext-radius { stroke: rgba(255,255,255,0.3); stroke-width: 0.02; stroke-dasharray: 0.05, 0.05; }
+
+        .drag-point { fill: var(--primary); stroke: white; stroke-width: 0.03; cursor: grab; filter: drop-shadow(0 0 5px var(--primary)); transition: transform 0.1s; }
+        .drag-point:active { transform: scale(1.5); }
+        
+        .angle-arc { fill: rgba(100, 255, 218, 0.2); stroke: var(--primary); stroke-width: 0.02; }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=64FFDA&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.10.4.1. Birim Çember ve Trigonometrik Oranlar</div>
+    </div>
+    
+    <h1>Dinamik Birim Çember Laboratuvarı</h1>
+    <p class="subtitle">Birim çember üzerindeki noktayı (beyaz/mavi daire) fare ile sürükleyerek sinüs, kosinüs, tanjant ve kotanjant eksenlerinin geometrik anlamını keşfedin.</p>
+    
+    <div class="workspace">
+        <div class="controls">
+            <div class="angle-display">
+                &alpha; = <span id="angleText">45&deg;</span>
+            </div>
+            
+            <div class="trig-card sin">
+                <span>sin(&alpha;)</span>
+                <span class="trig-val" id="valSin">0.707</span>
+            </div>
+            <div class="trig-card cos">
+                <span>cos(&alpha;)</span>
+                <span class="trig-val" id="valCos">0.707</span>
+            </div>
+            <div class="trig-card tan">
+                <span>tan(&alpha;)</span>
+                <span class="trig-val" id="valTan">1.000</span>
+            </div>
+            <div class="trig-card cot">
+                <span>cot(&alpha;)</span>
+                <span class="trig-val" id="valCot">1.000</span>
+            </div>
+            
+            <div class="math-rule-box" id="mathOutput">
+                <!-- MathJax equations -->
+            </div>
+        </div>
+        
+        <div class="graph-container" id="svgContainer">
+            <!-- ViewBox from -2.5 to 2.5 -->
+            <svg viewBox="-2.5 -2.5 5 5" preserveAspectRatio="xMidYMid meet" id="graphSvg">
+                <g id="transformGroup" transform="scale(1, -1)">
+                    
+                    <!-- Background Grid -->
+                    <g id="gridGroup"></g>
+                    
+                    <!-- Axes -->
+                    <line x1="-2.5" y1="0" x2="2.5" y2="0" class="svg-axis-line" />
+                    <line x1="0" y1="-2.5" x2="0" y2="2.5" class="svg-axis-line" />
+                    
+                    <!-- Tangent and Cotangent Axes (Background dashed) -->
+                    <line x1="1" y1="-2.5" x2="1" y2="2.5" class="line-tan-axis" />
+                    <line x1="-2.5" y1="1" x2="2.5" y2="1" class="line-cot-axis" />
+                    
+                    <!-- Unit Circle -->
+                    <circle cx="0" cy="0" r="1" class="unit-circle" />
+                    
+                    <!-- Angle Arc -->
+                    <path id="angleArc" class="angle-arc" d="" />
+                    
+                    <!-- Extended Radius for Tan/Cot -->
+                    <line id="extRadius" class="ext-radius" x1="0" y1="0" x2="0" y2="0" />
+                    
+                    <!-- Cosine Line (Horizontal) -->
+                    <line id="lineCos" class="line-cos" x1="0" y1="0" x2="0" y2="0" />
+                    <!-- Sine Line (Vertical) -->
+                    <line id="lineSin" class="line-sin" x1="0" y1="0" x2="0" y2="0" />
+                    
+                    <!-- Tangent Line (Vertical at x=1) -->
+                    <line id="lineTan" class="line-tan" x1="1" y1="0" x2="1" y2="0" />
+                    <!-- Cotangent Line (Horizontal at y=1) -->
+                    <line id="lineCot" class="line-cot" x1="0" y1="1" x2="0" y2="1" />
+                    
+                    <!-- Hypotenuse / Radius -->
+                    <line id="lineHyp" class="line-hyp" x1="0" y1="0" x2="0" y2="0" />
+                    
+                    <!-- Drag Point -->
+                    <circle id="dragPoint" class="drag-point" cx="0" cy="0" r="0.08" />
+                    
+                </g>
+                <!-- Labels (Outside inverted group) -->
+                <g id="labelsGroup"></g>
+                
+                <text x="1.05" y="0.2" fill="rgba(245,158,11,0.8)" font-size="0.12px" font-weight="bold">Tan Ekseni</text>
+                <text x="0.1" y="-1.05" fill="rgba(168,85,247,0.8)" font-size="0.12px" font-weight="bold">Cot Ekseni</text>
+            </svg>
+        </div>
+    </div>
+
+    <script>
+        const graphSvg = document.getElementById('graphSvg');
+        const dragPoint = document.getElementById('dragPoint');
+        
+        const lineSin = document.getElementById('lineSin');
+        const lineCos = document.getElementById('lineCos');
+        const lineTan = document.getElementById('lineTan');
+        const lineCot = document.getElementById('lineCot');
+        const lineHyp = document.getElementById('lineHyp');
+        const extRadius = document.getElementById('extRadius');
+        const angleArc = document.getElementById('angleArc');
+        
+        const angleText = document.getElementById('angleText');
+        const valSin = document.getElementById('valSin');
+        const valCos = document.getElementById('valCos');
+        const valTan = document.getElementById('valTan');
+        const valCot = document.getElementById('valCot');
+        
+        const mathOutput = document.getElementById('mathOutput');
+        
+        let isDragging = false;
+        let currentAngle = Math.PI / 4; // 45 degrees initially
+        let debounceTimer;
+
+        function drawGrid() {
+            let gridHtml = '';
+            let labelHtml = '';
+            for(let i = -2; i <= 2; i+=0.5) {
+                if(i !== 0) {
+                    gridHtml += `<line x1="${i}" y1="-2.5" x2="${i}" y2="2.5" class="svg-grid-line" />`;
+                    gridHtml += `<line x1="-2.5" y1="${i}" x2="2.5" y2="${i}" class="svg-grid-line" />`;
+                }
+                
+                // Labels 1, -1
+                if(i === 1 || i === -1) {
+                    labelHtml += `<text x="${i}" y="0.15" class="svg-axis-label" text-anchor="middle">${i}</text>`;
+                    labelHtml += `<text x="-0.05" y="${-i}" class="svg-axis-label" text-anchor="end" dominant-baseline="middle">${i}</text>`;
+                }
+            }
+            document.getElementById('gridGroup').innerHTML = gridHtml;
+            document.getElementById('labelsGroup').innerHTML = labelHtml;
+        }
+
+        function updateMathjax(deg) {
+            mathOutput.innerHTML = `\\( \\sin^2(\\alpha) + \\cos^2(\\alpha) = 1 \\)<br><br>\\( \\tan(\\alpha) \\cdot \\cot(\\alpha) = 1 \\)`;
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                MathJax.typesetPromise([mathOutput]);
+            }, 1000);
+        }
+
+        function generateArc(radius, angle) {
+            // angle is in radians
+            if (angle === 0) return '';
+            let largeArc = angle > Math.PI ? 1 : 0;
+            let sweep = 1;
+            let endX = radius * Math.cos(angle);
+            let endY = radius * Math.sin(angle);
+            
+            return `M 0 0 L ${radius} 0 A ${radius} ${radius} 0 ${largeArc} ${sweep} ${endX} ${endY} Z`;
+        }
+
+        function updateVisuals(angle) {
+            // angle in radians, 0 to 2PI
+            // Ensure angle is positive
+            while(angle < 0) angle += 2 * Math.PI;
+            while(angle >= 2 * Math.PI) angle -= 2 * Math.PI;
+            
+            let deg = Math.round((angle * 180) / Math.PI);
+            if(deg === 360) deg = 0;
+            
+            let x = Math.cos(angle);
+            let y = Math.sin(angle);
+            
+            // Drag point & Hypotenuse
+            dragPoint.setAttribute('cx', x);
+            dragPoint.setAttribute('cy', y);
+            lineHyp.setAttribute('x2', x);
+            lineHyp.setAttribute('y2', y);
+            
+            // Sine and Cosine
+            lineCos.setAttribute('x2', x);
+            lineSin.setAttribute('x1', x);
+            lineSin.setAttribute('x2', x);
+            lineSin.setAttribute('y2', y);
+            
+            // Tangent (x=1 line)
+            // intersection with x=1 is (1, tan)
+            let tanVal = Math.tan(angle);
+            if(Math.abs(x) < 0.001) {
+                // Tan is undefined/infinity
+                lineTan.style.opacity = 0;
+                valTan.innerText = "Tanımsız";
+            } else {
+                lineTan.style.opacity = 1;
+                // If angle is in Q2 or Q3, the extended radius intersects x=1 line on the opposite side
+                // But geometrically, the tangent axis is always at x=1. The value on that axis is the Y coordinate where the line connecting origin and the point on circle intersects x=1.
+                // The line is y = (sin/cos)*x = tan * x. So at x=1, y = tan.
+                lineTan.setAttribute('y2', tanVal);
+                valTan.innerText = tanVal.toFixed(3);
+                
+                // Draw extended radius to the tangent intersection if in Q1/Q4
+                extRadius.setAttribute('x2', 1);
+                extRadius.setAttribute('y2', tanVal);
+            }
+            
+            // Cotangent (y=1 line)
+            // intersection with y=1 is (cot, 1)
+            let cotVal = 1 / Math.tan(angle);
+            if(Math.abs(y) < 0.001) {
+                lineCot.style.opacity = 0;
+                valCot.innerText = "Tanımsız";
+            } else {
+                lineCot.style.opacity = 1;
+                lineCot.setAttribute('x2', cotVal);
+                valCot.innerText = cotVal.toFixed(3);
+                
+                // If cot is further than tan, extend radius to cot
+                if(Math.abs(cotVal) > Math.abs(1)) { // This logic can be refined for visual neatness
+                    extRadius.setAttribute('x2', cotVal);
+                    extRadius.setAttribute('y2', 1);
+                }
+            }
+            
+            // Draw arc
+            angleArc.setAttribute('d', generateArc(0.3, angle));
+            
+            // Update Texts
+            angleText.innerHTML = `${deg}&deg;`;
+            valSin.innerText = y.toFixed(3);
+            valCos.innerText = x.toFixed(3);
+            
+            // Highlight active quadrant in MathJax if needed (omitted for brevity, just keeping the identities)
+        }
+
+        // --- Interaction Logic ---
+        function getMousePos(evt) {
+            let CTM = graphSvg.getScreenCTM();
+            // CTM handles the scale and translation, but we have a <g> that flips Y.
+            // Let's use standard clientPoint
+            let pt = graphSvg.createSVGPoint();
+            if(evt.touches) {
+                pt.x = evt.touches[0].clientX;
+                pt.y = evt.touches[0].clientY;
+            } else {
+                pt.x = evt.clientX;
+                pt.y = evt.clientY;
+            }
+            let svgPt = pt.matrixTransform(CTM.inverse());
+            // svgPt.x, svgPt.y are in viewBox coordinates (-2.5 to 2.5)
+            // But Y is positive downwards in viewBox. We need to flip Y because our internal logic (and Math.atan2) assumes positive Y is up.
+            return { x: svgPt.x, y: -svgPt.y };
+        }
+
+        function handleDrag(evt) {
+            if(!isDragging) return;
+            evt.preventDefault(); // Prevent scrolling
+            
+            let pos = getMousePos(evt);
+            let angle = Math.atan2(pos.y, pos.x);
+            currentAngle = angle;
+            updateVisuals(currentAngle);
+        }
+
+        graphSvg.addEventListener('mousedown', (e) => { isDragging = true; handleDrag(e); });
+        window.addEventListener('mouseup', () => { isDragging = false; });
+        window.addEventListener('mousemove', handleDrag);
+
+        graphSvg.addEventListener('touchstart', (e) => { isDragging = true; handleDrag(e); }, {passive: false});
+        window.addEventListener('touchend', () => { isDragging = false; });
+        window.addEventListener('touchmove', handleDrag, {passive: false});
+
+
+        window.onload = () => {
+            drawGrid();
+            updateVisuals(currentAngle);
+            updateMathjax();
+        };
+    </script>
+</body>
+</html>

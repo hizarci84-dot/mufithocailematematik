@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eğim Animasyonu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F0E17; --surface: #1A1A24; --text: #F8FAFC;
+            --primary: #8B5CF6; --secondary: #10B981;
+            --tertiary: #06B6D4; --danger: #F43F5E;
+            --accent: #F59E0B;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, #161625 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(139, 92, 246, 0.2); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; margin-bottom: 20px;}
+        h1 { font-size: 2.2rem; color: var(--tertiary); font-weight: 900;}
+        .subtitle { color: #94A3B8; font-size: 1.1rem; margin-top: 5px;}
+
+        .canvas-area {
+            position: relative; width: 100%; max-width: 800px; height: 450px; 
+            background: #11111A; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.4); 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden;
+        }
+
+        .expl-text { background:rgba(139,92,246,0.15); border:1px solid rgba(139,92,246,0.3); padding:15px 25px; border-radius:12px; font-size:1.25rem; color:white; font-weight:800; text-align:center; width:100%; max-width:800px; margin-bottom:15px; transition:0.5s; }
+
+        /* SVG Graph */
+        svg {
+            width: 100%; height: 100%; position: absolute; top: 0; left: 0; pointer-events: none;
+        }
+        
+        .axis { stroke: white; stroke-width: 2; }
+        .slope-line { stroke: var(--secondary); stroke-width: 5; stroke-linecap: round; transition: all 1s;}
+        
+        .vert-line { stroke: var(--danger); stroke-width: 3; stroke-dasharray: 5,5; opacity: 0; transition: 0.5s;}
+        .horiz-line { stroke: var(--tertiary); stroke-width: 3; stroke-dasharray: 5,5; opacity: 0; transition: 0.5s;}
+        
+        .math-lbl { fill: white; font-weight: 900; font-size: 20px; font-family: 'Outfit'; opacity: 0; transition: 0.5s;}
+
+        .formula-box {
+            position: absolute; bottom: 30px; right: 30px; background: rgba(0,0,0,0.8); border: 2px solid var(--accent);
+            padding: 15px 30px; border-radius: 20px; font-size: 1.2rem; font-weight: 900; color: white;
+            opacity: 0; transform: translateY(20px); transition: all 1s; z-index: 10; text-align: center;
+        }
+
+        .fraction { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; margin-left: 10px;}
+        .f-top { border-bottom: 2px solid white; padding: 0 5px; color: var(--danger);}
+        .f-bot { padding: 0 5px; color: var(--tertiary);}
+
+        .btn-play {
+            background: var(--primary); color: white; border: none; padding: 15px 40px; border-radius: 50px;
+            font-size: 1.2rem; font-weight: 900; cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(139, 92, 246, 0.4); margin-top: 30px; z-index: 10;
+        }
+        .btn-play:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 15px 25px rgba(139, 92, 246, 0.6); }
+
+        /* The climber */
+        .climber {
+            position: absolute; width: 40px; height: 40px; background: var(--accent); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 900; color: black;
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.8); z-index: 15;
+            left: 100px; top: 350px; transform: translate(-50%, -50%); transition: all 2s linear;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.8.2.2. Eğim Kavramı (Animasyon)</div>
+    </div>
+
+    <div class="title-area">
+        <h1>Diklik Ölçüsü (Eğim)</h1>
+        <p class="subtitle">Eğim, bir doğrunun ne kadar dik olduğunu gösteren orandır (Dikey / Yatay).</p>
+    </div>
+
+    <div class="expl-text" id="explText">1. Karşımızda düz bir tepe var. Zirveye tırmanacağız.</div>
+    <div class="canvas-area">
+        
+
+        <svg viewBox="0 0 800 450">
+            <!-- Axes -->
+            <line x1="100" y1="350" x2="700" y2="350" class="axis"/>
+            <line x1="100" y1="50" x2="100" y2="350" class="axis"/>
+            
+            <text x="680" y="380" fill="white" font-weight="800">Yatay</text>
+            <text x="30" y="60" fill="white" font-weight="800">Dikey</text>
+
+            <!-- Slope Line (Starts flat, then tilts) -->
+            <!-- We will go from (100, 350) to (500, 150) -->
+            <line id="sLine" class="slope-line" x1="100" y1="350" x2="500" y2="350"/>
+            
+            <!-- Triangle -->
+            <line id="vLine" class="vert-line" x1="500" y1="350" x2="500" y2="150"/>
+            <line id="hLine" class="horiz-line" x1="100" y1="350" x2="500" y2="350"/>
+            
+            <text id="vLbl" x="520" y="260" class="math-lbl" fill="var(--danger)">Dikey (400m)</text>
+            <text id="hLbl" x="250" y="380" class="math-lbl" fill="var(--tertiary)">Yatay (800m)</text>
+        </svg>
+
+        <div class="climber" id="climber">👤</div>
+
+        <div class="formula-box" id="formulaBox">
+            Eğim (m) = 
+            <div class="fraction">
+                <span class="f-top">Dikey Değişim</span>
+                <span class="f-bot">Yatay Değişim</span>
+            </div>
+            = <span style="color:white; margin-left: 10px;" id="resM"></span>
+        </div>
+
+    </div>
+
+    <button class="btn-play" id="btnPlay" onclick="runAnim()">Tepeyi İncele</button>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        const btnPlay = document.getElementById('btnPlay');
+        const explText = document.getElementById('explText');
+        
+        const sLine = document.getElementById('sLine');
+        const vLine = document.getElementById('vLine');
+        const hLine = document.getElementById('hLine');
+        const vLbl = document.getElementById('vLbl');
+        const hLbl = document.getElementById('hLbl');
+        const climber = document.getElementById('climber');
+        const formulaBox = document.getElementById('formulaBox');
+        const resM = document.getElementById('resM');
+
+        async function runAnim() {
+            btnPlay.disabled = true;
+            btnPlay.style.opacity = 0.5;
+
+            // Step 1: Raise mountain
+            await sleep(1000);
+            explText.innerText = "2. Tepemiz yavaş yavaş dikleşiyor...";
+            sLine.setAttribute('y2', '150'); // Slope goes up
+            
+            await sleep(1500);
+
+            // Step 2: Show triangle components
+            explText.innerText = "3. Bu tepenin dikliğini (Eğimini) bulmak için ne kadar yükseldiğine ve ilerlediğine bakarız.";
+            vLine.style.opacity = 1;
+            await sleep(1000);
+            vLbl.style.opacity = 1;
+
+            await sleep(1000);
+            
+            hLine.style.opacity = 1;
+            await sleep(1000);
+            hLbl.style.opacity = 1;
+
+            await sleep(1500);
+
+            // Step 3: Climber moves
+            explText.innerText = "4. Tırmanıcı tepeye çıktığında, yatayda 800m, dikeyde 400m yol almış olur.";
+            climber.style.left = "500px";
+            climber.style.top = "150px";
+
+            await sleep(2500);
+
+            // Step 4: Formula
+            explText.style.color = "var(--secondary)";
+            explText.innerText = "Kural: Eğim daima 'Dikey / Yatay' olarak hesaplanır. Ve 'm' harfi ile gösterilir.";
+            
+            formulaBox.style.opacity = 1;
+            formulaBox.style.transform = "translateY(0)";
+            
+            await sleep(1500);
+            resM.innerText = "400 / 800 = 1/2";
+
+            btnPlay.style.display = "none";
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dinamik Denklem Terazisi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    
+    <!-- MATHJAX -->
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root { --bg:#0F0E17; --primary:#8B5CF6; --secondary:#10B981; --tertiary:#06B6D4; --danger:#F43F5E; --accent:#F59E0B; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Outfit',sans-serif; }
+        body { background:linear-gradient(135deg,var(--bg),#161625); color:#F8FAFC; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:20px; overflow-x:hidden; }
+        
+        .header { width:100%; max-width:1100px; display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); padding:15px 25px; border-radius:20px; border:1px solid rgba(139,92,246,0.2); margin-bottom:20px; backdrop-filter:blur(10px); }
+        .header-left { display:flex; align-items:center; gap:15px; font-weight:600; font-size:1.2rem; }
+        .header-left img { width:50px; height:50px; border-radius:50%; background:white; padding:2px; }
+        .kazanim { background:var(--primary); color:white; padding:8px 20px; border-radius:20px; font-weight:800; font-size:1rem; box-shadow: 0 0 20px rgba(139,92,246,0.4); }
+        
+        h1 { font-size:2.5rem; color:var(--tertiary); font-weight:900; text-align:center; margin-bottom:5px; }
+        .subtitle { color:#94A3B8; font-size:1.15rem; text-align:center; margin-bottom:25px; font-weight:600; max-width:800px; }
+        
+        .workspace { width:100%; max-width:1100px; background:#11111A; border:1px solid rgba(255,255,255,0.1); border-radius:24px; padding:30px; box-shadow:inset 0 0 50px rgba(0,0,0,0.5); display:flex; flex-direction:column; align-items:center; min-height:500px; }
+        
+        .expl-text { background:rgba(139,92,246,0.15); border:1px solid rgba(139,92,246,0.4); padding:15px 25px; border-radius:15px; font-size:1.3rem; color:white; font-weight:800; text-align:center; width:100%; margin-bottom:40px; }
+        
+        /* The Scale (Terazi) */
+        .scale-container { position:relative; width:400px; height:200px; margin-bottom:40px; display:flex; justify-content:center; }
+        
+        /* Base */
+        .scale-base { position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:0; height:0; border-left: 20px solid transparent; border-right: 20px solid transparent; border-bottom: 80px solid #334155; }
+        
+        /* Beam */
+        .scale-beam { position:absolute; bottom:70px; left:50%; width:300px; height:10px; background:var(--primary); margin-left:-150px; transform-origin:center center; transition:transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); display:flex; justify-content:space-between; border-radius:5px; }
+        
+        /* Pans */
+        .pan { width:80px; height:80px; border:2px solid rgba(255,255,255,0.2); border-top:none; border-radius:0 0 40px 40px; position:relative; top:5px; transition:transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); display:flex; align-items:flex-end; justify-content:center; padding-bottom:10px; font-weight:900; font-size:1.5rem; background:rgba(255,255,255,0.05); }
+        .pan-left { margin-left:-40px; }
+        .pan-right { margin-right:-40px; }
+        
+        /* Value blocks */
+        .val-block { background:var(--accent); color:black; padding:5px 10px; border-radius:5px; }
+
+        /* Controls */
+        .math-rule-box { background:rgba(0,0,0,0.5); border:2px solid #334155; padding:20px 40px; border-radius:15px; font-size:2rem; font-weight:900; color:white; display:flex; align-items:center; justify-content:center; box-shadow:0 10px 20px rgba(0,0,0,0.5); transition:all 0.5s; min-height:80px; width:100%; max-width:600px; margin-bottom:20px; }
+        
+        .slider-group { width:100%; max-width:600px; background:rgba(255,255,255,0.02); border-radius:15px; padding:20px; border:1px solid rgba(255,255,255,0.05); }
+        .slider-header { display:flex; justify-content:space-between; margin-bottom:15px; font-weight:800; color:#CBD5E1; }
+        .slider-header span.val { color:var(--tertiary); font-size:1.2rem; font-family:'Courier New', monospace; }
+        
+        input[type=range] { -webkit-appearance:none; width:100%; background:transparent; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; height:24px; width:24px; border-radius:50%; background:var(--secondary); cursor:pointer; margin-top:-10px; box-shadow:0 0 10px var(--secondary); }
+        input[type=range]::-webkit-slider-runnable-track { width:100%; height:4px; cursor:pointer; background:rgba(255,255,255,0.2); border-radius:2px; }
+
+        .feedback { margin-top:20px; font-size:1.5rem; font-weight:900; padding:10px 20px; border-radius:10px; opacity:0; transition:0.3s; text-align:center; }
+        .feedback.success { background:rgba(16,185,129,0.2); color:var(--secondary); opacity:1; }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.9.2.3. Dinamik Denklem Terazisi (Etkinlik)</div>
+    </div>
+    
+    <h1>Denklem Terazisi</h1>
+    <p class="subtitle">Eşitliğin her iki tarafını dengeye getirmek için x değerini bulun. Doğru x değerinde terazi dengede duracaktır.</p>
+    
+    <div class="workspace">
+        <div class="expl-text">Soru: \( 3x + 2 = x + 8 \) denklemini sağlayan x değeri kaçtır?</div>
+        
+        <div class="scale-container">
+            <div class="scale-base"></div>
+            <div class="scale-beam" id="beam">
+                <div class="pan pan-left" id="panL">
+                    <div class="val-block" id="valLText">0</div>
+                </div>
+                <div class="pan pan-right" id="panR">
+                    <div class="val-block" id="valRText">0</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="math-rule-box" id="ruleBox">
+            <span id="mathOutput"></span>
+        </div>
+        
+        <div class="slider-group">
+            <div class="slider-header">
+                <span>x Değerini Ayarla</span>
+                <span class="val" id="valX">0</span>
+            </div>
+            <input type="range" id="slX" min="-5" max="10" value="0" step="1" oninput="updateLab()">
+        </div>
+        
+        <div class="feedback" id="feedback">Denge Sağlandı! x = 3</div>
+    </div>
+
+    <script>
+        const beam = document.getElementById('beam');
+        const panL = document.getElementById('panL');
+        const panR = document.getElementById('panR');
+        const mathOutput = document.getElementById('mathOutput');
+        const ruleBox = document.getElementById('ruleBox');
+        const feedback = document.getElementById('feedback');
+        
+        let debounceTimer;
+        function updateMath(texString) {
+            mathOutput.innerHTML = texString;
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                MathJax.typesetPromise([mathOutput]);
+            }, 50);
+        }
+
+        function updateLab() {
+            let x = parseInt(document.getElementById('slX').value);
+            document.getElementById('valX').textContent = x;
+            
+            // Equation: 3x + 2 = x + 8
+            let valL = 3*x + 2;
+            let valR = x + 8;
+            
+            document.getElementById('valLText').textContent = valL;
+            document.getElementById('valRText').textContent = valR;
+            
+            let diff = valR - valL; // Positive means right is heavier
+            
+            // Limit rotation to max 25 degrees
+            let maxRot = 25;
+            let rotation = diff * 2; 
+            if(rotation > maxRot) rotation = maxRot;
+            if(rotation < -maxRot) rotation = -maxRot;
+            
+            beam.style.transform = `rotate(${rotation}deg)`;
+            panL.style.transform = `rotate(${-rotation}deg)`;
+            panR.style.transform = `rotate(${-rotation}deg)`;
+            
+            let eq = `\\( 3(${x}) + 2 \\quad ${valL === valR ? "=" : (valL > valR ? ">" : "<")} \\quad (${x}) + 8 \\)`;
+            updateMath(eq);
+            
+            if (valL === valR) {
+                ruleBox.style.borderColor = "var(--secondary)";
+                ruleBox.style.boxShadow = "0 0 30px rgba(16,185,129,0.5)";
+                feedback.className = "feedback success";
+            } else {
+                ruleBox.style.borderColor = "#334155";
+                ruleBox.style.boxShadow = "0 10px 20px rgba(0,0,0,0.5)";
+                feedback.className = "feedback";
+            }
+        }
+        
+        // Init
+        updateLab();
+    </script>
+</body>
+</html>

@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerçek Yaşam Problemleri - Çözüm Merkezi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #10B981; /* Green theme for environment */
+            --primary-hover: #059669;
+            --secondary: #3B82F6;
+            --background: #064E3B;
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-main: #1E293B;
+            --text-muted: #64748B;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #022C22 0%, #064E3B 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            position: relative;
+        }
+
+        /* Branding Header */
+        .brand-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            width: max-content;
+        }
+        .brand-header img {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: contain;
+            background: white;
+            padding: 2px;
+        }
+        .brand-header a {
+            color: #A7F3D0;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: color 0.3s ease;
+        }
+        .brand-header a:hover {
+            color: #34D399;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 3rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            color: #064E3B;
+            margin-bottom: 1rem;
+        }
+
+        .story-box {
+            background: #F0FDF4;
+            border-left: 5px solid var(--primary);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            font-size: 1.2rem;
+            text-align: left;
+            line-height: 1.6;
+            color: #166534;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .question-box {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            color: var(--secondary);
+        }
+
+        /* Operations Buttons */
+        .operations {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .op-btn {
+            background: white;
+            border: 2px solid #E2E8F0;
+            border-radius: 12px;
+            padding: 1rem 2rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #475569;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .op-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            transform: translateY(-3px);
+        }
+        .op-btn.selected {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* Number Input Area */
+        .input-area {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            animation: fadeIn 0.5s ease-out;
+        }
+        .input-area.active {
+            display: flex;
+        }
+        .input-field {
+            font-size: 1.5rem;
+            padding: 0.8rem;
+            border: 2px solid #CBD5E1;
+            border-radius: 12px;
+            width: 250px;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .input-field:focus {
+            border-color: var(--secondary);
+        }
+        .submit-btn {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .submit-btn:hover {
+            background: #2563EB;
+            transform: scale(1.05);
+        }
+
+        /* Feedback */
+        .feedback {
+            margin-top: 1.5rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            min-height: 2rem;
+        }
+        .success { color: var(--primary); }
+        .error { color: #EF4444; }
+
+        /* Kazanım */
+        .kazanim-box {
+            margin-top: 3rem;
+            padding: 1.2rem;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px dashed rgba(16, 185, 129, 0.4);
+            border-radius: 12px;
+            text-align: left;
+            position: relative;
+        }
+        .kazanim-badge {
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: var(--primary);
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 800;
+            padding: 3px 12px;
+            border-radius: 20px;
+            text-transform: uppercase;
+        }
+        .kazanim-box p {
+            color: #064E3B;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            margin: 0;
+            padding-top: 5px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #confetti {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="confetti"></canvas>
+
+    <div class="brand-header">
+        <img src="../../logom.png" alt="Müfit Hoca Logo">
+        <a href="https://www.instagram.com/mufithocailematematik" target="_blank">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+            @mufithocailematematik
+        </a>
+    </div>
+
+    <div class="container">
+        <h1>Geleceğe Nefes Olalım 🌳</h1>
+        
+        <div class="story-box" id="storyBox">
+            "Yeşil Dünya Projesi" kapsamında çevre gönüllüleri Ankara'ya <strong>24.350</strong> adet fidan dikmiştir. İstanbul'a ise Ankara'dan <strong>8.125</strong> adet daha FAZLA fidan dikilmiştir.
+        </div>
+
+        <div class="question-box" id="questionBox">
+            Aşama 1: İstanbul'a kaç fidan dikildiğini bulmak için hangi işlemi yapmalısın?
+        </div>
+
+        <div class="operations" id="operationsGroup">
+            <button class="op-btn" onclick="selectOperation('toplama')">Toplama (+)</button>
+            <button class="op-btn" onclick="selectOperation('cikarma')">Çıkarma (-)</button>
+            <button class="op-btn" onclick="selectOperation('carpma')">Çarpma (x)</button>
+            <button class="op-btn" onclick="selectOperation('bolme')">Bölme (÷)</button>
+        </div>
+
+        <div class="input-area" id="inputArea">
+            <p style="color: #64748B; margin-bottom: 5px;" id="inputHint">İşlem sonucunu aşağıya yaz:</p>
+            <input type="number" class="input-field" id="answerInput" placeholder="Cevabı buraya yazın...">
+            <button class="submit-btn" onclick="checkAnswer()">Cevabı Kontrol Et</button>
+        </div>
+
+        <div class="feedback" id="feedback"></div>
+
+        <div class="kazanim-box">
+            <span class="kazanim-badge">Kazanım</span>
+            <p><strong>MAT.5.1.2.</strong> Doğal sayılar ve işlemler içeren gerçek yaşam problemlerini çözebilme. (Toplama ve Çıkarma, Sürdürülebilirlik Bağlamı)</p>
+        </div>
+    </div>
+
+    <script>
+        let currentStage = 1;
+        let selectedOp = "";
+
+        function selectOperation(op) {
+            if (currentStage === 3) return; // Finished
+            
+            const buttons = document.querySelectorAll('.op-btn');
+            buttons.forEach(b => b.classList.remove('selected'));
+            event.target.classList.add('selected');
+            selectedOp = op;
+
+            const feedback = document.getElementById('feedback');
+            
+            if (currentStage === 1) {
+                if (op === 'toplama') {
+                    feedback.innerHTML = "<span class='success'>Harika! 'Fazla' dediği için toplama yapmalıyız. Şimdi sonucu hesapla!</span>";
+                    document.getElementById('inputArea').classList.add('active');
+                } else {
+                    feedback.innerHTML = "<span class='error'>Tekrar düşün! Ankara'dan 'daha fazla' diyor.</span>";
+                    document.getElementById('inputArea').classList.remove('active');
+                }
+            } else if (currentStage === 2) {
+                if (op === 'toplama') {
+                    feedback.innerHTML = "<span class='success'>Doğru! Toplam fidan için ikisini toplamalısın. Sonucu hesapla!</span>";
+                    document.getElementById('inputArea').classList.add('active');
+                } else {
+                    feedback.innerHTML = "<span class='error'>Tekrar düşün! 'Toplam kaç fidan' soruluyor.</span>";
+                    document.getElementById('inputArea').classList.remove('active');
+                }
+            }
+        }
+
+        function checkAnswer() {
+            const answer = parseInt(document.getElementById('answerInput').value);
+            const feedback = document.getElementById('feedback');
+
+            if (currentStage === 1) {
+                // Ankara: 24350, Istanbul: 24350 + 8125 = 32475
+                if (answer === 32475) {
+                    feedback.innerHTML = "<span class='success'>Mükemmel! İstanbul'a 32.475 fidan dikilmiş. Hadi Aşama 2'ye geçelim! 👏</span>";
+                    setTimeout(nextStage, 2000);
+                } else {
+                    feedback.innerHTML = "<span class='error'>İşlemde küçük bir hata var. 24.350 ile 8.125'i toplarken eldeye dikkat et!</span>";
+                }
+            } else if (currentStage === 2) {
+                // Total: 24350 + 32475 = 56825
+                if (answer === 56825) {
+                    feedback.innerHTML = "<span class='success'>İNANILMAZ! 🎉 İki şehre toplam 56.825 fidan dikildi. Harika bir iş çıkardın!</span>";
+                    document.getElementById('inputArea').classList.remove('active');
+                    document.getElementById('operationsGroup').style.display = 'none';
+                    document.getElementById('questionBox').innerText = "Görev Tamamlandı! 🌍";
+                    fireConfetti();
+                    currentStage = 3;
+                } else {
+                    feedback.innerHTML = "<span class='error'>Neredeyse! Ankara (24.350) ile İstanbul'u (32.475) toplamalısın.</span>";
+                }
+            }
+        }
+
+        function nextStage() {
+            currentStage = 2;
+            selectedOp = "";
+            document.getElementById('answerInput').value = "";
+            document.getElementById('feedback').innerHTML = "";
+            document.getElementById('inputArea').classList.remove('active');
+            
+            const buttons = document.querySelectorAll('.op-btn');
+            buttons.forEach(b => b.classList.remove('selected'));
+
+            document.getElementById('storyBox').innerHTML = "Harika! Ankara'da <strong>24.350</strong>, İstanbul'da ise <strong>32.475</strong> fidanımız oldu.";
+            document.getElementById('questionBox').innerText = "Aşama 2: İki şehre TOPLAM kaç fidan dikildiğini bulmak için hangi işlemi yapmalısın?";
+        }
+
+        // Simple Confetti
+        function fireConfetti() {
+            const canvas = document.getElementById('confetti');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const pieces = [];
+            const colors = ['#10B981', '#34D399', '#3B82F6', '#60A5FA', '#FBBF24'];
+
+            for (let i = 0; i < 150; i++) {
+                pieces.push({
+                    x: canvas.width / 2,
+                    y: canvas.height / 2,
+                    vx: (Math.random() - 0.5) * 25,
+                    vy: (Math.random() - 0.5) * 25 - 10,
+                    size: Math.random() * 12 + 6,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    rot: Math.random() * 360,
+                    rotSpeed: (Math.random() - 0.5) * 10
+                });
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                let active = false;
+                
+                pieces.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += 0.4; // gravity
+                    p.rot += p.rotSpeed;
+                    if (p.y < canvas.height) active = true;
+
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rot * Math.PI / 180);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+                    ctx.restore();
+                });
+
+                if (active) requestAnimationFrame(animate);
+                else ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+            animate();
+        }
+    </script>
+</body>
+</html>

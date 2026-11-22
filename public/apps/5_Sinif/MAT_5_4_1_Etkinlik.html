@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sabit Çevre Laboratuvarı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A;
+            --surface: #1E293B;
+            --text: #F8FAFC;
+            --primary: #10B981; /* Green */
+            --secondary: #3B82F6; /* Blue */
+            --tertiary: #F59E0B; /* Amber */
+            --danger: #F43F5E; /* Rose */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, var(--surface) 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: #0F172A; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .container {
+            width: 100%; max-width: 1000px; display: grid; grid-template-columns: 1fr 320px; gap: 20px;
+        }
+
+        .canvas-area {
+            background: #0B1120; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            position: relative; height: 550px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5); overflow: hidden;
+        }
+
+        svg { width: 100%; height: 100%; }
+
+        /* Grid */
+        .grid-line { stroke: rgba(255, 255, 255, 0.05); stroke-width: 1; }
+        .grid-axis { stroke: rgba(255, 255, 255, 0.15); stroke-width: 2; }
+
+        /* Rectangle */
+        .rect-shape { fill: rgba(16, 185, 129, 0.2); stroke: var(--primary); stroke-width: 4; stroke-linejoin: round; transition: all 0.3s; }
+        .rect-point { fill: white; stroke: var(--primary); stroke-width: 3; r: 6; transition: all 0.3s; }
+        .rect-label { fill: white; font-weight: 800; font-size: 16px; text-anchor: middle; transition: all 0.3s; }
+        .rect-label.v { dominant-baseline: central; }
+
+        .tools-area { display: flex; flex-direction: column; gap: 15px; }
+
+        .panel {
+            background: rgba(255,255,255,0.03); border-radius: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .panel-title { font-size: 1.2rem; font-weight: 800; color: var(--primary); margin-bottom: 15px; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 10px;}
+        
+        .control-group { margin-bottom: 20px; }
+        .control-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #94A3B8; }
+        
+        .perimeter-select {
+            width: 100%; background: rgba(0,0,0,0.3); border: 2px solid var(--secondary); color: white;
+            padding: 10px; border-radius: 10px; font-size: 1.1rem; font-weight: 800; outline: none;
+            cursor: pointer;
+        }
+        .perimeter-select option { background: var(--surface); }
+
+        .slider-container { display: flex; align-items: center; gap: 15px; }
+        input[type=range] { flex: 1; accent-color: var(--primary); cursor: pointer; }
+        .val-display { background: rgba(0,0,0,0.3); padding: 5px 12px; border-radius: 8px; font-weight: 800; font-size: 1.1rem; min-width: 45px; text-align: center; border: 1px solid rgba(255,255,255,0.1);}
+
+        .stats-box {
+            background: rgba(16, 185, 129, 0.1); border: 2px solid var(--primary); padding: 15px; border-radius: 15px;
+            text-align: center; font-size: 1.2rem; margin-top: 10px;
+        }
+        .stats-box .eq { font-weight: 800; color: white; margin-bottom: 5px;}
+        .stats-box .res { font-weight: 900; color: var(--primary); font-size: 1.4rem;}
+
+        .table-container { margin-top: 15px; max-height: 200px; overflow-y: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th { background: rgba(255,255,255,0.1); padding: 8px; color: var(--secondary); font-weight: 800; position: sticky; top: 0;}
+        td { padding: 8px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        tr.active { background: rgba(16, 185, 129, 0.2); font-weight: 800;}
+
+        @media (max-width: 768px) {
+            .container { grid-template-columns: 1fr; }
+            .canvas-area { height: 400px; }
+            .header { flex-direction: column; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.5.4.1. Dikdörtgenin Çevresi ve Kenarları</div>
+    </div>
+
+    <div class="container">
+        
+        <div class="canvas-area">
+            <svg id="svgCanvas">
+                <g id="gridGroup"></g>
+                <g id="rectGroup">
+                    <rect id="mainRect" class="rect-shape"></rect>
+                    
+                    <!-- Labels -->
+                    <text id="lblTop" class="rect-label"></text>
+                    <text id="lblBottom" class="rect-label"></text>
+                    <text id="lblLeft" class="rect-label v"></text>
+                    <text id="lblRight" class="rect-label v"></text>
+
+                    <!-- Points -->
+                    <circle id="pTL" class="rect-point"></circle>
+                    <circle id="pTR" class="rect-point"></circle>
+                    <circle id="pBL" class="rect-point"></circle>
+                    <circle id="pBR" class="rect-point"></circle>
+                </g>
+            </svg>
+        </div>
+
+        <div class="tools-area">
+            <div class="panel">
+                <div class="panel-title">Sabit Çevre Kontrolü</div>
+                
+                <div class="control-group">
+                    <label>Çevre Uzunluğunu Seç (br)</label>
+                    <select id="perimeterSelect" class="perimeter-select" onchange="changePerimeter()">
+                        <option value="12">Çevre = 12 br</option>
+                        <option value="16">Çevre = 16 br</option>
+                        <option value="20" selected>Çevre = 20 br</option>
+                        <option value="24">Çevre = 24 br</option>
+                        <option value="30">Çevre = 30 br</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label>Uzun Kenarı Değiştir (br)</label>
+                    <div class="slider-container">
+                        <input type="range" id="sideSlider" min="1" max="9" step="1" value="6" oninput="updateFromSlider()">
+                        <div class="val-display" id="sideVal">6</div>
+                    </div>
+                </div>
+
+                <div class="stats-box">
+                    <div class="eq" id="eqText">6 + 4 + 6 + 4</div>
+                    <div class="res" id="resText">= 20 br</div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">Olası Dikdörtgenler</div>
+                <div class="table-container">
+                    <table id="possibilityTable">
+                        <thead>
+                            <tr>
+                                <th>Kısa Kenar</th>
+                                <th>Uzun Kenar</th>
+                                <th>Çevre</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const svg = document.getElementById('svgCanvas');
+        const gridGroup = document.getElementById('gridGroup');
+        const mainRect = document.getElementById('mainRect');
+        
+        const lblTop = document.getElementById('lblTop');
+        const lblBottom = document.getElementById('lblBottom');
+        const lblLeft = document.getElementById('lblLeft');
+        const lblRight = document.getElementById('lblRight');
+        
+        const pTL = document.getElementById('pTL');
+        const pTR = document.getElementById('pTR');
+        const pBL = document.getElementById('pBL');
+        const pBR = document.getElementById('pBR');
+        
+        const perimeterSelect = document.getElementById('perimeterSelect');
+        const sideSlider = document.getElementById('sideSlider');
+        const sideVal = document.getElementById('sideVal');
+        const eqText = document.getElementById('eqText');
+        const resText = document.getElementById('resText');
+        const tbody = document.getElementById('tbody');
+
+        let UNIT = 30; // pixels per unit
+        let W = 0, H = 0;
+        let CX = 0, CY = 0;
+
+        let perimeter = 20;
+        let sideA = 6;
+        let sideB = 4;
+
+        function resize() {
+            let rect = svg.getBoundingClientRect();
+            W = rect.width;
+            H = rect.height;
+            CX = W / 2;
+            CY = H / 2;
+            drawGrid();
+            render();
+        }
+
+        function drawGrid() {
+            gridGroup.innerHTML = '';
+            // Draw grid relative to center
+            let maxUnitsX = Math.ceil(W / UNIT / 2);
+            let maxUnitsY = Math.ceil(H / UNIT / 2);
+
+            for(let i = -maxUnitsX; i <= maxUnitsX; i++) {
+                let x = CX + i * UNIT;
+                let line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', x); line.setAttribute('y1', 0);
+                line.setAttribute('x2', x); line.setAttribute('y2', H);
+                line.setAttribute('class', i === 0 ? 'grid-axis' : 'grid-line');
+                gridGroup.appendChild(line);
+            }
+
+            for(let i = -maxUnitsY; i <= maxUnitsY; i++) {
+                let y = CY + i * UNIT;
+                let line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', 0); line.setAttribute('y1', y);
+                line.setAttribute('x2', W); line.setAttribute('y2', y);
+                line.setAttribute('class', i === 0 ? 'grid-axis' : 'grid-line');
+                gridGroup.appendChild(line);
+            }
+        }
+
+        function changePerimeter() {
+            perimeter = parseInt(perimeterSelect.value);
+            let halfP = perimeter / 2;
+            sideSlider.max = halfP - 1;
+            
+            // Try to keep sideA, or clamp it
+            if(sideA >= halfP) sideA = halfP - 1;
+            sideSlider.value = sideA;
+            
+            updatePossibilityTable();
+            updateFromSlider();
+        }
+
+        function updateFromSlider() {
+            sideA = parseInt(sideSlider.value);
+            let halfP = perimeter / 2;
+            sideB = halfP - sideA;
+            sideVal.innerText = sideA;
+
+            // Make sure sideA is always represented as width in visual (or length)
+            let width = Math.max(sideA, sideB);
+            let height = Math.min(sideA, sideB);
+
+            // Update stats
+            eqText.innerText = `${width} + ${height} + ${width} + ${height}`;
+            resText.innerText = `= ${perimeter} br`;
+
+            renderRect(width, height);
+            highlightTableRow(height, width); // table is short x long
+        }
+
+        function renderRect(w, h) {
+            let pxW = w * UNIT;
+            let pxH = h * UNIT;
+            
+            // Center the rectangle
+            let startX = CX - pxW / 2;
+            let startY = CY - pxH / 2;
+
+            mainRect.setAttribute('x', startX);
+            mainRect.setAttribute('y', startY);
+            mainRect.setAttribute('width', pxW);
+            mainRect.setAttribute('height', pxH);
+
+            // Points
+            pTL.setAttribute('cx', startX); pTL.setAttribute('cy', startY);
+            pTR.setAttribute('cx', startX + pxW); pTR.setAttribute('cy', startY);
+            pBL.setAttribute('cx', startX); pBL.setAttribute('cy', startY + pxH);
+            pBR.setAttribute('cx', startX + pxW); pBR.setAttribute('cy', startY + pxH);
+
+            // Labels
+            lblTop.setAttribute('x', startX + pxW/2); lblTop.setAttribute('y', startY - 10);
+            lblTop.textContent = w + ' br';
+            
+            lblBottom.setAttribute('x', startX + pxW/2); lblBottom.setAttribute('y', startY + pxH + 20);
+            lblBottom.textContent = w + ' br';
+
+            lblLeft.setAttribute('x', startX - 25); lblLeft.setAttribute('y', startY + pxH/2);
+            lblLeft.textContent = h + ' br';
+
+            lblRight.setAttribute('x', startX + pxW + 25); lblRight.setAttribute('y', startY + pxH/2);
+            lblRight.textContent = h + ' br';
+        }
+
+        function updatePossibilityTable() {
+            tbody.innerHTML = '';
+            let halfP = perimeter / 2;
+            let maxKisa = Math.floor(halfP / 2); // If square, they are equal.
+            
+            // Loop for unique rectangles (kısa <= uzun)
+            for(let k = 1; k <= halfP / 2; k++) {
+                let u = halfP - k;
+                let tr = document.createElement('tr');
+                tr.id = `row-${k}-${u}`;
+                tr.innerHTML = `
+                    <td>${k} br</td>
+                    <td>${u} br</td>
+                    <td>${perimeter} br</td>
+                `;
+                tbody.appendChild(tr);
+            }
+        }
+
+        function highlightTableRow(k, u) {
+            document.querySelectorAll('#tbody tr').forEach(tr => tr.classList.remove('active'));
+            let activeRow = document.getElementById(`row-${k}-${u}`);
+            if(activeRow) {
+                activeRow.classList.add('active');
+                activeRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        window.addEventListener('resize', resize);
+        
+        // Init
+        resize();
+        changePerimeter();
+
+    </script>
+</body>
+</html>

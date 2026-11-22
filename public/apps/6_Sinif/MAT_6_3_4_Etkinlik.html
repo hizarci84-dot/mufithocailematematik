@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Problem Çözme Görevleri</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A; --surface: #1E293B; --text: #F8FAFC;
+            --primary: #3B82F6; --secondary: #10B981;
+            --tertiary: #F59E0B; --danger: #F43F5E;
+            --purple: #8B5CF6; --cyan: #06B6D4;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, var(--surface) 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--cyan); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .container {
+            width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 20px;
+        }
+
+        .task-panel {
+            background: rgba(255,255,255,0.03); border-radius: 20px; padding: 40px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; position: relative; overflow: hidden;
+        }
+
+        .task-panel h2 { font-size: 2rem; color: var(--cyan); margin-bottom: 10px; font-weight: 900;}
+
+        .canvas-area {
+            position: relative; width: 100%; height: 350px; margin-top: 20px;
+            background: #0B1120; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.5); overflow: hidden; display: flex; align-items: center; justify-content: center;
+        }
+
+        .input-box {
+            position: absolute; display: flex; flex-direction: column; align-items: center;
+        }
+        .input-box input {
+            width: 70px; height: 40px; background: rgba(0,0,0,0.7); border: 2px solid var(--danger);
+            border-radius: 8px; color: white; font-size: 1.2rem; font-weight: 900; text-align: center; outline: none;
+        }
+        .input-box input:focus { border-color: var(--cyan); }
+        .input-box.solved input { border-color: var(--secondary); background: rgba(16, 185, 129, 0.2); color: var(--secondary); pointer-events: none;}
+        
+        .static-label {
+            position: absolute; font-size: 1.3rem; font-weight: 900; color: white; text-shadow: 0 0 5px black;
+        }
+
+        /* Task 1 SVG */
+        .shape-path { stroke: #64748B; stroke-width: 3; fill: rgba(100, 116, 139, 0.1); }
+        .arc { fill: transparent; stroke-width: 3; stroke: white;}
+        
+        .btn-check {
+            background: var(--secondary); color: white; border: none; padding: 15px 40px; border-radius: 50px;
+            font-size: 1.2rem; font-weight: 800; cursor: pointer; transition: all 0.3s; margin-top: 20px;
+        }
+        .btn-check:hover { transform: scale(1.05); }
+
+        .feedback { margin-top: 15px; font-size: 1.1rem; font-weight: 800; padding: 10px; border-radius: 10px; display: none; }
+        .feedback.error { background: rgba(244, 63, 94, 0.1); color: var(--danger); border: 1px solid var(--danger); display: block;}
+
+        .overlay-msg {
+            position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(15, 23, 42, 0.95);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20;
+            opacity: 0; pointer-events: none; transition: all 0.5s; backdrop-filter: blur(5px);
+        }
+        .overlay-msg.show { opacity: 1; pointer-events: auto; }
+        .om-title { font-size: 2.5rem; font-weight: 900; margin-bottom: 10px; color: var(--secondary);}
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=3B82F6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.6.3.4. Problem Çözme Görevleri</div>
+    </div>
+
+    <div class="container">
+        
+        <div class="task-panel">
+            <h2 id="tTitle">Görev 1: Yamuğun Sırrı</h2>
+            <p style="color:#94A3B8;" id="tDesc">Yamukta üst ve alt tabanlar paraleldir. Paralel doğrular arasında kalan (ardışık) iç açıların toplamı 180°'dir. Soru işaretli açıyı bul!</p>
+            
+            <div class="canvas-area">
+                
+                <!-- SVG Container used dynamically -->
+                <svg id="drawing" width="600" height="300" style="position: absolute; top:25px; left:100px;">
+                    <!-- Injected by JS -->
+                </svg>
+
+                <div id="htmlElements">
+                    <!-- Injected by JS -->
+                </div>
+
+            </div>
+
+            <button class="btn-check" onclick="checkTask()" id="btnCheck">Cevabı Kontrol Et</button>
+            <div class="feedback" id="fb"></div>
+
+            <div class="overlay-msg" id="overlay">
+                <div class="om-title">Görev Tamamlandı! 🚀</div>
+                <p style="color:#94A3B8; font-size:1.2rem; font-weight:600; text-align:center; max-width:80%;" id="oDesc">Tebrikler.</p>
+                <button class="btn-check" style="background:var(--purple);" onclick="nextTask()" id="btnNext">Sonraki Görevi Aç</button>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        const tasks = [
+            {
+                title: "Görev 1: Yamuğun Sırrı",
+                desc: "Yamukta üst ve alt tabanlar paraleldir. Kural: Paralel doğrular arasında kalan altlı-üstlü açıların toplamı 180°'dir.",
+                svg: `
+                    <!-- Yamuk: (200, 50) to (400, 50) | (100, 250) to (500, 250) -->
+                    <polygon class="shape-path" points="200,50 400,50 500,250 100,250" />
+                    <!-- Top Left Angle -->
+                    <path class="arc" d="M 180 90 A 30 30 0 0 1 230 50" stroke="var(--cyan)" />
+                    <!-- Bottom Left Angle -->
+                    <path class="arc" d="M 130 250 A 40 40 0 0 1 125 200" stroke="var(--danger)" />
+                `,
+                html: `
+                    <div class="static-label" style="top: 80px; left: 340px;">130°</div>
+                    <div class="input-box" style="top: 240px; left: 240px;" id="box0">
+                        <input type="number" id="inp0" placeholder="?">
+                    </div>
+                `,
+                inputs: [ { id: 'inp0', ans: 50, boxId: 'box0' } ], // 180 - 130 = 50
+                successMsg: "Harika! Paralel doğrular arasında kalan (ardışık) iç açıların bütünler (toplamları 180) olduğunu başarıyla kullandın."
+            },
+            {
+                title: "Görev 2: Dikdörtgenin İçindeki Üçgen",
+                desc: "Dikdörtgenin köşe açıları 90°'dir. Köşegen çizildiğinde oluşan üçgenlerin iç açılarını bul!",
+                svg: `
+                    <!-- Dikdörtgen: (150, 50) to (450, 50) | (450, 250) | (150, 250) -->
+                    <polygon class="shape-path" points="150,50 450,50 450,250 150,250" />
+                    <!-- Diagonal -->
+                    <line x1="150" y1="250" x2="450" y2="50" stroke="#64748B" stroke-width="3" />
+                    
+                    <!-- Bottom Right Angle (90 deg total) -->
+                    <!-- Angle 1 (Bottom side to Diagonal) -->
+                    <path class="arc" d="M 400 250 A 40 40 0 0 1 415 225" stroke="var(--cyan)" />
+                    <!-- Angle 2 (Diagonal to Right side) -->
+                    <path class="arc" d="M 450 200 A 40 40 0 0 0 425 220" stroke="var(--danger)" />
+                `,
+                html: `
+                    <div class="static-label" style="top: 260px; left: 450px;">35°</div>
+                    <div class="input-box" style="top: 220px; left: 520px;" id="box0">
+                        <input type="number" id="inp0" placeholder="?">
+                    </div>
+                `,
+                inputs: [ { id: 'inp0', ans: 55, boxId: 'box0' } ], // 90 - 35 = 55
+                successMsg: "Mükemmel! Dikdörtgenin bir köşesinin 90 derece olduğunu bilerek eksik parçayı buldun. Geometri problemlerinde tümevarım böyledir!"
+            }
+        ];
+
+        let currIdx = 0;
+
+        function loadTask() {
+            let t = tasks[currIdx];
+            document.getElementById('tTitle').innerText = t.title;
+            document.getElementById('tDesc').innerText = t.desc;
+            document.getElementById('drawing').innerHTML = t.svg;
+            document.getElementById('htmlElements').innerHTML = t.html;
+            document.getElementById('fb').className = "feedback";
+            document.getElementById('overlay').classList.remove('show');
+            document.getElementById('oDesc').innerText = t.successMsg;
+        }
+
+        function checkTask() {
+            let t = tasks[currIdx];
+            let allCorrect = true;
+
+            t.inputs.forEach(inpData => {
+                let val = parseInt(document.getElementById(inpData.id).value);
+                let box = document.getElementById(inpData.boxId);
+                
+                if(val === inpData.ans) {
+                    box.classList.add('solved');
+                } else {
+                    allCorrect = false;
+                    document.getElementById(inpData.id).value = "";
+                }
+            });
+
+            let fb = document.getElementById('fb');
+            if(allCorrect) {
+                fb.style.display = "none";
+                setTimeout(() => {
+                    document.getElementById('overlay').classList.add('show');
+                    if(currIdx === tasks.length - 1) {
+                        document.getElementById('btnNext').innerText = "Tüm Görevleri Başardın!";
+                        document.getElementById('btnNext').disabled = true;
+                    }
+                }, 500);
+            } else {
+                fb.className = "feedback error";
+                fb.innerText = "Hatalı değerler var. Lütfen kuralları hatırlayarak tekrar hesapla.";
+            }
+        }
+
+        function nextTask() {
+            if(currIdx < tasks.length - 1) {
+                currIdx++;
+                loadTask();
+            }
+        }
+
+        loadTask();
+    </script>
+</body>
+</html>

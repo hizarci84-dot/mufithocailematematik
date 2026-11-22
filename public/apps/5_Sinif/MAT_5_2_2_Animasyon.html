@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İşlem Önceliği Piramidi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0F172A;
+            --bg-light: #1E293B;
+            --text-main: #F8FAFC;
+            --c-paren: #EC4899; /* Pink */
+            --c-exp: #8B5CF6;   /* Purple */
+            --c-mul: #3B82F6;   /* Blue */
+            --c-add: #10B981;   /* Green */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body { 
+            background: linear-gradient(135deg, var(--bg-light) 0%, var(--bg-dark) 100%); 
+            color: var(--text-main); 
+            min-height: 100vh; 
+            display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; 
+            overflow: hidden; 
+        }
+
+        .brand-header { 
+            position: absolute; top: 20px; 
+            display: flex; align-items: center; gap: 15px; 
+            background: rgba(255, 255, 255, 0.05); 
+            padding: 8px 20px; border-radius: 50px; 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            backdrop-filter: blur(10px); z-index: 100; 
+        }
+        .brand-header img { width: 40px; height: 40px; border-radius: 50%; object-fit: contain; background: white; padding: 2px;}
+        .brand-header span { color: #E2E8F0; font-weight: 600; font-size: 1.1rem; }
+
+        .kazanim-box { 
+            position: absolute; bottom: 20px; 
+            padding: 12px 25px; background: rgba(255, 255, 255, 0.05); 
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; 
+            text-align: center; z-index: 100; max-width: 90%;
+        }
+        .kazanim-box p { font-size: 0.9rem; color: #94A3B8; }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 1000px;
+            gap: 20px;
+            padding: 20px;
+            margin-top: 40px;
+        }
+
+        .title { 
+            font-size: 2rem; 
+            color: #FDE047; 
+            text-align: center;
+            opacity: 0; 
+            transition: all 0.8s ease; 
+            height: 60px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .show-title .title { opacity: 1; }
+
+        .content-area {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 50px;
+            width: 100%;
+        }
+
+        /* Pyramid */
+        .pyramid {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            opacity: 0;
+            transform: translateX(-50px);
+            transition: all 1s ease;
+        }
+        .show-pyramid .pyramid { opacity: 1; transform: translateX(0); }
+
+        .level {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 50px;
+            border-radius: 10px;
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+            position: relative;
+        }
+        .level::before { content: ''; position: absolute; top:0; left:0; width:100%; height:100%; border-radius:10px; background: white; opacity:0; transition:opacity 0.3s;}
+        .level.active::before { opacity: 0.2; }
+        .level.active { transform: scale(1.1); box-shadow: 0 0 20px currentColor;}
+
+        .l1 { width: 100px; background: var(--c-paren); color: var(--c-paren);} /* Parantez */
+        .l2 { width: 160px; background: var(--c-exp); color: var(--c-exp);}   /* Üslü */
+        .l3 { width: 220px; background: var(--c-mul); color: var(--c-mul);}   /* Çarpma Bölme */
+        .l4 { width: 280px; background: var(--c-add); color: var(--c-add);}   /* Toplama Çıkarma */
+
+        .level-text { z-index: 2; color: white; }
+
+        /* Equation Board */
+        .eq-board {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+            font-size: 3.5rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            opacity: 0;
+            transform: translateX(50px);
+            transition: all 1s ease;
+            position: relative;
+        }
+        .show-eq .eq-board { opacity: 1; transform: translateX(0); }
+
+        .chunk { display: inline-block; transition: all 0.5s; border-radius: 10px; padding: 0 5px; }
+        .chunk.highlight { background: rgba(255,255,255,0.2); transform: scale(1.1); }
+        
+        .c-p { color: var(--c-paren); }
+        .c-e { color: var(--c-exp); }
+        .c-m { color: var(--c-mul); }
+        .c-a { color: var(--c-add); }
+        .c-w { color: #F8FAFC; }
+
+        /* Error simulation */
+        .error-stamp {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) rotate(-15deg) scale(2);
+            color: #EF4444;
+            font-size: 5rem;
+            border: 8px solid #EF4444;
+            padding: 10px 30px;
+            border-radius: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .show-error .error-stamp { opacity: 1; transform: translate(-50%, -50%) rotate(-15deg) scale(1); }
+
+        #replayBtn { 
+            position: absolute; right: 20px; bottom: 20px; 
+            background: #FDE047; color: #0F172A; border: none; 
+            padding: 10px 20px; border-radius: 8px; font-size: 1rem; font-weight: 800; 
+            cursor: pointer; opacity: 0; pointer-events: none; transition: opacity 0.5s ease; z-index: 100; 
+        }
+        #replayBtn.visible { opacity: 1; pointer-events: auto; }
+        #replayBtn:hover { background: #EAB308; }
+
+        @media (max-width: 768px) {
+            .content-area { flex-direction: column; gap: 30px; }
+            .pyramid { transform: translateY(-50px); }
+            .show-pyramid .pyramid { transform: translateY(0); }
+            .eq-board { transform: translateY(50px); padding: 20px; font-size: 2.2rem; text-align: center;}
+            .show-eq .eq-board { transform: translateY(0); }
+            .title { font-size: 1.5rem; height: auto;}
+            .error-stamp { font-size: 3rem; border-width: 4px;}
+        }
+    </style>
+</head>
+<body>
+
+    <div class="brand-header">
+        <img src="../../logom.png" alt="Logo">
+        <span>@mufithocailematematik</span>
+    </div>
+    
+    <div class="container" id="mainScene">
+        <div class="title" id="titleText">Birden fazla işlemin olduğu durumda hangisinden başlamalıyız?</div>
+        
+        <div class="content-area">
+            
+            <div class="pyramid" id="pyramid">
+                <div class="level l1" id="lvl1"><span class="level-text">( )</span></div>
+                <div class="level l2" id="lvl2"><span class="level-text">x² , x³</span></div>
+                <div class="level l3" id="lvl3"><span class="level-text">x , ÷</span></div>
+                <div class="level l4" id="lvl4"><span class="level-text">+ , -</span></div>
+            </div>
+
+            <div class="eq-board" id="eqBoard">
+                <div id="eqDisplay">
+                    <!-- JS injects equation here -->
+                </div>
+                <div class="error-stamp" id="errorStamp">YANLIŞ</div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="kazanim-box">
+        <p><strong>MAT.5.2.2.</strong> İşlem Önceliği (Parantez > Üslü İfade > Çarpma/Bölme > Toplama/Çıkarma)</p>
+    </div>
+    
+    <button id="replayBtn" onclick="startSequence()">Tekrar Oynat</button>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        
+        async function startSequence() {
+            const scene = document.getElementById('mainScene');
+            const title = document.getElementById('titleText');
+            const eqDisplay = document.getElementById('eqDisplay');
+            const btn = document.getElementById('replayBtn');
+            const pyramid = document.getElementById('pyramid');
+            const eqBoard = document.getElementById('eqBoard');
+            const errorStamp = document.getElementById('errorStamp');
+
+            // Reset
+            scene.classList.remove('show-title', 'show-pyramid', 'show-eq');
+            eqBoard.classList.remove('show-error');
+            document.querySelectorAll('.level').forEach(el => el.classList.remove('active'));
+            title.innerHTML = "Birden fazla işlemin olduğu durumda hangisinden başlamalıyız?";
+            btn.classList.remove('visible');
+            
+            // Initial Equation
+            eqDisplay.innerHTML = `<span class="chunk c-w">10</span> <span class="chunk c-w">+</span> <span class="chunk c-w">2³</span> <span class="chunk c-w">x</span> <span class="chunk c-w">(5 - 3)</span>`;
+
+            await sleep(500);
+
+            // 1. Show Title & Equation
+            scene.classList.add('show-title', 'show-eq');
+            await sleep(2000);
+
+            // 2. Show Error Simulation (Left to Right blindly)
+            title.innerHTML = "Kuralsız soldan sağa yaparsak: <br>10+8 = 18 ... 18 x (5-3) = 36 çıkabilirdi.";
+            await sleep(1500);
+            eqBoard.classList.add('show-error');
+            await sleep(2500);
+            eqBoard.classList.remove('show-error');
+            
+            // 3. Intro Pyramid
+            title.innerHTML = "Doğru sonuç için İŞLEM ÖNCELİĞİ PİRAMİDİ kullanılır.";
+            scene.classList.add('show-pyramid');
+            await sleep(3000);
+
+            // 4. Step 1: Parentheses
+            title.innerHTML = "1. Adım: En üst kat! Parantez içi işlemler.";
+            document.getElementById('lvl1').classList.add('active');
+            eqDisplay.innerHTML = `<span class="chunk c-w">10</span> <span class="chunk c-w">+</span> <span class="chunk c-w">2³</span> <span class="chunk c-w">x</span> <span class="chunk c-p highlight">(5 - 3)</span>`;
+            await sleep(2000);
+            eqDisplay.innerHTML = `<span class="chunk c-w">10</span> <span class="chunk c-w">+</span> <span class="chunk c-w">2³</span> <span class="chunk c-w">x</span> <span class="chunk c-p highlight">2</span>`;
+            await sleep(1000);
+            document.getElementById('lvl1').classList.remove('active');
+            document.querySelector('.c-p').classList.remove('highlight');
+            document.querySelector('.c-p').classList.replace('c-p', 'c-w');
+
+            // 5. Step 2: Exponents
+            title.innerHTML = "2. Adım: Üslü İfadeler (Kare ve Küp hesaplanır).";
+            document.getElementById('lvl2').classList.add('active');
+            eqDisplay.innerHTML = `<span class="chunk c-w">10</span> <span class="chunk c-w">+</span> <span class="chunk c-e highlight">2³</span> <span class="chunk c-w">x</span> <span class="chunk c-w">2</span>`;
+            await sleep(2000);
+            eqDisplay.innerHTML = `<span class="chunk c-w">10</span> <span class="chunk c-w">+</span> <span class="chunk c-e highlight">8</span> <span class="chunk c-w">x</span> <span class="chunk c-w">2</span>`;
+            await sleep(1000);
+            document.getElementById('lvl2').classList.remove('active');
+            document.querySelector('.c-e').classList.remove('highlight');
+            document.querySelector('.c-e').classList.replace('c-e', 'c-w');
+
+            // 6. Step 3: Multiplication
+            title.innerHTML = "3. Adım: Çarpma veya Bölme İşlemleri.";
+            document.getElementById('lvl3').classList.add('active');
+            eqDisplay.innerHTML = `<span class="chunk c-w">10</span> <span class="chunk c-w">+</span> <span class="chunk c-m highlight">8 x 2</span>`;
+            await sleep(2000);
+            eqDisplay.innerHTML = `<span class="chunk c-w">10</span> <span class="chunk c-w">+</span> <span class="chunk c-m highlight">16</span>`;
+            await sleep(1000);
+            document.getElementById('lvl3').classList.remove('active');
+            document.querySelector('.c-m').classList.remove('highlight');
+            document.querySelector('.c-m').classList.replace('c-m', 'c-w');
+
+            // 7. Step 4: Addition
+            title.innerHTML = "4. Adım: Toplama veya Çıkarma İşlemleri.";
+            document.getElementById('lvl4').classList.add('active');
+            eqDisplay.innerHTML = `<span class="chunk c-a highlight">10 + 16</span>`;
+            await sleep(2000);
+            eqDisplay.innerHTML = `<span class="chunk c-a highlight">= 26</span>`;
+            await sleep(1000);
+            document.getElementById('lvl4').classList.remove('active');
+            
+            title.innerHTML = "İşte bu kadar! İşlem önceliği hayat kurtarır. 🥳";
+            
+            await sleep(1500);
+            btn.classList.add('visible');
+        }
+        
+        window.onload = startSequence;
+    </script>
+</body>
+</html>

@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kesirlerin Farklı Gösterimleri - Yüzlük Kart</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #8B5CF6; /* Violet */
+            --primary-hover: #7C3AED;
+            --background: #F1F5F9;
+            --card-bg: #FFFFFF;
+            --text-main: #1E293B;
+            --grid-border: #E2E8F0;
+            --grid-hover: #DDD6FE;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            position: relative;
+        }
+
+        /* Branding Header */
+        .brand-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            background: var(--card-bg);
+            padding: 10px 20px;
+            border-radius: 50px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            width: max-content;
+        }
+        .brand-header img {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: contain;
+        }
+        .brand-header a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: color 0.3s ease;
+        }
+        .brand-header a:hover {
+            color: var(--primary-hover);
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+            display: flex;
+            gap: 3rem;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .left-panel {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .right-panel {
+            flex: 1;
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+        }
+        
+        p.subtitle {
+            color: #64748B;
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+        }
+
+        /* 10x10 Grid */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 2px;
+            background: var(--grid-border);
+            border: 2px solid var(--grid-border);
+            border-radius: 8px;
+            overflow: hidden;
+            width: 100%;
+            aspect-ratio: 1;
+            cursor: pointer;
+        }
+
+        .grid-cell {
+            background: white;
+            transition: background 0.2s;
+            user-select: none;
+        }
+
+        .grid-cell:hover {
+            background: var(--grid-hover);
+        }
+
+        .grid-cell.active {
+            background: var(--primary);
+        }
+
+        .btn-controls {
+            margin-top: 1rem;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            background: #F1F5F9;
+            color: #475569;
+            border: 1px solid #CBD5E1;
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: #E2E8F0;
+        }
+
+        /* Display Cards */
+        .stat-card {
+            background: #F8FAFC;
+            border: 2px solid #E2E8F0;
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 4px;
+        }
+
+        .stat-card.kesir::before { background: #3B82F6; }
+        .stat-card.ondalik::before { background: #10B981; }
+        .stat-card.yuzde::before { background: #F59E0B; }
+
+        .stat-title {
+            font-size: 1.1rem;
+            color: #64748B;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .fraction-display {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            vertical-align: middle;
+            font-size: 2.5rem;
+            font-weight: 800;
+        }
+
+        .fraction-display span {
+            padding: 0 10px;
+        }
+        
+        .fraction-display .numerator {
+            border-bottom: 4px solid var(--text-main);
+        }
+
+        /* Kazanım */
+        .kazanim-box {
+            width: 100%;
+            margin-top: 2rem;
+            padding: 1.2rem;
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px dashed rgba(139, 92, 246, 0.4);
+            border-radius: 12px;
+            text-align: left;
+            position: relative;
+        }
+        .kazanim-badge {
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: var(--primary);
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 800;
+            padding: 3px 12px;
+            border-radius: 20px;
+            text-transform: uppercase;
+        }
+        .kazanim-box p {
+            color: #4C1D95;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            margin: 0;
+            padding-top: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="brand-header">
+        <img src="../../logom.png" alt="Müfit Hoca Logo">
+        <a href="https://www.instagram.com/mufithocailematematik" target="_blank">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+            @mufithocailematematik
+        </a>
+    </div>
+
+    <div class="container">
+        <div class="left-panel">
+            <h1>Yüzlük Kart Modeli</h1>
+            <p class="subtitle">Kutucuklara tıklayarak veya sürükleyerek boyayın. Yandaki değerlerin nasıl değiştiğini gözlemleyin.</p>
+            
+            <div class="grid-container" id="grid">
+                <!-- Cells generated by JS -->
+            </div>
+            
+            <div class="btn-controls">
+                <button class="btn" onclick="clearGrid()">Temizle</button>
+                <button class="btn" onclick="fillRandom()">Rastgele Doldur</button>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <div class="stat-card kesir">
+                <div class="stat-title">Kesir Gösterimi</div>
+                <div class="fraction-display">
+                    <span class="numerator" id="valKesirPay">0</span>
+                    <span class="denominator">100</span>
+                </div>
+            </div>
+
+            <div class="stat-card ondalik">
+                <div class="stat-title">Ondalık Gösterim</div>
+                <div class="stat-value" id="valOndalik">0,00</div>
+            </div>
+
+            <div class="stat-card yuzde">
+                <div class="stat-title">Yüzde Gösterimi</div>
+                <div class="stat-value" id="valYuzde">%0</div>
+            </div>
+        </div>
+
+        <div class="kazanim-box">
+            <span class="kazanim-badge">Kazanım</span>
+            <p><strong>MAT.5.1.3.</strong> Gerçek yaşam durumlarına karşılık gelen kesirleri farklı biçimlerde (kesir, ondalık, yüzde) temsil edebilme.</p>
+        </div>
+    </div>
+
+    <script>
+        const grid = document.getElementById('grid');
+        let isMouseDown = false;
+        let activeCount = 0;
+
+        // Create 100 cells
+        for(let i=0; i<100; i++) {
+            const cell = document.createElement('div');
+            cell.classList.add('grid-cell');
+            
+            cell.addEventListener('mousedown', () => {
+                isMouseDown = true;
+                toggleCell(cell);
+            });
+            
+            cell.addEventListener('mouseenter', () => {
+                if(isMouseDown) toggleCell(cell);
+            });
+
+            grid.appendChild(cell);
+        }
+
+        document.addEventListener('mouseup', () => {
+            isMouseDown = false;
+        });
+
+        function toggleCell(cell) {
+            if (cell.classList.contains('active')) {
+                cell.classList.remove('active');
+            } else {
+                cell.classList.add('active');
+            }
+            updateStats();
+        }
+
+        function updateStats() {
+            const cells = document.querySelectorAll('.grid-cell.active');
+            activeCount = cells.length;
+
+            // Kesir
+            document.getElementById('valKesirPay').innerText = activeCount;
+
+            // Ondalık (convert to format 0,xx)
+            let ondalik = (activeCount / 100).toFixed(2).replace('.', ',');
+            document.getElementById('valOndalik').innerText = ondalik;
+
+            // Yüzde
+            document.getElementById('valYuzde').innerText = "%" + activeCount;
+        }
+
+        function clearGrid() {
+            document.querySelectorAll('.grid-cell').forEach(c => c.classList.remove('active'));
+            updateStats();
+        }
+
+        function fillRandom() {
+            clearGrid();
+            const count = Math.floor(Math.random() * 90) + 5; // 5 to 95
+            const cells = Array.from(document.querySelectorAll('.grid-cell'));
+            
+            // Shuffle and pick
+            cells.sort(() => 0.5 - Math.random());
+            for(let i=0; i<count; i++) {
+                cells[i].classList.add('active');
+            }
+            updateStats();
+        }
+    </script>
+</body>
+</html>

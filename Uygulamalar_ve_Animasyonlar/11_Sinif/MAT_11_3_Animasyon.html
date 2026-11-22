@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>11.3 - En Küçük Kareler Doğrusu Animasyonu</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0A0A12;
+            --panel-bg: #151522;
+            --primary: #00F0FF; 
+            --secondary: #FF00E4; 
+            --accent: #FFE600; 
+            --error: #FF3333;
+            --text-main: #FFFFFF;
+            --text-muted: #8A8A9E;
+            --grid-line: rgba(0, 240, 255, 0.12);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background-color: var(--bg-color); color: var(--text-main);
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; padding: 20px; overflow-x: hidden;
+            background-image: 
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        .header {
+            width: 100%; max-width: 1200px; display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 25px; background: rgba(21, 21, 34, 0.85); backdrop-filter: blur(10px);
+            border-radius: 16px; border: 1px solid rgba(0, 240, 255, 0.3);
+            margin-bottom: 20px; box-shadow: 0 0 20px rgba(0, 240, 255, 0.15);
+        }
+        
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 800; color: var(--primary); font-size: 1.1rem; }
+        .header-left img { width: 45px; height: 45px; border-radius: 10px; border: 1px solid var(--primary); }
+        .kazanim { background: rgba(0, 240, 255, 0.1); padding: 8px 15px; border-radius: 8px; color: var(--primary); font-weight: 600; font-size: 0.85rem; border: 1px solid rgba(0, 240, 255, 0.3); }
+
+        h1 { font-size: 2rem; font-weight: 900; margin-bottom: 8px; text-align: center; text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 0 10px rgba(0, 240, 255, 0.5); }
+        .subtitle { color: var(--text-muted); font-size: 1rem; margin-bottom: 25px; text-align: center; max-width: 900px; }
+
+        .workspace { display: flex; flex-direction: row; gap: 20px; width: 100%; max-width: 1200px; align-items: stretch; }
+
+        .anim-container {
+            flex: 2; display: flex; position: relative; background: #0A0A12; 
+            border-radius: 16px; border: 2px solid var(--primary); overflow: hidden; 
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.15) inset; height: 500px;
+        }
+
+        .side-panel {
+            flex: 1; display: flex; flex-direction: column; background: var(--panel-bg); gap: 20px;
+            border-radius: 16px; border: 1px solid rgba(255, 0, 228, 0.3); padding: 20px;
+            align-items: center; box-shadow: inset 0 0 30px rgba(0,0,0,0.5);
+        }
+        
+        .error-display {
+            background: rgba(0,0,0,0.6); border: 2px dashed var(--error); padding: 20px; border-radius: 12px;
+            width: 100%; text-align: center;
+        }
+        .error-title { color: white; font-weight: 600; font-size: 1.1rem; margin-bottom: 10px; }
+        .error-val { color: var(--error); font-size: 2.5rem; font-weight: 900; font-family: monospace; text-shadow: 0 0 10px var(--error); }
+
+        svg { width: 100%; height: 100%; display: block; }
+        
+        .svg-grid { stroke: rgba(255,255,255,0.06); stroke-width: 0.5; }
+        .svg-axis { stroke: rgba(255,255,255,0.3); stroke-width: 1; }
+        
+        .data-point { fill: var(--primary); stroke: #0A0A12; stroke-width: 1.5; filter: drop-shadow(0 0 5px var(--primary)); }
+        .fit-line { stroke: var(--accent); stroke-width: 2; filter: drop-shadow(0 0 8px var(--accent)); }
+        .error-line { stroke: var(--error); stroke-width: 1.5; stroke-dasharray: 4,4; opacity: 0.8; }
+        
+        .btn-play {
+            width: 100%; background: var(--primary); color: #000; border: none; padding: 18px 20px; border-radius: 12px;
+            font-size: 1.2rem; font-weight: 900; cursor: pointer; transition: 0.3s; box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+            margin-top: auto;
+        }
+        .btn-play:hover { transform: scale(1.02); box-shadow: 0 0 25px rgba(0, 240, 255, 0.7); }
+        .btn-play:disabled { background: #333; color: #666; cursor: not-allowed; box-shadow: none; transform: none; }
+        
+        .status-box {
+            background: rgba(0,0,0,0.6); padding: 15px; border-radius: 12px; font-size: 1rem;
+            color: var(--text-muted); width: 100%; text-align: center;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=00F0FF&color=000'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.11.3. En Küçük Kareler Doğrusu Animasyonu</div>
+    </div>
+    
+    <h1>En İyi Uyum Doğrusunun Keşfi</h1>
+    <p class="subtitle"><strong>En Küçük Kareler Doğrusu</strong>, serpme diyagramındaki tüm noktaların doğruya olan dikey uzaklıklarının (hataların) kareleri toplamını <strong>en aza indiren (optimize eden)</strong> doğrudur.</p>
+    
+    <div class="workspace">
+        <div class="anim-container">
+            <svg id="scatterSvg" viewBox="0 0 600 500">
+                <!-- Grid background -->
+                <g id="gridGroup"></g>
+                <line x1="50" y1="450" x2="550" y2="450" class="svg-axis" />
+                <line x1="50" y1="50" x2="50" y2="450" class="svg-axis" />
+                
+                <!-- Errors -->
+                <g id="errorsGroup"></g>
+                
+                <!-- Line -->
+                <line id="fitLine" class="fit-line" x1="50" y1="250" x2="550" y2="250" />
+                
+                <!-- Points -->
+                <g id="pointsGroup"></g>
+            </svg>
+        </div>
+        
+        <div class="side-panel">
+            <div class="error-display">
+                <div class="error-title">Toplam Hata Karesi (SSE)</div>
+                <div class="error-val" id="sseVal">0.00</div>
+            </div>
+            
+            <div class="status-box" id="mathOutput">
+                <!-- Status text -->
+                Animasyonu başlatarak doğrunun noktalar arasına nasıl yerleştiğini izleyin.
+            </div>
+            
+            <button class="btn-play" id="btnPlay" onclick="startAnimation()">OPTİMİZASYONU BAŞLAT</button>
+        </div>
+    </div>
+
+    <script>
+        const btnPlay = document.getElementById('btnPlay');
+        const sseVal = document.getElementById('sseVal');
+        const fitLine = document.getElementById('fitLine');
+        const pointsGroup = document.getElementById('pointsGroup');
+        const errorsGroup = document.getElementById('errorsGroup');
+        const mathOutput = document.getElementById('mathOutput');
+        
+        // Define some static points that have a clear linear trend
+        const dataPoints = [
+            {x: 100, y: 380},
+            {x: 150, y: 320},
+            {x: 200, y: 340},
+            {x: 250, y: 260},
+            {x: 300, y: 210},
+            {x: 350, y: 240},
+            {x: 400, y: 150},
+            {x: 450, y: 180},
+            {x: 500, y: 100}
+        ];
+        
+        // Target best fit line parameters (y = mx + b in SVG coords)
+        // Calculated roughly for these points: m ≈ -0.65, b ≈ 445
+        const targetM = -0.68;
+        const targetB = 445;
+        
+        // Start line parameters
+        let currentM = 0.2;
+        let currentB = 150;
+        
+        let animActive = false;
+
+        function initVisuals() {
+            // Draw grid
+            let gridHtml = '';
+            for(let i=1; i<=10; i++) {
+                let px = 50 + i * (500/10);
+                gridHtml += `<line x1="${px}" y1="50" x2="${px}" y2="450" class="svg-grid" />`;
+                let py = 450 - i * (400/10);
+                gridHtml += `<line x1="50" y1="${py}" x2="550" y2="${py}" class="svg-grid" />`;
+            }
+            document.getElementById('gridGroup').innerHTML = gridHtml;
+            
+            // Draw points
+            let pointsHtml = "";
+            dataPoints.forEach(pt => {
+                pointsHtml += `<circle cx="${pt.x}" cy="${pt.y}" r="4" class="data-point" />`;
+            });
+            pointsGroup.innerHTML = pointsHtml;
+            
+            updateLineAndErrors(currentM, currentB);
+        }
+        
+        function updateLineAndErrors(m, b) {
+            // y1 at x=50, y2 at x=550
+            let y1 = m * 50 + b;
+            let y2 = m * 550 + b;
+            
+            fitLine.setAttribute("y1", y1);
+            fitLine.setAttribute("y2", y2);
+            
+            let sse = 0;
+            let errorsHtml = "";
+            
+            dataPoints.forEach(pt => {
+                let lineY = m * pt.x + b;
+                let error = pt.y - lineY; // vertical distance
+                sse += error * error;
+                
+                errorsHtml += `<line x1="${pt.x}" y1="${pt.y}" x2="${pt.x}" y2="${lineY}" class="error-line" />`;
+            });
+            
+            errorsGroup.innerHTML = errorsHtml;
+            
+            // Scale SSE for display purposes to look like a standard metric
+            let displaySse = sse / 100;
+            sseVal.innerText = displaySse.toFixed(0);
+        }
+        
+        function startAnimation() {
+            if(animActive) return;
+            animActive = true;
+            btnPlay.disabled = true;
+            
+            mathOutput.innerHTML = `Model öğreniyor...<br>Hata karesi (SSE) düşürülüyor.`;
+            
+            // Animate M and B to target
+            let frames = 150;
+            let stepM = (targetM - currentM) / frames;
+            let stepB = (targetB - currentB) / frames;
+            let curFrame = 0;
+            
+            // Easing function for smoother stop
+            function easeOutQuart(x) {
+                return 1 - Math.pow(1 - x, 4);
+            }
+            
+            let startM = currentM;
+            let startB = currentB;
+            
+            function animStep() {
+                curFrame++;
+                let progress = curFrame / frames;
+                let easedProgress = easeOutQuart(progress);
+                
+                currentM = startM + (targetM - startM) * easedProgress;
+                currentB = startB + (targetB - startB) * easedProgress;
+                
+                updateLineAndErrors(currentM, currentB);
+                
+                if(curFrame < frames) {
+                    requestAnimationFrame(animStep);
+                } else {
+                    finishAnimation();
+                }
+            }
+            
+            requestAnimationFrame(animStep);
+        }
+        
+        function finishAnimation() {
+            animActive = false;
+            btnPlay.innerText = "YENİDEN OYNAT";
+            
+            // Reset for next play
+            btnPlay.onclick = () => {
+                currentM = 0.2; currentB = 150;
+                btnPlay.onclick = startAnimation;
+                startAnimation();
+            };
+            
+            btnPlay.disabled = false;
+            
+            mathOutput.innerHTML = `<span style="color:var(--primary); font-weight:bold;">Optimizasyon Tamamlandı!</span><br><br>Doğru, tüm noktalara olan toplam hatayı minimize edecek konuma yerleşti (En Küçük Kareler Doğrusu).`;
+            MathJax.typesetPromise([mathOutput]);
+        }
+
+        window.onload = () => {
+            initVisuals();
+        };
+    </script>
+</body>
+</html>

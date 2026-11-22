@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alan Hesaplama Laboratuvarı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A; --surface: #1E293B; --text: #F8FAFC;
+            --primary: #3B82F6; --secondary: #10B981;
+            --tertiary: #F59E0B; --danger: #F43F5E;
+            --purple: #8B5CF6; --cyan: #06B6D4;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, var(--surface) 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--secondary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .container {
+            width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 20px;
+        }
+
+        .lab-panel {
+            background: rgba(255,255,255,0.03); border-radius: 20px; padding: 40px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; position: relative; overflow: hidden;
+        }
+
+        .lab-panel h2 { font-size: 2rem; color: var(--secondary); margin-bottom: 10px; font-weight: 900;}
+
+        .canvas-area {
+            position: relative; width: 100%; height: 350px; margin-top: 20px;
+            background: #0B1120; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.5); overflow: hidden; display: flex; align-items: center; justify-content: center;
+        }
+
+        .svg-container { width: 100%; height: 100%; position: absolute; top:0; left:0; }
+        
+        .shape-poly { fill: rgba(16, 185, 129, 0.2); stroke: var(--secondary); stroke-width: 3; }
+        .height-line { stroke: var(--danger); stroke-width: 3; stroke-dasharray: 5 5; }
+        .base-line { stroke: var(--primary); stroke-width: 5; }
+        .lbl { font-size: 1.2rem; font-weight: 900; fill: white; text-shadow: 0 0 5px black; }
+
+        .input-row {
+            display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: 30px;
+        }
+
+        .input-box {
+            background: rgba(0,0,0,0.4); border: 2px solid var(--secondary); color: white;
+            font-size: 1.5rem; font-weight: 900; text-align: center; padding: 10px; border-radius: 10px;
+            width: 120px; outline: none; transition: all 0.3s;
+        }
+        .input-box:focus { box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+
+        .btn-check {
+            background: var(--secondary); color: white; border: none; padding: 12px 30px; border-radius: 10px;
+            font-size: 1.2rem; font-weight: 800; cursor: pointer; transition: all 0.3s;
+        }
+        .btn-check:hover { transform: scale(1.05); }
+
+        .feedback { margin-top: 15px; font-size: 1.1rem; font-weight: 800; padding: 10px; border-radius: 10px; display: none; }
+        .feedback.error { background: rgba(244, 63, 94, 0.1); color: var(--danger); border: 1px solid var(--danger); display: block;}
+
+        .overlay-msg {
+            position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(15, 23, 42, 0.95);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20;
+            opacity: 0; pointer-events: none; transition: all 0.5s; backdrop-filter: blur(5px);
+        }
+        .overlay-msg.show { opacity: 1; pointer-events: auto; }
+        .om-title { font-size: 2.5rem; font-weight: 900; margin-bottom: 10px; color: var(--secondary);}
+        .btn-next {
+            background: var(--purple); color: white; border: none; padding: 15px 40px; border-radius: 50px;
+            font-size: 1.2rem; font-weight: 800; cursor: pointer; margin-top: 20px; transition: all 0.3s;
+        }
+        .btn-next:hover { transform: scale(1.05); }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=3B82F6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.6.4.2. Alan Hesaplama Laboratuvarı</div>
+    </div>
+
+    <div class="container">
+        
+        <div class="lab-panel">
+            <h2 id="tTitle">Görev 1: Paralelkenarın Alanı</h2>
+            <p style="color:#94A3B8;" id="tDesc">Paralelkenarın alanı = Taban x Yükseklik. Bu şeklin alanını cm² cinsinden bul!</p>
+            
+            <div class="canvas-area">
+                <svg class="svg-container" id="drawing">
+                    <!-- Injected via JS -->
+                </svg>
+            </div>
+
+            <div class="input-row">
+                <span style="font-size:1.5rem; font-weight:800; color:white;">Alan = </span>
+                <input type="number" id="inpArea" class="input-box" placeholder="?">
+                <span style="font-size:1.5rem; font-weight:800; color:#94A3B8;">cm²</span>
+                <button class="btn-check" onclick="checkAnswer()">Kontrol Et</button>
+            </div>
+            
+            <div class="feedback" id="fb"></div>
+
+            <div class="overlay-msg" id="overlay">
+                <div class="om-title">Harika Hesaplama! 🏆</div>
+                <p style="color:#94A3B8; font-size:1.2rem; font-weight:600; text-align:center;" id="oDesc">Formülü doğru uyguladın.</p>
+                <button class="btn-next" onclick="nextLevel()" id="btnNext">Sonraki Şekil ➔</button>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        const levels = [
+            {
+                title: "Görev 1: Paralelkenarın Alanı",
+                desc: "Paralelkenarın alanı = Taban x Yükseklik. Bu şeklin alanını cm² cinsinden bul!",
+                svg: `
+                    <!-- Parallelogram: width 300, height 150. Shift 80. -->
+                    <polygon class="shape-poly" points="200,80 500,80 420,230 120,230" />
+                    <!-- Base line highlight -->
+                    <line class="base-line" x1="120" y1="230" x2="420" y2="230" />
+                    <!-- Height line -->
+                    <line class="height-line" x1="200" y1="80" x2="200" y2="230" />
+                    
+                    <text class="lbl" x="250" y="260" fill="var(--primary)">Taban (a) = 12 cm</text>
+                    <text class="lbl" x="40" y="160" fill="var(--danger)">Yükseklik (h) = 8 cm</text>
+                `,
+                ans: 96, // 12 * 8
+                success: "Tebrikler! Paralelkenarın alanı, tıpkı dikdörtgen gibi Taban ve Yüksekliğin çarpımıdır."
+            },
+            {
+                title: "Görev 2: Üçgenin Alanı",
+                desc: "Dikkat! Üçgenin alanı dikdörtgenin yarısıdır: (Taban x Yükseklik) / 2. Alanı hesapla!",
+                svg: `
+                    <!-- Triangle: Base 300, Height 160 -->
+                    <polygon class="shape-poly" style="fill: rgba(59, 130, 246, 0.2); stroke: var(--primary);" points="350,60 150,220 450,220" />
+                    <!-- Base line highlight -->
+                    <line class="base-line" x1="150" y1="220" x2="450" y2="220" />
+                    <!-- Height line -->
+                    <line class="height-line" x1="350" y1="60" x2="350" y2="220" />
+                    
+                    <text class="lbl" x="250" y="250" fill="var(--primary)">Taban (a) = 10 cm</text>
+                    <text class="lbl" x="360" y="150" fill="var(--danger)">h = 6 cm</text>
+                `,
+                ans: 30, // (10 * 6) / 2
+                success: "Mükemmel! Üçgenin alanını hesaplarken 2'ye bölmeyi unutmadın. Bu en önemli kuraldır."
+            },
+            {
+                title: "Görev 3: Dik Üçgenin Alanı",
+                desc: "Dik üçgenlerde dik kenarlar birbirinin yüksekliğidir. Alan formülünü uygulayarak sonucu bul!",
+                svg: `
+                    <!-- Right Triangle -->
+                    <polygon class="shape-poly" style="fill: rgba(245, 158, 11, 0.2); stroke: var(--tertiary);" points="250,70 250,240 450,240" />
+                    <!-- Diklik sembolü -->
+                    <polyline points="250,220 270,220 270,240" fill="none" stroke="white" stroke-width="2" />
+                    
+                    <text class="lbl" x="320" y="270" fill="var(--tertiary)">Taban (a) = 8 cm</text>
+                    <text class="lbl" x="140" y="160" fill="var(--tertiary)">Yükseklik = 5 cm</text>
+                `,
+                ans: 20, // (8 * 5) / 2
+                success: "Çok iyi! Dik üçgenlerde yüksekliğin dışarıdan değil, direkt kenarın kendisi olabileceğini kavradın."
+            }
+        ];
+
+        let currIdx = 0;
+
+        function loadLevel() {
+            let l = levels[currIdx];
+            document.getElementById('tTitle').innerText = l.title;
+            document.getElementById('tDesc').innerText = l.desc;
+            document.getElementById('drawing').innerHTML = l.svg;
+            document.getElementById('inpArea').value = "";
+            document.getElementById('fb').className = "feedback";
+            document.getElementById('overlay').classList.remove('show');
+            document.getElementById('oDesc').innerText = l.success;
+        }
+
+        function checkAnswer() {
+            let l = levels[currIdx];
+            let val = parseInt(document.getElementById('inpArea').value);
+            let fb = document.getElementById('fb');
+
+            if(isNaN(val)) {
+                fb.className = "feedback error";
+                fb.innerText = "Lütfen bir sayı girin.";
+                return;
+            }
+
+            if(val === l.ans) {
+                fb.style.display = "none";
+                document.getElementById('overlay').classList.add('show');
+                if(currIdx === levels.length - 1) {
+                    document.getElementById('btnNext').innerText = "Tüm Görevleri Başardın!";
+                    document.getElementById('btnNext').disabled = true;
+                }
+            } else {
+                fb.className = "feedback error";
+                fb.innerText = "Hatalı hesaplama. Formülü (Özellikle üçgense 2'ye bölmeyi) tekrar kontrol et!";
+            }
+        }
+
+        function nextLevel() {
+            if(currIdx < levels.length - 1) {
+                currIdx++;
+                loadLevel();
+            }
+        }
+
+        // Key bindings
+        document.getElementById('inpArea').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') checkAnswer();
+        });
+
+        loadLevel();
+    </script>
+</body>
+</html>

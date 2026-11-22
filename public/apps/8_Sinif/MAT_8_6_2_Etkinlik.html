@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Histogram Oluşturma Laboratuvarı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg:#0F0E17; --surface:#1A1A24; --primary:#8B5CF6; --secondary:#10B981; --tertiary:#06B6D4; --danger:#F43F5E; --accent:#F59E0B; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Outfit',sans-serif; }
+        body { background:linear-gradient(135deg,var(--bg),#161625); color:#F8FAFC; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:20px; }
+        .header { width:100%; max-width:1100px; display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); padding:15px 25px; border-radius:20px; border:1px solid rgba(139,92,246,0.2); margin-bottom:20px; }
+        .header-left { display:flex; align-items:center; gap:15px; font-weight:600; font-size:1.2rem; }
+        .header-left img { width:50px; height:50px; border-radius:50%; background:white; padding:2px; }
+        .kazanim { background:var(--primary); color:white; padding:5px 15px; border-radius:20px; font-weight:800; font-size:0.9rem; }
+        h1 { font-size:2rem; color:var(--tertiary); font-weight:900; text-align:center; }
+        .subtitle { color:#94A3B8; font-size:1.05rem; margin-top:5px; text-align:center; margin-bottom:20px; }
+        .panel { background:#11111A; border-radius:24px; border:1px solid rgba(255,255,255,0.05); box-shadow:inset 0 0 30px rgba(0,0,0,0.5); padding:25px; width:100%; max-width:1100px; display:flex; gap:25px; flex-wrap:wrap; }
+        .left-col { display:flex; flex-direction:column; gap:15px; width:300px; flex-shrink:0; }
+        .right-col { flex:1; min-width:300px; display:flex; flex-direction:column; gap:15px; }
+        .card { background:var(--surface); padding:15px; border-radius:15px; }
+        .c-title { font-weight:800; color:white; font-size:1.05rem; margin-bottom:10px; }
+        /* Preset buttons */
+        .preset-btn { padding:10px 15px; border-radius:10px; font-size:0.95rem; font-weight:800; cursor:pointer; border:2px solid #334155; background:transparent; color:white; transition:all 0.3s; width:100%; text-align:left; margin-bottom:8px; }
+        .preset-btn:hover { border-color:var(--primary); background:rgba(139,92,246,0.1); }
+        /* Frequency inputs */
+        .freq-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+        .freq-item { display:flex; flex-direction:column; gap:4px; }
+        .freq-item label { font-size:0.9rem; color:#94A3B8; font-weight:600; }
+        .freq-item input { background:#0A0A12; border:2px solid #334155; border-radius:8px; color:white; font-size:1.1rem; font-weight:700; padding:8px; text-align:center; outline:none; width:100%; }
+        .freq-item input:focus { border-color:var(--primary); }
+        .btn-draw { background:var(--primary); color:white; border:none; padding:12px; border-radius:12px; font-size:1.1rem; font-weight:900; cursor:pointer; width:100%; }
+        .btn-draw:hover { transform:translateY(-2px); box-shadow:0 6px 15px rgba(139,92,246,0.4); }
+        canvas { display:block; width:100%; border-radius:15px; background:#161625; }
+        .chart-type-row { display:flex; gap:8px; }
+        .ctype-btn { flex:1; padding:10px; border-radius:10px; font-size:0.95rem; font-weight:800; cursor:pointer; border:2px solid #334155; background:transparent; color:white; transition:0.3s; }
+        .ctype-btn.active { border-color:var(--tertiary); background:rgba(6,182,212,0.15); color:var(--tertiary); }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.8.6.2. Histogram ve Grafik (Etkinlik)</div>
+    </div>
+    <h1>Grafik Oluşturma Laboratuvarı</h1>
+    <p class="subtitle">Frekans değerlerini girerek histogram, sütun ve pasta grafik oluşturun.</p>
+    <div class="panel">
+        <div class="left-col">
+            <div class="card">
+                <div class="c-title">📊 Hazır Senaryolar</div>
+                <button class="preset-btn" onclick="loadPreset('sinav')">📝 Sınav Notları (0-100)</button>
+                <button class="preset-btn" onclick="loadPreset('boy')">📏 Öğrenci Boyları (cm)</button>
+                <button class="preset-btn" onclick="loadPreset('harcama')">💰 Aylık Harcama (TL)</button>
+            </div>
+            <div class="card">
+                <div class="c-title">✏️ Frekans Tablosu</div>
+                <div class="freq-grid" id="freqGrid">
+                    <!-- populated by JS -->
+                </div>
+                <div style="margin-top:12px;">
+                    <div class="chart-type-row">
+                        <button class="ctype-btn active" id="tbar" onclick="setType('bar')">Sütun</button>
+                        <button class="ctype-btn" id="thist" onclick="setType('hist')">Histogram</button>
+                        <button class="ctype-btn" id="tpie" onclick="setType('pie')">Pasta</button>
+                    </div>
+                </div>
+                <button class="btn-draw" style="margin-top:12px;" onclick="draw()">📈 Grafiği Çiz</button>
+            </div>
+        </div>
+        <div class="right-col">
+            <canvas id="cvs" height="400"></canvas>
+        </div>
+    </div>
+    <script>
+        const cvs=document.getElementById('cvs');const ctx=cvs.getContext('2d');
+        let chartType='bar';
+        let currentLabels=[];let currentFreqs=[];
+
+        const presets={
+            sinav:{labels:['0-20','20-40','40-60','60-80','80-100'],freqs:[2,5,12,18,8],title:'Sınav Not Dağılımı'},
+            boy:{labels:['150-155','155-160','160-165','165-170','170-175','175+'],freqs:[3,8,14,10,6,2],title:'Öğrenci Boy Dağılımı'},
+            harcama:{labels:['0-500','500-1000','1000-2000','2000-5000'],freqs:[15,28,20,7],title:'Aylık Harcama Dağılımı'}
+        };
+        const COLORS=['#8B5CF6','#10B981','#06B6D4','#F43F5E','#F59E0B','#EC4899','#14B8A6'];
+
+        function loadPreset(key){
+            let p=presets[key];
+            currentLabels=[...p.labels];currentFreqs=[...p.freqs];
+            renderInputs();draw();
+        }
+
+        function renderInputs(){
+            const g=document.getElementById('freqGrid');
+            g.innerHTML='';
+            currentLabels.forEach((lbl,i)=>{
+                g.innerHTML+=`<div class="freq-item"><label>${lbl}</label><input type="number" id="f${i}" value="${currentFreqs[i]||0}" oninput="syncFreqs()"></div>`;
+            });
+        }
+
+        function syncFreqs(){
+            currentFreqs=currentLabels.map((_,i)=>parseInt(document.getElementById('f'+i).value)||0);
+        }
+
+        function setType(t){
+            chartType=t;
+            ['bar','hist','pie'].forEach(k=>document.getElementById('t'+k).classList.toggle('active',k===t));
+            draw();
+        }
+
+        function draw(){
+            syncFreqs();
+            cvs.width=cvs.offsetWidth;
+            let W=cvs.width,H=cvs.height;
+            ctx.clearRect(0,0,W,H);
+            ctx.fillStyle='#161625';ctx.fillRect(0,0,W,H);
+            if(!currentLabels.length)return;
+            if(chartType==='pie') drawPie(W,H);
+            else drawBar(W,H,chartType==='hist');
+        }
+
+        function drawBar(W,H,hist){
+            let total=currentFreqs.reduce((a,b)=>a+b,0);
+            let maxF=Math.max(...currentFreqs);
+            let padL=55,padR=20,padT=40,padB=60;
+            let chartW=W-padL-padR,chartH=H-padT-padB;
+            let n=currentLabels.length,bw=chartW/n;
+            let gap=hist?0:bw*0.15;
+            // Y gridlines
+            ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=1;
+            for(let i=1;i<=5;i++){
+                let y=padT+chartH*(1-i/5);
+                ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(padL+chartW,y);ctx.stroke();
+                let v=Math.round(maxF*i/5);
+                ctx.fillStyle='#94A3B8';ctx.font='600 11px Outfit';ctx.textAlign='right';
+                ctx.fillText(v,padL-6,y+4);
+            }
+            // Axes
+            ctx.strokeStyle='rgba(255,255,255,0.4)';ctx.lineWidth=2;
+            ctx.beginPath();ctx.moveTo(padL,padT);ctx.lineTo(padL,padT+chartH);ctx.lineTo(padL+chartW,padT+chartH);ctx.stroke();
+            // Bars
+            currentFreqs.forEach((f,i)=>{
+                let x=padL+i*bw+gap/2;
+                let bWidth=bw-gap;
+                let bH=(f/maxF)*chartH;
+                let y=padT+chartH-bH;
+                // Gradient
+                let grd=ctx.createLinearGradient(x,y,x,y+bH);
+                grd.addColorStop(0,COLORS[i%COLORS.length]);
+                grd.addColorStop(1,COLORS[i%COLORS.length]+'55');
+                ctx.fillStyle=grd;
+                ctx.beginPath();ctx.roundRect(x,y,bWidth,bH,hist?0:6);ctx.fill();
+                // Value label top
+                ctx.fillStyle='white';ctx.font='700 12px Outfit';ctx.textAlign='center';
+                ctx.fillText(f,x+bWidth/2,y-6);
+                // X label
+                ctx.fillStyle='#94A3B8';ctx.font='600 11px Outfit';
+                ctx.save();ctx.translate(x+bWidth/2,padT+chartH+12);
+                if(currentLabels[i].length>6){ctx.rotate(-0.4);}
+                ctx.fillText(currentLabels[i],0,0);ctx.restore();
+            });
+        }
+
+        function drawPie(W,H){
+            let total=currentFreqs.reduce((a,b)=>a+b,0);
+            let cx=W/2,cy=H/2,r=Math.min(W,H)/2-60;
+            let startAngle=-Math.PI/2;
+            currentFreqs.forEach((f,i)=>{
+                let slice=(f/total)*Math.PI*2;
+                ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,startAngle,startAngle+slice);ctx.closePath();
+                ctx.fillStyle=COLORS[i%COLORS.length];ctx.fill();
+                ctx.strokeStyle='#11111A';ctx.lineWidth=3;ctx.stroke();
+                // Label
+                let mid=startAngle+slice/2;
+                let lx=cx+r*0.65*Math.cos(mid),ly=cy+r*0.65*Math.sin(mid);
+                let pct=Math.round(f/total*100);
+                ctx.fillStyle='white';ctx.font='800 13px Outfit';ctx.textAlign='center';
+                ctx.fillText(pct+'%',lx,ly);
+                // Legend
+                ctx.fillStyle=COLORS[i%COLORS.length];ctx.fillRect(20,20+i*22,16,16);
+                ctx.fillStyle='white';ctx.font='600 12px Outfit';ctx.textAlign='left';
+                ctx.fillText(currentLabels[i]+' ('+f+')',42,33+i*22);
+                startAngle+=slice;
+            });
+        }
+
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'BUTTON' && !e.target.hasAttribute('data-spam-locked')) {
+                e.target.setAttribute('data-spam-locked','true'); e.target.style.opacity='0.7'; e.target.style.pointerEvents='none';
+                setTimeout(() => { e.target.removeAttribute('data-spam-locked'); e.target.style.opacity='1'; e.target.style.pointerEvents='auto'; }, 400);
+            }
+        });
+
+        window.addEventListener('resize',draw);
+        loadPreset('sinav');
+    </script>
+</body>
+</html>

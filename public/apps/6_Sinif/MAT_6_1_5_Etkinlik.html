@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ondalık Çözümleme Laboratuvarı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A; --surface: #1E293B; --text: #F8FAFC;
+            --primary: #3B82F6; --secondary: #10B981;
+            --tertiary: #F59E0B; --danger: #F43F5E;
+            --purple: #8B5CF6; --cyan: #06B6D4;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, var(--surface) 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .container {
+            width: 100%; max-width: 1000px; display: flex; flex-direction: column; gap: 20px;
+        }
+
+        .input-panel {
+            background: rgba(255,255,255,0.03); border-radius: 20px; padding: 30px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center;
+        }
+
+        .input-panel h2 { font-size: 1.8rem; color: var(--primary); margin-bottom: 20px; font-weight: 900;}
+
+        .input-group { display: flex; justify-content: center; gap: 15px; align-items: center;}
+        input[type="number"] {
+            background: #0B1120; border: 2px solid var(--primary); color: white;
+            font-size: 2.5rem; font-weight: 900; width: 200px; text-align: center; padding: 10px; border-radius: 15px;
+            outline: none; transition: all 0.3s; font-variant-numeric: tabular-nums;
+        }
+        input[type="number"]:focus { box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);}
+        
+        .btn-calc {
+            background: var(--primary); color: white; border: none; padding: 15px 30px; border-radius: 15px;
+            font-size: 1.2rem; font-weight: 900; cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4);
+        }
+        .btn-calc:hover { transform: translateY(-2px); box-shadow: 0 15px 25px rgba(59, 130, 246, 0.6); }
+
+        /* Resolution Area */
+        .breakdown-area {
+            background: rgba(255,255,255,0.02); border-radius: 20px; padding: 30px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2); display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; align-items: center;
+            opacity: 0; transform: translateY(20px); transition: all 0.5s; pointer-events: none;
+        }
+        .breakdown-area.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+        .b-card {
+            background: rgba(0,0,0,0.3); border: 2px solid; border-radius: 15px; padding: 15px 20px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3); min-width: 120px;
+        }
+        .bc-digit { font-size: 2.5rem; font-weight: 900; color: white;}
+        .bc-mult { font-size: 1.2rem; color: #94A3B8; font-weight: 800; display: flex; align-items: center; gap: 5px;}
+        
+        .c-100 { border-color: rgba(16, 185, 129, 0.5); }
+        .c-100 .bc-mult span { color: var(--secondary); }
+        
+        .c-10 { border-color: rgba(16, 185, 129, 0.5); }
+        .c-10 .bc-mult span { color: var(--secondary); }
+        
+        .c-1 { border-color: rgba(16, 185, 129, 0.5); }
+        .c-1 .bc-mult span { color: var(--secondary); }
+
+        .c-01 { border-color: rgba(59, 130, 246, 0.5); }
+        .c-01 .bc-mult span { color: var(--primary); }
+        
+        .c-001 { border-color: rgba(245, 158, 11, 0.5); }
+        .c-001 .bc-mult span { color: var(--tertiary); }
+        
+        .c-0001 { border-color: rgba(139, 92, 246, 0.5); }
+        .c-0001 .bc-mult span { color: var(--purple); }
+
+        .plus-sign { font-size: 2.5rem; font-weight: 900; color: rgba(255,255,255,0.3); }
+
+        .fraction-text { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; vertical-align: middle; font-size: 1rem; line-height: 1.2;}
+        .ft-top { border-bottom: 2px solid; padding: 0 3px;}
+
+        /* Final Sentence */
+        .sentence-box {
+            grid-column: 1 / -1; background: rgba(59, 130, 246, 0.1); border: 1px dashed var(--primary);
+            color: white; padding: 20px; border-radius: 15px; text-align: center; font-weight: 600; font-size: 1.2rem;
+            margin-top: 20px; width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .header { flex-direction: column; gap: 10px; }
+            .input-group { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=3B82F6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.6.1.5. Ondalık Çözümleme Laboratuvarı</div>
+    </div>
+
+    <div class="container">
+        
+        <div class="input-panel">
+            <h2>🧩 Kesirlerin Gücüyle Çözümle!</h2>
+            <div class="input-group">
+                <input type="number" id="numInput" step="0.001" value="45.678">
+                <button class="btn-calc" onclick="calculate()">Sayıyı Parçala ➔</button>
+            </div>
+            <p style="color:#94A3B8; margin-top:15px; font-size:0.9rem;">(Örn: 12.34 veya 5.678 şeklinde ondalık bir sayı girin)</p>
+        </div>
+
+        <div class="breakdown-area" id="bArea">
+            <!-- Dynamically generated cards -->
+        </div>
+
+    </div>
+
+    <script>
+        const numInput = document.getElementById('numInput');
+        const bArea = document.getElementById('bArea');
+
+        function generateCard(digit, multiplierHtml, cssClass) {
+            return `
+                <div class="b-card ${cssClass}">
+                    <div class="bc-digit">${digit}</div>
+                    <div class="bc-mult">x <span>${multiplierHtml}</span></div>
+                </div>
+            `;
+        }
+
+        function getFractionHtml(top, bottom) {
+            return `<div class="fraction-text"><div class="ft-top">${top}</div><div>${bottom}</div></div>`;
+        }
+
+        function calculate() {
+            let valStr = numInput.value.trim();
+            if(!valStr) return;
+            
+            // Format check, replace comma with dot if user typed it
+            valStr = valStr.replace(',', '.');
+            let n = parseFloat(valStr);
+            
+            if(isNaN(n)) {
+                alert("Geçerli bir ondalık sayı giriniz.");
+                return;
+            }
+
+            bArea.classList.remove('show');
+            
+            setTimeout(() => {
+                let parts = valStr.split('.');
+                let wholeStr = parts[0];
+                let fracStr = parts.length > 1 ? parts[1] : "";
+                
+                let cardsHtml = [];
+                
+                // Whole parts
+                for(let i=0; i<wholeStr.length; i++) {
+                    let digit = wholeStr[i];
+                    if(digit !== '0') {
+                        let power = wholeStr.length - 1 - i;
+                        let multiplier = Math.pow(10, power);
+                        let cssClass = power >= 2 ? 'c-100' : (power === 1 ? 'c-10' : 'c-1');
+                        cardsHtml.push(generateCard(digit, multiplier, cssClass));
+                    }
+                }
+
+                // Fraction parts
+                for(let i=0; i<fracStr.length; i++) {
+                    let digit = fracStr[i];
+                    if(digit !== '0') {
+                        let denominator = Math.pow(10, i+1);
+                        let cssClass = denominator === 10 ? 'c-01' : (denominator === 100 ? 'c-001' : 'c-0001');
+                        let fracHtml = getFractionHtml(1, denominator);
+                        cardsHtml.push(generateCard(digit, fracHtml, cssClass));
+                    }
+                }
+
+                if(cardsHtml.length === 0) {
+                    cardsHtml.push(generateCard(0, 1, 'c-1'));
+                }
+
+                let finalHtml = cardsHtml.join('<div class="plus-sign">+</div>');
+                
+                // Read text logic
+                let wText = "Sıfır tam";
+                if(parseInt(wholeStr) !== 0) wText = `${wholeStr} tam`;
+                
+                let fText = "";
+                if(fracStr.length === 1) fText = `onda ${fracStr}`;
+                else if(fracStr.length === 2) fText = `yüzde ${fracStr}`;
+                else if(fracStr.length >= 3) fText = `binde ${fracStr.substring(0,3)}`;
+
+                let sentence = fText ? `${wText}, ${fText}` : wText;
+
+                finalHtml += `<div class="sentence-box">Okunuşu: <b>${sentence}</b></div>`;
+
+                bArea.innerHTML = finalHtml;
+                bArea.classList.add('show');
+
+            }, 300);
+        }
+
+        // Run once on load
+        calculate();
+
+        // Enter key
+        numInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') calculate();
+        });
+    </script>
+</body>
+</html>

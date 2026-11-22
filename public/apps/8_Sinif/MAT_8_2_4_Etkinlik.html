@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algoritma Akış Şeması Oyunu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F0E17; --surface: #1A1A24; --text: #F8FAFC;
+            --primary: #8B5CF6; --secondary: #10B981;
+            --tertiary: #06B6D4; --danger: #F43F5E;
+            --accent: #F59E0B;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, #161625 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(139, 92, 246, 0.2); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; margin-bottom: 20px;}
+        h1 { font-size: 2.2rem; color: var(--tertiary); font-weight: 900;}
+        .subtitle { color: #94A3B8; font-size: 1.1rem; margin-top: 5px;}
+
+        .main-container {
+            display: flex; gap: 30px; width: 100%; max-width: 1000px; flex-wrap: wrap; justify-content: center;
+        }
+
+        .panel {
+            background: #11111A; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.4); 
+            padding: 30px; display: flex; flex-direction: column; width: 100%; gap: 30px; align-items: center;
+        }
+
+        .expl-text {
+            font-size: 1.2rem; font-weight: 800; color: white; text-align: center;
+            background: rgba(139, 92, 246, 0.1); padding: 15px 30px; border-radius: 15px; border-left: 5px solid var(--primary);
+        }
+
+        .game-area {
+            display: flex; width: 100%; gap: 30px; justify-content: center; align-items: flex-start;
+        }
+
+        /* Source blocks */
+        .source-col {
+            display: flex; flex-direction: column; gap: 15px; width: 300px;
+        }
+
+        .algo-block {
+            background: var(--surface); border: 2px solid #334155; border-radius: 10px;
+            padding: 15px; font-size: 1.1rem; font-weight: 800; color: white; cursor: grab;
+            user-select: none; transition: 0.2s; display: flex; align-items: center; justify-content: center; text-align: center;
+        }
+        .algo-block:active { cursor: grabbing; transform: scale(1.05); }
+
+        /* Target Flowchart */
+        .flow-col {
+            display: flex; flex-direction: column; gap: 10px; width: 300px; align-items: center;
+        }
+
+        .drop-zone {
+            width: 100%; height: 60px; background: rgba(0,0,0,0.3); border: 2px dashed rgba(255,255,255,0.2);
+            border-radius: 10px; display: flex; align-items: center; justify-content: center;
+        }
+        .drop-zone.hover { border-color: var(--secondary); background: rgba(16,185,129,0.1); }
+        
+        .arrow {
+            color: #94A3B8; font-size: 1.5rem; font-weight: 900; line-height: 1; margin: -5px 0;
+        }
+
+        .status-box {
+            background: rgba(0,0,0,0.5); padding: 15px 30px; border-radius: 50px;
+            font-size: 1.5rem; font-weight: 900; color: white; border: 2px solid #334155;
+            transition: 0.5s; text-align: center; opacity: 0;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.8.2.4. Algoritma Yapılandırma (Etkinlik)</div>
+    </div>
+
+    <div class="title-area">
+        <h1>Sıcaklık Çevirici Algoritması</h1>
+        <p class="subtitle">Celsius'u Fahrenheit'a (f(x) = 1.8x + 32) çeviren bilgisayar algoritmasının adımlarını doğru sıraya dizin.</p>
+    </div>
+
+    <div class="main-container">
+        
+        <div class="panel">
+            
+            <div class="expl-text">Blokları tutarak sağ taraftaki boşluklara yukarıdan aşağıya (1. Adımdan 5. Adıma) sıralı şekilde bırakın.</div>
+
+            <div class="game-area">
+                
+                <div class="source-col" id="sourceCol">
+                    <div class="algo-block" draggable="true" id="b4">Sıcaklığı 1.8 ile Çarp ve 32 Ekle</div>
+                    <div class="algo-block" draggable="true" id="b2">"Bitir" (Programı Sonlandır)</div>
+                    <div class="algo-block" draggable="true" id="b1">Dışarıdan Celsius Sıcaklık Değerini Al</div>
+                    <div class="algo-block" draggable="true" id="b5">"Başla" (Programı Başlat)</div>
+                    <div class="algo-block" draggable="true" id="b3">Sonucu Ekrana Yazdır (Fahrenheit)</div>
+                </div>
+
+                <div class="flow-col">
+                    <div class="drop-zone" id="z1" data-correct="b5" ondragover="allowDrop(event)" ondrop="drop(event, this)">1. Adım</div>
+                    <div class="arrow">↓</div>
+                    <div class="drop-zone" id="z2" data-correct="b1" ondragover="allowDrop(event)" ondrop="drop(event, this)">2. Adım</div>
+                    <div class="arrow">↓</div>
+                    <div class="drop-zone" id="z3" data-correct="b4" ondragover="allowDrop(event)" ondrop="drop(event, this)">3. Adım</div>
+                    <div class="arrow">↓</div>
+                    <div class="drop-zone" id="z4" data-correct="b3" ondragover="allowDrop(event)" ondrop="drop(event, this)">4. Adım</div>
+                    <div class="arrow">↓</div>
+                    <div class="drop-zone" id="z5" data-correct="b2" ondragover="allowDrop(event)" ondrop="drop(event, this)">5. Adım</div>
+                </div>
+
+            </div>
+
+            <div class="status-box" id="statusBox">TEBRİKLER! ALGORİTMA ÇALIŞIYOR!</div>
+
+        </div>
+
+    </div>
+
+    <script>
+        let correctCount = 0;
+
+        document.querySelectorAll('.algo-block').forEach(item => {
+            item.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', e.target.id);
+            });
+        });
+
+        document.querySelectorAll('.drop-zone').forEach(zone => {
+            zone.addEventListener('dragenter', (e) => {
+                zone.classList.add('hover');
+            });
+            zone.addEventListener('dragleave', (e) => {
+                zone.classList.remove('hover');
+            });
+        });
+
+        function allowDrop(e) {
+            e.preventDefault();
+        }
+
+        function drop(e, zone) {
+            e.preventDefault();
+            zone.classList.remove('hover');
+            
+            const blockId = e.dataTransfer.getData('text/plain');
+            const block = document.getElementById(blockId);
+            const correctId = zone.getAttribute('data-correct');
+
+            if(blockId === correctId) {
+                // Correct
+                block.style.borderColor = "var(--secondary)";
+                block.style.background = "rgba(16,185,129,0.2)";
+                block.setAttribute('draggable', 'false');
+                
+                zone.innerHTML = '';
+                zone.appendChild(block);
+                zone.style.border = "none";
+                zone.style.background = "transparent";
+                
+                correctCount++;
+                if(correctCount === 5) {
+                    checkFinal();
+                }
+            } else {
+                // Wrong
+                block.style.borderColor = "var(--danger)";
+                setTimeout(() => {
+                    block.style.borderColor = "#334155";
+                }, 500);
+            }
+        }
+
+        function checkFinal() {
+            const sb = document.getElementById('statusBox');
+            sb.style.opacity = 1;
+            sb.style.borderColor = "var(--primary)";
+            sb.style.boxShadow = "0 0 30px rgba(139, 92, 246, 0.5)";
+        }
+
+        // Global spam click prevention for Etkinlik files
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'BUTTON' && !e.target.hasAttribute('data-spam-locked')) {
+                e.target.setAttribute('data-spam-locked', 'true');
+                let originalOpacity = e.target.style.opacity || '1';
+                e.target.style.opacity = '0.7';
+                e.target.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    e.target.removeAttribute('data-spam-locked');
+                    e.target.style.opacity = originalOpacity;
+                    e.target.style.pointerEvents = 'auto';
+                }, 400);
+            }
+        });
+    </script>
+</body>
+</html>

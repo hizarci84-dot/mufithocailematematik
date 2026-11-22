@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mantık Kapıları Lojik Akış</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    
+    <!-- MATHJAX -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root { --bg:#0F0E17; --primary:#8B5CF6; --secondary:#10B981; --tertiary:#06B6D4; --danger:#F43F5E; --accent:#F59E0B; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Outfit',sans-serif; }
+        body { background:linear-gradient(135deg,var(--bg),#161625); color:#F8FAFC; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:20px; overflow-x:hidden; }
+        
+        .header { width:100%; max-width:1100px; display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); padding:15px 25px; border-radius:20px; border:1px solid rgba(139,92,246,0.2); margin-bottom:20px; backdrop-filter:blur(10px); }
+        .header-left { display:flex; align-items:center; gap:15px; font-weight:600; font-size:1.2rem; }
+        .header-left img { width:50px; height:50px; border-radius:50%; background:white; padding:2px; }
+        .kazanim { background:var(--primary); color:white; padding:8px 20px; border-radius:20px; font-weight:800; font-size:1rem; box-shadow: 0 0 20px rgba(139,92,246,0.4); }
+        
+        h1 { font-size:2.5rem; color:var(--tertiary); font-weight:900; text-align:center; margin-bottom:5px; }
+        .subtitle { color:#94A3B8; font-size:1.15rem; text-align:center; margin-bottom:25px; font-weight:600; max-width:800px; }
+        
+        .workspace { width:100%; max-width:1100px; background:#11111A; border:1px solid rgba(255,255,255,0.1); border-radius:24px; padding:30px; box-shadow:inset 0 0 50px rgba(0,0,0,0.5); display:flex; flex-direction:column; align-items:center; min-height:600px; position:relative; overflow:hidden; }
+        
+        .expl-text { background:rgba(139,92,246,0.15); border:1px solid rgba(139,92,246,0.4); padding:15px 25px; border-radius:15px; font-size:1.3rem; color:white; font-weight:800; text-align:center; width:100%; margin-bottom:20px; transition:all 0.5s; box-shadow:0 8px 32px rgba(0,0,0,0.3); min-height:65px; display:flex; align-items:center; justify-content:center; }
+        
+        /* Circuit Container */
+        .circuit-container { position:relative; width:800px; height:400px; background:rgba(255,255,255,0.02); border-radius:10px; border:1px solid rgba(255,255,255,0.1); display:flex; justify-content:center; overflow:hidden; }
+        
+        /* Wires */
+        .wire { fill:none; stroke:#475569; stroke-width:6; stroke-linejoin:round; transition:stroke 0.5s; }
+        .wire-active { stroke:var(--accent); filter:drop-shadow(0 0 10px var(--accent)); }
+        
+        /* Gates */
+        .gate-body { fill:#1E293B; stroke:var(--primary); stroke-width:4; transition:all 0.5s; }
+        .gate-text { fill:white; font-family:Outfit; font-weight:900; font-size:24px; text-anchor:middle; }
+        
+        .gate-active { fill:var(--primary); stroke:white; filter:drop-shadow(0 0 20px var(--primary)); }
+        
+        /* Inputs/Outputs */
+        .io-node { fill:#0F0E17; stroke:#94A3B8; stroke-width:4; transition:all 0.5s; }
+        .io-active { fill:var(--accent); stroke:white; filter:drop-shadow(0 0 15px var(--accent)); }
+        .io-text { fill:#94A3B8; font-family:Outfit; font-weight:900; font-size:20px; text-anchor:middle; }
+        .io-text-active { fill:white; }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.9.3.2. Mantık Bağlaçları (Animasyon)</div>
+    </div>
+    
+    <h1>Mantık Kapıları Lojik Akış</h1>
+    <p class="subtitle">Matematikteki "VE" (\(\land\)) ile "VEYA" (\(\lor\)) bağlaçları, bilgisayar algoritmalarının kalbinde yatan elektronik kapılardır.</p>
+    
+    <div class="workspace">
+        <div class="expl-text" id="explText">Simülasyon başlıyor: <b>VE (\(\land\))</b> kapısı...</div>
+        
+        <div class="circuit-container">
+            <svg width="100%" height="100%" viewBox="0 0 800 400" preserveAspectRatio="xMidYMid meet" id="circuitSvg">
+                
+                <!-- AND GATE SECTION -->
+                <g id="andSection">
+                    <!-- Wires In -->
+                    <path class="wire" id="andW1" d="M 100 100 L 250 100" />
+                    <path class="wire" id="andW2" d="M 100 200 L 250 200" />
+                    <!-- Wire Out -->
+                    <path class="wire" id="andW3" d="M 350 150 L 500 150" />
+                    
+                    <!-- AND Gate Shape (D shape) -->
+                    <path class="gate-body" id="andGate" d="M 250 60 L 290 60 A 50 90 0 0 1 290 240 L 250 240 Z" />
+                    <text x="290" y="158" class="gate-text">VE (\(\land\))</text>
+                    
+                    <!-- Input nodes -->
+                    <circle class="io-node" id="andN1" cx="100" cy="100" r="20" />
+                    <text x="100" y="107" class="io-text" id="andT1">0</text>
+                    <text x="100" y="70" class="io-text">p</text>
+                    
+                    <circle class="io-node" id="andN2" cx="100" cy="200" r="20" />
+                    <text x="100" y="207" class="io-text" id="andT2">0</text>
+                    <text x="100" y="170" class="io-text">q</text>
+                    
+                    <!-- Output node -->
+                    <circle class="io-node" id="andN3" cx="500" cy="150" r="30" />
+                    <text x="500" y="158" class="io-text" id="andT3" style="font-size:28px;">0</text>
+                    <text x="500" y="105" class="io-text">p \(\land\) q</text>
+                </g>
+                
+                <!-- OR GATE SECTION (Hidden initially) -->
+                <g id="orSection" style="opacity:0; transform:translateX(800px); transition:all 1s;">
+                    <!-- Wires In -->
+                    <path class="wire" id="orW1" d="M 100 100 L 250 100" />
+                    <path class="wire" id="orW2" d="M 100 200 L 250 200" />
+                    <!-- Wire Out -->
+                    <path class="wire" id="orW3" d="M 370 150 L 500 150" />
+                    
+                    <!-- OR Gate Shape (Shield shape) -->
+                    <path class="gate-body" id="orGate" d="M 250 60 Q 280 150 250 240 Q 320 240 370 150 Q 320 60 250 60 Z" />
+                    <text x="290" y="158" class="gate-text">VEYA (\(\lor\))</text>
+                    
+                    <!-- Input nodes -->
+                    <circle class="io-node" id="orN1" cx="100" cy="100" r="20" />
+                    <text x="100" y="107" class="io-text" id="orT1">0</text>
+                    <text x="100" y="70" class="io-text">p</text>
+                    
+                    <circle class="io-node" id="orN2" cx="100" cy="200" r="20" />
+                    <text x="100" y="207" class="io-text" id="orT2">0</text>
+                    <text x="100" y="170" class="io-text">q</text>
+                    
+                    <!-- Output node -->
+                    <circle class="io-node" id="orN3" cx="500" cy="150" r="30" />
+                    <text x="500" y="158" class="io-text" id="orT3" style="font-size:28px;">0</text>
+                    <text x="500" y="105" class="io-text">p \(\lor\) q</text>
+                </g>
+
+            </svg>
+        </div>
+        
+    </div>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        const explText = document.getElementById('explText');
+        
+        function setSignal(prefix, n1, n2, out, gateActive) {
+            document.getElementById(prefix+'T1').textContent = n1;
+            document.getElementById(prefix+'T2').textContent = n2;
+            document.getElementById(prefix+'T3').textContent = out;
+            
+            if(n1 === 1) {
+                document.getElementById(prefix+'N1').classList.add('io-active');
+                document.getElementById(prefix+'W1').classList.add('wire-active');
+            } else {
+                document.getElementById(prefix+'N1').classList.remove('io-active');
+                document.getElementById(prefix+'W1').classList.remove('wire-active');
+            }
+            
+            if(n2 === 1) {
+                document.getElementById(prefix+'N2').classList.add('io-active');
+                document.getElementById(prefix+'W2').classList.add('wire-active');
+            } else {
+                document.getElementById(prefix+'N2').classList.remove('io-active');
+                document.getElementById(prefix+'W2').classList.remove('wire-active');
+            }
+            
+            if(gateActive) {
+                document.getElementById(prefix+'Gate').classList.add('gate-active');
+                document.getElementById(prefix+'W3').classList.add('wire-active');
+                document.getElementById(prefix+'N3').classList.add('io-active');
+            } else {
+                document.getElementById(prefix+'Gate').classList.remove('gate-active');
+                document.getElementById(prefix+'W3').classList.remove('wire-active');
+                document.getElementById(prefix+'N3').classList.remove('io-active');
+            }
+        }
+
+        async function runSequence() {
+            MathJax.typesetPromise();
+            await sleep(2000);
+            
+            // AND GATE
+            explText.innerHTML = "<b>VE (\(\land\))</b> kapısı seri bağlı devre gibidir. İki girişin de 1 (Doğru) olması gerekir.";
+            MathJax.typesetPromise([explText]);
+            
+            // p=1, q=0
+            setSignal('and', 1, 0, 0, false);
+            await sleep(2500);
+            
+            // p=0, q=1
+            setSignal('and', 0, 1, 0, false);
+            await sleep(2500);
+            
+            // p=1, q=1
+            explText.innerHTML = "Her iki giriş de sinyal (1) aldığında <b>VE</b> kapısı açılır ve sonuç 1 olur.";
+            setSignal('and', 1, 1, 1, true);
+            await sleep(4000);
+            
+            // SWITCH TO OR GATE
+            document.getElementById('andSection').style.opacity = "0";
+            document.getElementById('andSection').style.transform = "translateX(-800px)";
+            document.getElementById('andSection').style.transition = "all 1s";
+            
+            document.getElementById('orSection').style.opacity = "1";
+            document.getElementById('orSection').style.transform = "translateX(0)";
+            
+            explText.innerHTML = "Şimdi <b>VEYA (\(\lor\))</b> kapısına geçiyoruz. Paralel devre gibi davranır.";
+            MathJax.typesetPromise([explText]);
+            await sleep(2000);
+            
+            // p=0, q=0
+            setSignal('or', 0, 0, 0, false);
+            await sleep(2000);
+            
+            // p=1, q=0
+            explText.innerHTML = "Girişlerden sadece birinin 1 (Doğru) olması, kapının sinyal üretmesi için yeterlidir.";
+            setSignal('or', 1, 0, 1, true);
+            await sleep(3000);
+            
+            // p=0, q=1
+            setSignal('or', 0, 1, 1, true);
+            await sleep(3000);
+            
+            // p=1, q=1
+            explText.innerHTML = "Her ikisi 1 olduğunda zaten sorunsuzca geçiş sağlanır.";
+            setSignal('or', 1, 1, 1, true);
+            
+            await sleep(4000);
+            explText.innerHTML = "🔄 Animasyon bitti. Mantık bağlaçları işlemcilerin (CPU) yapı taşıdır.";
+        }
+
+        window.onload = runSequence;
+    </script>
+</body>
+</html>

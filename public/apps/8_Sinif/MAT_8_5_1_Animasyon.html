@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Öteleme Vektörü Animasyonu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg:#0F0E17; --primary:#8B5CF6; --secondary:#10B981; --tertiary:#06B6D4; --danger:#F43F5E; --accent:#F59E0B; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Outfit',sans-serif; }
+        body { background:linear-gradient(135deg,var(--bg),#161625); color:#F8FAFC; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:20px; }
+        .header { width:100%; max-width:1000px; display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); padding:15px 25px; border-radius:20px; border:1px solid rgba(139,92,246,0.2); margin-bottom:20px; }
+        .header-left { display:flex; align-items:center; gap:15px; font-weight:600; font-size:1.2rem; }
+        .header-left img { width:50px; height:50px; border-radius:50%; background:white; padding:2px; }
+        .kazanim { background:var(--primary); color:white; padding:5px 15px; border-radius:20px; font-weight:800; font-size:0.9rem; }
+        h1 { font-size:2.2rem; color:var(--tertiary); font-weight:900; text-align:center; }
+        .subtitle { color:#94A3B8; font-size:1.1rem; margin-top:5px; text-align:center; margin-bottom:20px; }
+        .canvas-area { position:relative; width:100%; max-width:800px; height:450px; background:#11111A; border-radius:24px; border:1px solid rgba(255,255,255,0.05); box-shadow:inset 0 0 50px rgba(0,0,0,0.5); overflow:hidden; }
+        canvas { position:absolute; top:0; left:0; }
+        .expl-text { background:rgba(139,92,246,0.15); border:1px solid rgba(139,92,246,0.3); padding:15px 25px; border-radius:12px; font-size:1.25rem; color:white; font-weight:800; text-align:center; width:100%; max-width:800px; margin-bottom:15px; transition:0.5s; }
+        .btn-play { background:var(--primary); color:white; border:none; padding:15px 40px; border-radius:50px; font-size:1.2rem; font-weight:900; cursor:pointer; transition:all 0.3s; box-shadow:0 10px 20px rgba(139,92,246,0.4); margin-top:30px; }
+        .btn-play:hover { transform:translateY(-3px) scale(1.05); }
+        .formula-box { position:absolute; bottom:20px; right:20px; background:rgba(0,0,0,0.9); border:2px solid var(--accent); padding:10px 20px; border-radius:15px; font-size:1.1rem; font-weight:900; color:white; opacity:0; transition:all 1s; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.8.5.1. Öteleme Vektörü (Animasyon)</div>
+    </div>
+    <h1>Öteleme Vektörü</h1>
+    <p class="subtitle">Şeklin tüm noktaları aynı yönde, aynı mesafe kadar kayar. Şeklin şekli ve büyüklüğü değişmez.</p>
+    <div class="expl-text" id="explText">1. Mor üçgenimiz koordinat sisteminde duruyor.</div>
+    <div class="canvas-area">
+        <canvas id="cvs" width="800" height="450"></canvas>
+        <div class="formula-box" id="fBox">A(x,y) → A'(x+5, y+3)</div>
+    </div>
+    <button class="btn-play" id="btnPlay" onclick="runAnim()">Ötelemeyi Göster</button>
+    <script>
+        const cvs = document.getElementById('cvs');
+        const ctx = cvs.getContext('2d');
+        const CELL=40, OX=120, OY=320;
+        function gx(x){return OX+x*CELL;} function gy(y){return OY-y*CELL;}
+        // Shape: triangle at (1,0),(4,0),(1,3)
+        const shapeOrig=[{x:1,y:0},{x:4,y:0},{x:1,y:3}];
+        const shapeDest=[{x:6,y:3},{x:9,y:3},{x:6,y:6}]; // +5,+3
+        let animT=0, animRunning=false;
+
+        function drawGrid(){
+            ctx.clearRect(0,0,800,450);
+            ctx.strokeStyle='rgba(255,255,255,0.07)'; ctx.lineWidth=1;
+            for(let x=0;x<=16;x++){ctx.beginPath();ctx.moveTo(gx(x),0);ctx.lineTo(gx(x),450);ctx.stroke();}
+            for(let y=-2;y<=8;y++){ctx.beginPath();ctx.moveTo(0,gy(y));ctx.lineTo(800,gy(y));ctx.stroke();}
+            ctx.strokeStyle='rgba(255,255,255,0.35)';ctx.lineWidth=2;
+            ctx.beginPath();ctx.moveTo(0,gy(0));ctx.lineTo(800,gy(0));ctx.stroke();
+            ctx.beginPath();ctx.moveTo(gx(0),0);ctx.lineTo(gx(0),450);ctx.stroke();
+            ctx.fillStyle='#94A3B8';ctx.font='bold 11px Outfit';ctx.textAlign='center';
+            for(let x=0;x<=15;x+=2){ctx.fillText(x,gx(x),gy(0)+16);}
+            ctx.textAlign='right';
+            for(let y=-1;y<=8;y+=2){if(y!==0)ctx.fillText(y,gx(0)-6,gy(y)+4);}
+        }
+
+        function drawPoly(pts,fill,stroke,alpha=0.3,label=''){
+            ctx.beginPath();ctx.moveTo(gx(pts[0].x),gy(pts[0].y));
+            pts.forEach(p=>ctx.lineTo(gx(p.x),gy(p.y)));ctx.closePath();
+            ctx.fillStyle=fill;ctx.globalAlpha=alpha;ctx.fill();
+            ctx.globalAlpha=1;ctx.strokeStyle=stroke;ctx.lineWidth=3;ctx.setLineDash([]);ctx.stroke();
+            if(label){ctx.fillStyle=stroke;ctx.font='800 13px Outfit';ctx.textAlign='center';
+                let cx=pts.reduce((s,p)=>s+p.x,0)/pts.length, cy=pts.reduce((s,p)=>s+p.y,0)/pts.length;
+                ctx.fillText(label,gx(cx),gy(cy)+5);}
+        }
+
+        function drawArrow(x1,y1,x2,y2,color,dashed=true){
+            ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);
+            ctx.strokeStyle=color;ctx.lineWidth=2;
+            if(dashed)ctx.setLineDash([6,4]);else ctx.setLineDash([]);
+            ctx.stroke();ctx.setLineDash([]);
+            let a=Math.atan2(y2-y1,x2-x1);
+            ctx.beginPath();ctx.moveTo(x2,y2);
+            ctx.lineTo(x2-10*Math.cos(a-0.4),y2-10*Math.sin(a-0.4));
+            ctx.lineTo(x2-10*Math.cos(a+0.4),y2-10*Math.sin(a+0.4));
+            ctx.closePath();ctx.fillStyle=color;ctx.fill();
+        }
+
+        function lerp(a,b,t){return a+(b-a)*t;}
+
+        function renderFrame(t, showDest, showArrows, showLabel){
+            drawGrid();
+            // Interpolated shape
+            let current=shapeOrig.map((p,i)=>({x:lerp(p.x,shapeDest[i].x,t),y:lerp(p.y,shapeDest[i].y,t)}));
+            if(t<1) drawPoly(shapeOrig,'#8B5CF6','#8B5CF6',0.2,'Orijinal');
+            if(showDest && t>=1) drawPoly(shapeDest,'#10B981','#10B981',0.3,"A'B'C'");
+            drawPoly(current,'#8B5CF6','#8B5CF6',0.4, t<1?'':'ABC');
+            if(showArrows){
+                shapeOrig.forEach((p,i)=>{
+                    let tx=lerp(gx(p.x),gx(shapeDest[i].x),t),ty2=lerp(gy(p.y),gy(shapeDest[i].y),t);
+                    drawArrow(gx(p.x),gy(p.y),tx,ty2,'#F59E0B');
+                });
+            }
+            // Vector arrow from shape centroid
+            if(t>0.1){
+                let cx=gx(1),cy=gy(1.5);
+                let vx=5*CELL, vy=-3*CELL;
+                ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+vx*t,cy+vy*t);
+                ctx.strokeStyle='#F59E0B';ctx.lineWidth=3;ctx.setLineDash([]);ctx.stroke();
+                ctx.fillStyle='#F59E0B';ctx.font='800 14px Outfit';ctx.textAlign='left';
+                ctx.fillText(`v⃗ = (5, 3)`,cx+vx*t+5,cy+vy*t-5);
+            }
+        }
+
+        const sleep = ms=>new Promise(r=>setTimeout(r,ms));
+        async function runAnim(){
+            document.getElementById('btnPlay').style.display='none';
+            const et=document.getElementById('explText');
+            await sleep(500);
+            et.textContent='2. Öteleme vektörü v⃗=(5,3) belirlendi — sağa 5, yukarı 3 birim.';
+            await sleep(1500);
+            et.textContent='3. Şeklin her noktası aynı yönde ve aynı miktarda kayıyor...';
+            // Animate
+            const dur=2000, start=performance.now();
+            await new Promise(res=>{
+                function frame(now){
+                    let t=Math.min((now-start)/dur,1);
+                    t=t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2; // ease
+                    renderFrame(t,false,true,false);
+                    if(t<1)requestAnimationFrame(frame);else res();
+                }
+                requestAnimationFrame(frame);
+            });
+            await sleep(500);
+            et.textContent='4. Öteleme tamamlandı! Yeşil şekil A\'B\'C\' ötelemin görüntüsüdür.';
+            renderFrame(1,true,false,true);
+            await sleep(1500);
+            et.style.color='var(--secondary)';
+            et.textContent='Her koordinat (x,y) → (x+5, y+3) biçiminde dönüştü. Şeklin boyu ve açıları değişmedi.';
+            document.getElementById('fBox').style.opacity='1';
+        }
+
+        renderFrame(0,false,false,false);
+    </script>
+</body>
+</html>

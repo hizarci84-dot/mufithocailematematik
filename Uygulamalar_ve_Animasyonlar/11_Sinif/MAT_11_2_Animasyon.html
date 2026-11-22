@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>11.2 - Dış Açılar ve Düzgün Çokgen Animasyonu</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0A0A12;
+            --panel-bg: #151522;
+            --primary: #00F0FF; 
+            --secondary: #FF00E4; 
+            --accent: #FFE600; 
+            --text-main: #FFFFFF;
+            --text-muted: #8A8A9E;
+            --grid-line: rgba(0, 240, 255, 0.12);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background-color: var(--bg-color); color: var(--text-main);
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; padding: 20px; overflow-x: hidden;
+            background-image: 
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        .header {
+            width: 100%; max-width: 1200px; display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 25px; background: rgba(21, 21, 34, 0.85); backdrop-filter: blur(10px);
+            border-radius: 16px; border: 1px solid rgba(0, 240, 255, 0.3);
+            margin-bottom: 20px; box-shadow: 0 0 20px rgba(0, 240, 255, 0.15);
+        }
+        
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 800; color: var(--primary); font-size: 1.1rem; }
+        .header-left img { width: 45px; height: 45px; border-radius: 10px; border: 1px solid var(--primary); }
+        .kazanim { background: rgba(0, 240, 255, 0.1); padding: 8px 15px; border-radius: 8px; color: var(--primary); font-weight: 600; font-size: 0.85rem; border: 1px solid rgba(0, 240, 255, 0.3); }
+
+        h1 { font-size: 2rem; font-weight: 900; margin-bottom: 8px; text-align: center; text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 0 10px rgba(0, 240, 255, 0.5); }
+        .subtitle { color: var(--text-muted); font-size: 1rem; margin-bottom: 25px; text-align: center; max-width: 900px; }
+
+        .workspace { display: flex; flex-direction: row; gap: 20px; width: 100%; max-width: 1200px; align-items: stretch; }
+
+        .anim-container {
+            flex: 2; display: flex; position: relative; background: #0A0A12; 
+            border-radius: 16px; border: 2px solid var(--primary); overflow: hidden; 
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.15) inset; height: 500px; justify-content: center; align-items: center;
+        }
+
+        .tracker-container {
+            flex: 1; display: flex; flex-direction: column; background: var(--panel-bg);
+            border-radius: 16px; border: 1px solid rgba(255, 230, 0, 0.3); padding: 20px;
+            align-items: center; position: relative; box-shadow: inset 0 0 30px rgba(0,0,0,0.5);
+        }
+        
+        .tracker-title { color: var(--accent); font-weight: 800; font-size: 1.2rem; margin-bottom: 20px; text-align: center; }
+
+        svg { width: 100%; height: 100%; display: block; }
+        
+        .turtle-path { fill: none; stroke: var(--primary); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; filter: drop-shadow(0 0 8px var(--primary)); }
+        .turtle-ext-line { stroke: rgba(255, 0, 228, 0.6); stroke-width: 2; stroke-dasharray: 4,4; }
+        .turtle-arrow { fill: var(--primary); }
+
+        .tracker-pie { transform: rotate(-90deg); transform-origin: 50% 50%; }
+        .pie-slice { fill: none; stroke: var(--accent); stroke-width: 50; stroke-dasharray: 0, 360; transition: stroke-dasharray 0.5s ease-out; }
+        .pie-bg { fill: none; stroke: rgba(255, 230, 0, 0.1); stroke-width: 50; }
+
+        .controls-row {
+            width: 100%; max-width: 1200px; display: flex; gap: 20px; align-items: center;
+            margin-top: 20px; background: var(--panel-bg); padding: 20px; border-radius: 16px;
+            border: 1px solid rgba(255, 0, 228, 0.3); box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+        
+        .select-n {
+            background: #000; color: white; border: 2px solid var(--secondary); padding: 10px 20px;
+            border-radius: 8px; font-size: 1.2rem; font-family: 'Outfit'; outline: none; cursor: pointer;
+        }
+
+        .btn-play {
+            background: var(--primary); color: #0A0A12; border: none; padding: 14px 40px; border-radius: 12px;
+            font-size: 1.2rem; font-weight: 900; cursor: pointer; transition: 0.3s; box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+        }
+        .btn-play:hover { transform: scale(1.05); box-shadow: 0 0 25px rgba(0, 240, 255, 0.7); }
+        .btn-play:disabled { background: #333; color: #666; cursor: not-allowed; box-shadow: none; transform: none; }
+
+        .status-box {
+            background: rgba(0,0,0,0.6); border: 1px dashed var(--accent); padding: 15px 30px;
+            border-radius: 12px; font-size: 1.3rem; text-align: center; color: var(--accent); flex: 1;
+            min-height: 70px; display: flex; align-items: center; justify-content: center; font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=00F0FF&color=000'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.11.2. Çokgen Çizimi ve Dış Açı Toplamı Animasyonu</div>
+    </div>
+    
+    <h1>Dış Açılarla Çokgen İnşası</h1>
+    <p class="subtitle">Çizici (lazer), her kenarın sonunda tam olarak "Dış Açı" kadar döner. Tüm kenarlar çizildiğinde, toplam dönüş <strong>tam bir tur (360°)</strong> oluşturur.</p>
+    
+    <div class="workspace">
+        <div class="anim-container">
+            <svg id="drawSvg" viewBox="-250 -250 500 500">
+                <g id="drawGroup"></g>
+                <path id="extLine" class="turtle-ext-line" d="" display="none" />
+                
+                <!-- Turtle Arrow -->
+                <g id="turtle" transform="translate(0, 150)">
+                    <polygon points="-10,-10 15,0 -10,10" class="turtle-arrow" />
+                </g>
+            </svg>
+        </div>
+        
+        <div class="tracker-container">
+            <div class="tracker-title">Toplam Dönüş Açısı</div>
+            <svg viewBox="0 0 100 100" style="width: 200px; height: 200px;" class="tracker-pie">
+                <circle class="pie-bg" cx="50" cy="50" r="25" />
+                <circle id="pieFill" class="pie-slice" cx="50" cy="50" r="25" />
+            </svg>
+            <div id="turnStatus" style="font-size: 2rem; font-weight: 900; color: white; margin-top: 20px;">0° / 360°</div>
+            <div id="extValText" style="font-size: 1.2rem; color: var(--secondary); margin-top: 10px;">Dış Açı: --</div>
+        </div>
+    </div>
+
+    <div class="controls-row">
+        <select class="select-n" id="selN">
+            <option value="3">Üçgen (n=3)</option>
+            <option value="4">Kare (n=4)</option>
+            <option value="5" selected>Beşgen (n=5)</option>
+            <option value="6">Altıgen (n=6)</option>
+            <option value="8">Sekizgen (n=8)</option>
+            <option value="10">Ongen (n=10)</option>
+        </select>
+        <button class="btn-play" id="btnPlay" onclick="startAnimation()">ÇİZİMİ BAŞLAT</button>
+        <div class="status-box" id="mathOutput">
+            <!-- Math Output -->
+        </div>
+    </div>
+
+    <script>
+        const selN = document.getElementById('selN');
+        const btnPlay = document.getElementById('btnPlay');
+        const drawGroup = document.getElementById('drawGroup');
+        const turtle = document.getElementById('turtle');
+        const extLine = document.getElementById('extLine');
+        
+        const pieFill = document.getElementById('pieFill');
+        const turnStatus = document.getElementById('turnStatus');
+        const extValText = document.getElementById('extValText');
+        const mathOutput = document.getElementById('mathOutput');
+        
+        let isTypesetting = false;
+        let pendingTex = null;
+        let animActive = false;
+
+        function renderMathClean(texString) {
+            if (isTypesetting) {
+                pendingTex = texString;
+                return;
+            }
+            isTypesetting = true;
+            
+            let temp = document.createElement('div');
+            temp.style.position = 'absolute';
+            temp.style.top = '-9999px';
+            temp.style.left = '-9999px';
+            temp.style.visibility = 'hidden';
+            temp.innerHTML = texString;
+            document.body.appendChild(temp);
+            
+            MathJax.typesetPromise([temp]).then(() => {
+                mathOutput.innerHTML = temp.innerHTML;
+                if (temp.parentNode) document.body.removeChild(temp);
+                isTypesetting = false;
+                
+                if (pendingTex) {
+                    let next = pendingTex;
+                    pendingTex = null;
+                    renderMathClean(next);
+                }
+            }).catch(err => {
+                if (temp.parentNode) document.body.removeChild(temp);
+                isTypesetting = false;
+            });
+        }
+        
+        function getSideLength(n, radius) {
+            return 2 * radius * Math.sin(Math.PI / n);
+        }
+
+        async function startAnimation() {
+            if(animActive) return;
+            animActive = true;
+            btnPlay.disabled = true;
+            
+            drawGroup.innerHTML = '';
+            pieFill.style.strokeDasharray = `0, 100`;
+            turnStatus.innerText = `0° / 360°`;
+            
+            let n = parseInt(selN.value);
+            let extAngle = 360 / n;
+            extValText.innerText = `Her Dönüş (Dış Açı): ${extAngle.toFixed(1)}°`;
+            
+            renderMathClean(`\\( \\text{Dış Açı} = \\frac{360^\\circ}{n} = \\frac{360^\\circ}{${n}} = ${extAngle.toFixed(1)}^\\circ \\)`);
+            
+            // Calculate starting position to center the polygon
+            // A regular polygon circumscribed by a circle of R=150.
+            let R = 150;
+            let sideLen = getSideLength(n, R);
+            
+            // To make the bottom side horizontal, we start at:
+            // x: -sideLen/2
+            // y: R * cos(pi/n)
+            let startX = -sideLen / 2;
+            let startY = R * Math.cos(Math.PI / n);
+            
+            let currentX = startX;
+            let currentY = startY;
+            let currentDir = 0; // 0 means pointing right (along X axis)
+            let totalTurn = 0;
+            
+            // Move turtle to start
+            updateTurtle(currentX, currentY, currentDir);
+            
+            for(let i = 0; i < n; i++) {
+                // 1. Draw Forward
+                await animateForward(currentX, currentY, currentDir, sideLen);
+                currentX += sideLen * Math.cos(currentDir * Math.PI / 180);
+                currentY += sideLen * Math.sin(currentDir * Math.PI / 180);
+                
+                // End of side, visualize the exterior extension line briefly
+                await showExtensionLine(currentX, currentY, currentDir, 50);
+                
+                // 2. Turn (except maybe very last turn visually)
+                totalTurn += extAngle;
+                updatePie(totalTurn);
+                await animateTurn(currentX, currentY, currentDir, currentDir - extAngle);
+                currentDir -= extAngle;
+                
+                hideExtensionLine();
+            }
+            
+            renderMathClean(`\\( ${n} \\times ${extAngle.toFixed(1)}^\\circ = 360^\\circ \\) <br> <span style="color:white; font-size:1.1rem;">(Tüm dış açılar toplamı bir tam çember eder)</span>`);
+            
+            animActive = false;
+            btnPlay.innerText = "YENİDEN BAŞLAT";
+            btnPlay.disabled = false;
+        }
+        
+        function updateTurtle(x, y, angle) {
+            turtle.setAttribute("transform", `translate(${x}, ${y}) rotate(${angle})`);
+        }
+        
+        function updatePie(totalDeg) {
+            // Circle length is 100 for SVG stroke-dasharray (r=16 -> 2*pi*r ~ 100.5, but we use a known trick: r=15.9155 for exactly 100 circumference, let's use 16 and approx 100 is fine if pathLength="100")
+            // Actually, best to use pathLength on circle!
+            pieFill.setAttribute("pathLength", "360");
+            pieFill.style.strokeDasharray = `${totalDeg}, 360`;
+            turnStatus.innerText = `${Math.round(totalDeg)}° / 360°`;
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        async function animateForward(startX, startY, dir, dist) {
+            return new Promise(resolve => {
+                let frames = 30;
+                let stepDist = dist / frames;
+                let cur = 0;
+                let p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                p.setAttribute("class", "turtle-path");
+                drawGroup.appendChild(p);
+                
+                let cx = startX;
+                let cy = startY;
+                
+                let d = `M ${cx} ${cy}`;
+                
+                function frame() {
+                    cur++;
+                    cx += stepDist * Math.cos(dir * Math.PI / 180);
+                    cy += stepDist * Math.sin(dir * Math.PI / 180);
+                    d += ` L ${cx} ${cy}`;
+                    p.setAttribute("d", d);
+                    updateTurtle(cx, cy, dir);
+                    
+                    if(cur < frames) {
+                        requestAnimationFrame(frame);
+                    } else {
+                        resolve();
+                    }
+                }
+                requestAnimationFrame(frame);
+            });
+        }
+        
+        async function animateTurn(x, y, startAngle, endAngle) {
+            return new Promise(resolve => {
+                let frames = 30;
+                let diff = endAngle - startAngle;
+                let stepA = diff / frames;
+                let cur = 0;
+                let ca = startAngle;
+                
+                function frame() {
+                    cur++;
+                    ca += stepA;
+                    updateTurtle(x, y, ca);
+                    if(cur < frames) {
+                        requestAnimationFrame(frame);
+                    } else {
+                        resolve();
+                    }
+                }
+                requestAnimationFrame(frame);
+            });
+        }
+        
+        async function showExtensionLine(x, y, dir, len) {
+            let ex = x + len * Math.cos(dir * Math.PI / 180);
+            let ey = y + len * Math.sin(dir * Math.PI / 180);
+            extLine.setAttribute("d", `M ${x} ${y} L ${ex} ${ey}`);
+            extLine.style.display = "block";
+            await sleep(400); // pause to show extension before turning
+        }
+        
+        function hideExtensionLine() {
+            extLine.style.display = "none";
+        }
+
+        window.onload = () => {
+            renderMathClean(`Seçilen çokgen için çizimi başlatın.`);
+        };
+    </script>
+</body>
+</html>

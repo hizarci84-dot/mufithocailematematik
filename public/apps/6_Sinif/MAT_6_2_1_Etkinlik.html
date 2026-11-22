@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cebirsel Çevirmen</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A; --surface: #1E293B; --text: #F8FAFC;
+            --primary: #3B82F6; --secondary: #10B981;
+            --tertiary: #F59E0B; --danger: #F43F5E;
+            --purple: #8B5CF6; --cyan: #06B6D4;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, var(--surface) 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--tertiary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .container {
+            width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 20px;
+        }
+
+        .translator-panel {
+            background: rgba(255,255,255,0.03); border-radius: 20px; padding: 40px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; position: relative; overflow: hidden;
+        }
+
+        .translator-panel h2 { font-size: 1.8rem; color: var(--tertiary); margin-bottom: 30px; font-weight: 900;}
+
+        .sentence-box {
+            background: rgba(0,0,0,0.4); padding: 20px; border-radius: 15px; border: 2px dashed rgba(255,255,255,0.2);
+            font-size: 1.8rem; font-weight: 800; color: white; margin-bottom: 30px; min-height: 100px; display: flex; align-items: center; justify-content: center;
+        }
+
+        .options-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;
+        }
+
+        .opt-card {
+            background: #0B1120; border: 2px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 20px 10px;
+            font-size: 2rem; font-weight: 900; color: var(--primary); cursor: pointer; transition: all 0.3s;
+            display: flex; align-items: center; justify-content: center; min-height: 100px; line-height: 1.2;
+        }
+        .opt-card:hover { transform: translateY(-5px); border-color: var(--tertiary); box-shadow: 0 10px 20px rgba(245, 158, 11, 0.3); }
+
+        .opt-card.correct { background: rgba(16, 185, 129, 0.1); border-color: var(--secondary); color: var(--secondary); box-shadow: 0 0 20px var(--secondary);}
+        .opt-card.wrong { background: rgba(244, 63, 94, 0.1); border-color: var(--danger); color: var(--danger); }
+
+        .fraction { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; font-size: 1.5rem;}
+        .f-top { border-bottom: 2px solid; padding: 0 5px;}
+        .f-bot { padding: 0 5px;}
+
+        .score-board {
+            display: flex; justify-content: space-between; align-items: center; margin-top: 20px;
+            font-size: 1.2rem; font-weight: 800; color: #94A3B8;
+        }
+        .score-val { color: var(--tertiary); font-size: 1.5rem; }
+
+        .overlay-msg {
+            position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(15, 23, 42, 0.9);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10;
+            opacity: 0; pointer-events: none; transition: all 0.3s; backdrop-filter: blur(5px);
+        }
+        .overlay-msg.show { opacity: 1; pointer-events: auto; }
+        
+        .om-title { font-size: 3rem; font-weight: 900; margin-bottom: 10px;}
+        .om-desc { font-size: 1.2rem; color: #94A3B8; font-weight: 600; margin-bottom: 20px;}
+        .btn-next {
+            background: var(--tertiary); color: white; border: none; padding: 15px 40px; border-radius: 50px;
+            font-size: 1.2rem; font-weight: 800; cursor: pointer; transition: all 0.3s;
+        }
+
+        @media (max-width: 768px) {
+            .header { flex-direction: column; gap: 10px; }
+            .options-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=3B82F6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.6.2.1. Cebirsel Çevirmen</div>
+    </div>
+
+    <div class="container">
+        
+        <div class="translator-panel">
+            <h2>🤖 Türkçe ➔ Matematik Çeviricisi</h2>
+            
+            <div class="sentence-box" id="qText">
+                <!-- Question loaded here -->
+            </div>
+
+            <div class="options-grid" id="optGrid">
+                <div class="opt-card" onclick="checkAns(0)" id="o0"></div>
+                <div class="opt-card" onclick="checkAns(1)" id="o1"></div>
+                <div class="opt-card" onclick="checkAns(2)" id="o2"></div>
+            </div>
+
+            <div class="score-board">
+                <div>Soru: <span id="qCount" style="color:white;">1/5</span></div>
+                <div>Puan: <span class="score-val" id="scoreVal">0</span></div>
+            </div>
+
+            <div class="overlay-msg" id="overlay">
+                <div class="om-title" id="omTitle">Harika!</div>
+                <div class="om-desc" id="omDesc"></div>
+                <button class="btn-next" onclick="nextQuestion()" id="nextBtn">Sıradaki Çeviri ➔</button>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        const questions = [
+            {
+                q: "Bir sayının 3 fazlası",
+                opts: ["x - 3", "x + 3", "3x"],
+                ans: 1,
+                desc: "Bir sayıya 'x' dersek, fazlası '+' demektir."
+            },
+            {
+                q: "Maaşımın çeyreği",
+                opts: ["<div class='fraction'><div class='f-top'>x</div><div class='f-bot'>4</div></div>", "4x", "x - 4"],
+                ans: 0,
+                desc: "Çeyrek, bir bütünü 4'e bölmek demektir (x/4)."
+            },
+            {
+                q: "Bir sayının 2 katının 5 eksiği",
+                opts: ["2(x - 5)", "x + 2 - 5", "2x - 5"],
+                ans: 2,
+                desc: "Önce 2 katı alınır (2x), sonra 5 eksiği çıkarılır (-5)."
+            },
+            {
+                q: "Bir sayının 5 eksiğinin 2 katı",
+                opts: ["2x - 5", "2(x - 5)", "<div class='fraction'><div class='f-top'>x-5</div><div class='f-bot'>2</div></div>"],
+                ans: 1,
+                desc: "Burada 'önce' 5 eksiği istendiği için (x-5) paranteze alınır, sonra 2 ile çarpılır."
+            },
+            {
+                q: "Ahmet'in misketlerinin yarısının 4 fazlası",
+                opts: ["<div class='fraction'><div class='f-top'>x+4</div><div class='f-bot'>2</div></div>", "2x + 4", "<div class='fraction'><div class='f-top'>x</div><div class='f-bot'>2</div></div> + 4"],
+                ans: 2,
+                desc: "Önce yarısı (x/2), sonra buna 4 eklenir (+4)."
+            }
+        ];
+
+        let currentQ = 0;
+        let score = 0;
+        let canAnswer = true;
+
+        const qText = document.getElementById('qText');
+        const o0 = document.getElementById('o0');
+        const o1 = document.getElementById('o1');
+        const o2 = document.getElementById('o2');
+        const overlay = document.getElementById('overlay');
+        const omTitle = document.getElementById('omTitle');
+        const omDesc = document.getElementById('omDesc');
+        const scoreVal = document.getElementById('scoreVal');
+        const qCount = document.getElementById('qCount');
+        const nextBtn = document.getElementById('nextBtn');
+
+        function loadQuestion() {
+            canAnswer = true;
+            let q = questions[currentQ];
+            qText.innerHTML = `"${q.q}"`;
+            o0.innerHTML = q.opts[0];
+            o1.innerHTML = q.opts[1];
+            o2.innerHTML = q.opts[2];
+            
+            o0.className = "opt-card";
+            o1.className = "opt-card";
+            o2.className = "opt-card";
+
+            qCount.innerText = `${currentQ + 1} / ${questions.length}`;
+        }
+
+        function checkAns(idx) {
+            if(!canAnswer) return;
+            canAnswer = false;
+
+            let q = questions[currentQ];
+            let cards = [o0, o1, o2];
+
+            if(idx === q.ans) {
+                cards[idx].classList.add('correct');
+                score += 20;
+                scoreVal.innerText = score;
+                omTitle.innerText = "Doğru Çeviri! ✅";
+                omTitle.style.color = "var(--secondary)";
+            } else {
+                cards[idx].classList.add('wrong');
+                cards[q.ans].classList.add('correct');
+                omTitle.innerText = "Hatalı Çeviri ❌";
+                omTitle.style.color = "var(--danger)";
+            }
+
+            omDesc.innerText = q.desc;
+            
+            if(currentQ === questions.length - 1) {
+                nextBtn.innerText = "Testi Bitir";
+            }
+
+            setTimeout(() => {
+                overlay.classList.add('show');
+            }, 1000);
+        }
+
+        function nextQuestion() {
+            overlay.classList.remove('show');
+            
+            if(currentQ < questions.length - 1) {
+                currentQ++;
+                setTimeout(loadQuestion, 300);
+            } else {
+                // End of test
+                qText.innerHTML = `Mükemmel! Toplam Puanın: <span style="color:var(--tertiary)">${score} / 100</span>`;
+                document.getElementById('optGrid').style.display = 'none';
+                document.querySelector('.score-board').style.display = 'none';
+            }
+        }
+
+        // Init
+        loadQuestion();
+    </script>
+</body>
+</html>

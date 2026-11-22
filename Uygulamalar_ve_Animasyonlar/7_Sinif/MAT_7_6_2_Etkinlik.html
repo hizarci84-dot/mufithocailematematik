@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eşit Olasılık Laboratuvarı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F0E17; --surface: #1A1A24; --text: #F8FAFC;
+            --primary: #8B5CF6; --secondary: #10B981;
+            --tertiary: #06B6D4; --danger: #F43F5E;
+            --accent: #F59E0B;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, #161625 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(139, 92, 246, 0.2); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; margin-bottom: 20px;}
+        h1 { font-size: 2.2rem; color: var(--tertiary); font-weight: 900;}
+        .subtitle { color: #94A3B8; font-size: 1.1rem; margin-top: 5px;}
+
+        .main-container {
+            display: flex; gap: 30px; width: 100%; max-width: 1000px; flex-wrap: wrap; justify-content: center;
+        }
+
+        .panel {
+            background: #11111A; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.4); 
+            padding: 30px; display: flex; flex-direction: column; width: 100%; gap: 30px; align-items: center;
+        }
+
+        .scale-container {
+            width: 100%; max-width: 600px; height: 300px; position: relative;
+            display: flex; justify-content: center; align-items: flex-end; margin-top: 50px;
+        }
+
+        .base {
+            width: 100px; height: 100px; clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+            background: #334155; position: absolute; bottom: 0; z-index: 10;
+        }
+
+        .arm {
+            width: 400px; height: 10px; background: var(--primary); position: absolute; bottom: 100px;
+            transform-origin: center; transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 5px; z-index: 5;
+        }
+
+        .pan {
+            width: 100px; height: 150px; position: absolute; border: 2px solid rgba(255,255,255,0.2);
+            border-top: none; display: flex; flex-wrap: wrap-reverse; align-content: flex-start;
+            gap: 5px; padding: 10px; transform-origin: top center; transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .pan-left { left: 0; top: 0; border-radius: 0 0 50px 50px; }
+        .pan-right { right: 0; top: 0; border-radius: 0 0 50px 50px; }
+
+        .pan::before {
+            content: ''; position: absolute; top: -50px; left: 50%; width: 2px; height: 50px; background: rgba(255,255,255,0.5);
+        }
+
+        .ball {
+            width: 20px; height: 20px; border-radius: 50%; box-shadow: inset -5px -5px 10px rgba(0,0,0,0.5);
+        }
+        .ball.red { background: var(--danger); }
+        .ball.blue { background: var(--tertiary); }
+
+        .controls {
+            display: flex; gap: 50px; width: 100%; justify-content: center;
+        }
+
+        .ctrl-box {
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+            background: rgba(255,255,255,0.02); padding: 20px; border-radius: 15px; border: 1px solid;
+        }
+
+        .ctrl-box.red-box { border-color: var(--danger); }
+        .ctrl-box.blue-box { border-color: var(--tertiary); }
+
+        .btn-group { display: flex; gap: 10px; }
+        
+        .btn {
+            width: 40px; height: 40px; border-radius: 50%; border: none; font-size: 1.5rem; font-weight: 900;
+            cursor: pointer; background: var(--surface); color: white; transition: 0.2s;
+        }
+        .btn:hover { background: rgba(255,255,255,0.2); }
+        
+        .val-text { font-size: 2rem; font-weight: 900; }
+
+        .status-box {
+            background: rgba(0,0,0,0.5); padding: 15px 30px; border-radius: 50px;
+            font-size: 1.5rem; font-weight: 900; color: white; border: 2px solid #334155;
+            transition: 0.5s;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.7.6.2. Eşit Olasılık (Etkinlik)</div>
+    </div>
+
+    <div class="title-area">
+        <h1>Olasılık Terazisi</h1>
+        <p class="subtitle">İki olayın "Eşit Olasılıklı" olması için olası çıktı sayılarının eşit olması (terazinin dengelenmesi) gerekir.</p>
+    </div>
+
+    <div class="main-container">
+        
+        <div class="panel">
+            
+            <div class="scale-container">
+                <div class="base"></div>
+                <div class="arm" id="arm">
+                    <div class="pan pan-left" id="panLeft"></div>
+                    <div class="pan pan-right" id="panRight"></div>
+                </div>
+            </div>
+
+            <div class="status-box" id="statusBox">Kırmızı Daha Olası</div>
+
+            <div class="controls">
+                <div class="ctrl-box red-box">
+                    <div class="val-text" id="valRed" style="color:var(--danger)">5</div>
+                    <div class="btn-group">
+                        <button class="btn" onclick="updateCount('red', -1)">-</button>
+                        <button class="btn" onclick="updateCount('red', 1)">+</button>
+                    </div>
+                </div>
+
+                <div class="ctrl-box blue-box">
+                    <div class="val-text" id="valBlue" style="color:var(--tertiary)">2</div>
+                    <div class="btn-group">
+                        <button class="btn" onclick="updateCount('blue', -1)">-</button>
+                        <button class="btn" onclick="updateCount('blue', 1)">+</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        let redCount = 5;
+        let blueCount = 2;
+
+        const panLeft = document.getElementById('panLeft');
+        const panRight = document.getElementById('panRight');
+        const arm = document.getElementById('arm');
+        const valRed = document.getElementById('valRed');
+        const valBlue = document.getElementById('valBlue');
+        const statusBox = document.getElementById('statusBox');
+
+        function renderBalls() {
+            panLeft.innerHTML = "";
+            for(let i=0; i<redCount; i++) {
+                panLeft.innerHTML += `<div class="ball red"></div>`;
+            }
+
+            panRight.innerHTML = "";
+            for(let i=0; i<blueCount; i++) {
+                panRight.innerHTML += `<div class="ball blue"></div>`;
+            }
+        }
+
+        function updateScale() {
+            valRed.innerText = redCount;
+            valBlue.innerText = blueCount;
+            renderBalls();
+
+            let diff = redCount - blueCount; // positive means left is heavier
+            
+            // max rotation +/- 20 deg
+            let angle = Math.max(Math.min(diff * 4, 20), -20);
+            
+            arm.style.transform = `rotate(${-angle}deg)`; // -angle because left heavy means negative rotation (CCW)
+            
+            // counter rotate pans to keep them straight
+            panLeft.style.transform = `rotate(${angle}deg)`;
+            panRight.style.transform = `rotate(${angle}deg)`;
+
+            if(diff > 0) {
+                statusBox.innerText = "Kırmızı Gelme Olasılığı Daha Fazla";
+                statusBox.style.borderColor = "var(--danger)";
+                statusBox.style.boxShadow = "none";
+            } else if (diff < 0) {
+                statusBox.innerText = "Mavi Gelme Olasılığı Daha Fazla";
+                statusBox.style.borderColor = "var(--tertiary)";
+                statusBox.style.boxShadow = "none";
+            } else {
+                statusBox.innerText = "EŞİT OLASILIKLI OLAYLAR!";
+                statusBox.style.borderColor = "var(--accent)";
+                statusBox.style.boxShadow = "0 0 30px rgba(245, 158, 11, 0.6)";
+            }
+        }
+
+        function updateCount(color, delta) {
+            if(color === 'red') {
+                redCount += delta;
+                if(redCount < 0) redCount = 0;
+                if(redCount > 15) redCount = 15;
+            } else {
+                blueCount += delta;
+                if(blueCount < 0) blueCount = 0;
+                if(blueCount > 15) blueCount = 15;
+            }
+            updateScale();
+        }
+
+        // Init
+        updateScale();
+
+    </script>
+
+    <script>
+        // Global spam click prevention for Etkinlik files
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'BUTTON' && !e.target.hasAttribute('data-spam-locked')) {
+                e.target.setAttribute('data-spam-locked', 'true');
+                let originalOpacity = e.target.style.opacity || '1';
+                e.target.style.opacity = '0.7';
+                e.target.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    e.target.removeAttribute('data-spam-locked');
+                    e.target.style.opacity = originalOpacity;
+                    e.target.style.pointerEvents = 'auto';
+                }, 400);
+            }
+        });
+    </script>
+</body>
+</html>

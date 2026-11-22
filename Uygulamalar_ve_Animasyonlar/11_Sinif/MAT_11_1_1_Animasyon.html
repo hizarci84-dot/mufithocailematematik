@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>11.1.1 - Dönme Dolap ve Sinüsoidal Dalgalar</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0A0A12;
+            --panel-bg: #151522;
+            --primary: #00F0FF; /* Neon Cyan */
+            --secondary: #FF00E4; /* Neon Pink */
+            --accent: #FFE600; /* Neon Yellow */
+            --text-main: #FFFFFF;
+            --text-muted: #8A8A9E;
+            --grid-line: rgba(0, 240, 255, 0.1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background-color: var(--bg-color); color: var(--text-main);
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; padding: 20px; overflow-x: hidden;
+            background-image: 
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        .header {
+            width: 100%; max-width: 1200px; display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 25px; background: rgba(21, 21, 34, 0.85); backdrop-filter: blur(10px);
+            border-radius: 16px; border: 1px solid rgba(0, 240, 255, 0.3);
+            margin-bottom: 20px; box-shadow: 0 0 20px rgba(0, 240, 255, 0.15);
+        }
+        
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 800; color: var(--primary); font-size: 1.1rem; }
+        .header-left img { width: 45px; height: 45px; border-radius: 10px; border: 1px solid var(--primary); }
+        .kazanim { background: rgba(0, 240, 255, 0.1); padding: 8px 15px; border-radius: 8px; color: var(--primary); font-weight: 600; font-size: 0.85rem; border: 1px solid rgba(0, 240, 255, 0.3); }
+
+        h1 { font-size: 2rem; font-weight: 900; margin-bottom: 8px; text-align: center; text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 0 10px rgba(0, 240, 255, 0.5); }
+        .subtitle { color: var(--text-muted); font-size: 1rem; margin-bottom: 20px; text-align: center; max-width: 900px; }
+
+        .workspace { display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 1200px; align-items: center; }
+
+        .anim-container {
+            display: flex; width: 100%; height: 450px; gap: 0;
+            background: #0A0A12; border-radius: 16px; border: 2px solid var(--primary);
+            overflow: hidden; box-shadow: 0 0 30px rgba(0, 240, 255, 0.15) inset;
+        }
+
+        .ferris-area { flex: 1; position: relative; border-right: 1px dashed rgba(0, 240, 255, 0.3); }
+        .graph-area { flex: 1.8; position: relative; }
+
+        svg { width: 100%; height: 100%; display: block; }
+        
+        .wheel-struct { stroke: rgba(255,255,255,0.15); stroke-width: 0.15; fill: none; }
+        .wheel-rim { stroke: var(--primary); stroke-width: 0.3; fill: none; filter: drop-shadow(0 0 6px var(--primary)); }
+        .ground-line { stroke: rgba(255,255,255,0.4); stroke-width: 0.2; }
+        .center-line { stroke: rgba(0, 240, 255, 0.3); stroke-width: 0.1; stroke-dasharray: 0.3, 0.3; }
+        
+        .cabin { fill: var(--secondary); stroke: white; stroke-width: 0.1; r: 0.4; }
+        .cabin-active { fill: var(--accent); stroke: white; stroke-width: 0.15; r: 0.55; filter: drop-shadow(0 0 8px var(--accent)); }
+        
+        .trace-line { stroke: var(--accent); stroke-width: 0.15; stroke-dasharray: 0.3, 0.3; opacity: 0.8; }
+        .wave-path { fill: none; stroke: var(--accent); stroke-width: 0.25; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 6px var(--accent)); }
+        
+        .svg-label { fill: var(--text-muted); font-size: 0.55px; font-weight: 600; }
+        .svg-label-accent { fill: var(--accent); font-size: 0.6px; font-weight: 700; }
+
+        .controls {
+            display: flex; gap: 20px; background: var(--panel-bg); justify-content: space-between; align-items: center;
+            padding: 20px 30px; border-radius: 16px; border: 1px solid rgba(255, 0, 228, 0.3);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5); width: 100%; flex-wrap: wrap;
+        }
+
+        .btn-play {
+            background: var(--primary); color: #0A0A12; border: none; padding: 12px 30px; border-radius: 10px;
+            font-size: 1.1rem; font-weight: 900; cursor: pointer; transition: 0.3s; box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+        }
+        .btn-play:hover { transform: scale(1.05); box-shadow: 0 0 25px rgba(0, 240, 255, 0.7); }
+
+        .slider-group { background: rgba(0,0,0,0.4); padding: 10px 18px; border-radius: 10px; border-left: 3px solid var(--primary); flex: 1; min-width: 200px; }
+        .slider-header { display: flex; justify-content: space-between; margin-bottom: 6px; font-weight: 600; color: var(--text-main); font-size: 0.9rem; }
+        .slider-val { color: var(--primary); font-family: monospace; font-size: 1rem; font-weight: bold; }
+        
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; }
+        input[type=range]::-webkit-slider-thumb { height: 16px; width: 16px; border-radius: 50%; background: var(--primary); cursor: pointer; -webkit-appearance: none; margin-top: -5px; box-shadow: 0 0 10px var(--primary); }
+
+        .math-box {
+            background: rgba(0,0,0,0.6); border: 1px dashed var(--accent); padding: 12px 25px;
+            border-radius: 10px; font-size: 1.2rem; text-align: center; color: var(--accent); min-width: 280px;
+            min-height: 50px; display: flex; align-items: center; justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=00F0FF&color=000'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.11.1.1. Trigonometrik Fonksiyonlar - Dönme Dolap Modeli</div>
+    </div>
+    
+    <h1>Trigonometrik Dönme Dolap Animasyonu</h1>
+    <p class="subtitle">Bir kabinin zamana (t) göre yerden yüksekliği <strong>h(t) = R · sin(ω·t) + h₀</strong> sinüsoidal fonksiyonunu oluşturur.</p>
+    
+    <div class="workspace">
+        <div class="anim-container">
+            <div class="ferris-area">
+                <svg id="ferrisSvg" viewBox="-6 -11 12 12" preserveAspectRatio="xMidYMid meet">
+                    <g transform="scale(1, -1)">
+                        <line x1="-6" y1="0" x2="6" y2="0" class="ground-line" />
+                        <line x1="-6" y1="5.5" x2="6" y2="5.5" class="center-line" />
+                        
+                        <line x1="-2.5" y1="0" x2="0" y2="5.5" class="wheel-struct" stroke-width="0.3" />
+                        <line x1="2.5" y1="0" x2="0" y2="5.5" class="wheel-struct" stroke-width="0.3" />
+                        
+                        <g id="wheelGroup"></g>
+                        
+                        <circle cx="0" cy="5.5" r="0.35" fill="white" />
+                        <line id="traceLine" class="trace-line" x1="0" y1="5.5" x2="6" y2="5.5" />
+                    </g>
+                    <text x="-5.5" y="-0.3" class="svg-label">Zemin (y=0)</text>
+                    <text x="-5.5" y="-5.7" class="svg-label">Merkez (h₀)</text>
+                </svg>
+            </div>
+            
+            <div class="graph-area">
+                <svg id="graphSvg" viewBox="0 -11 20 12" preserveAspectRatio="xMidYMid meet">
+                    <g transform="scale(1, -1)">
+                        <line x1="0" y1="0" x2="20" y2="0" class="ground-line" />
+                        <line x1="0" y1="5.5" x2="20" y2="5.5" class="center-line" />
+                        
+                        <line id="lineMax" x1="0" y1="9.5" x2="20" y2="9.5" stroke="rgba(255,255,255,0.1)" stroke-dasharray="0.2,0.2" />
+                        <line id="lineMin" x1="0" y1="1.5" x2="20" y2="1.5" stroke="rgba(255,255,255,0.1)" stroke-dasharray="0.2,0.2" />
+                        
+                        <path id="wavePath" class="wave-path" d="" />
+                        <line id="graphTraceLine" class="trace-line" x1="0" y1="5.5" x2="20" y2="5.5" />
+                        <circle id="wavePt" cx="0" cy="5.5" class="cabin-active" />
+                    </g>
+                    <text x="17" y="-0.4" class="svg-label">Zaman (t) →</text>
+                    <text x="0.4" y="-5.7" class="svg-label">h₀ = 5.5m</text>
+                    <text x="0.4" y="-9.7" class="svg-label-accent" id="lblMax">h_max = 9.5m</text>
+                    <text x="0.4" y="-1.7" class="svg-label" id="lblMin">h_min = 1.5m</text>
+                </svg>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn-play" id="btnPlay" onclick="togglePlay()">DURDUR</button>
+
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span>Açısal Hız (ω)</span>
+                    <span class="slider-val" id="valW">1.0 rad/s</span>
+                </div>
+                <input type="range" id="slideW" min="0.3" max="2.5" step="0.1" value="1.0">
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span>Dönme Dolap Yarıçapı (R)</span>
+                    <span class="slider-val" id="valR">4.0 m</span>
+                </div>
+                <input type="range" id="slideR" min="2.0" max="4.5" step="0.5" value="4.0">
+            </div>
+            
+            <div class="math-box" id="mathOutput">
+                <!-- Clean Rendered TeX -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const slideW = document.getElementById('slideW'); const valW = document.getElementById('valW');
+        const slideR = document.getElementById('slideR'); const valR = document.getElementById('valR');
+        const btnPlay = document.getElementById('btnPlay');
+        const wheelGroup = document.getElementById('wheelGroup');
+        const traceLine = document.getElementById('traceLine');
+        const graphTraceLine = document.getElementById('graphTraceLine');
+        const wavePath = document.getElementById('wavePath');
+        const wavePt = document.getElementById('wavePt');
+        const mathOutput = document.getElementById('mathOutput');
+        const lblMax = document.getElementById('lblMax');
+        const lblMin = document.getElementById('lblMin');
+        
+        let isPlaying = true;
+        let time = 0;
+        let animationId;
+        const h0 = 5.5;
+        let waveHistory = [];
+        
+        let isTypesetting = false;
+        let pendingTex = null;
+
+        function renderMathClean(texString) {
+            if (isTypesetting) {
+                pendingTex = texString;
+                return;
+            }
+            isTypesetting = true;
+            
+            let temp = document.createElement('div');
+            temp.style.position = 'absolute';
+            temp.style.top = '-9999px';
+            temp.style.left = '-9999px';
+            temp.style.visibility = 'hidden';
+            temp.innerHTML = texString;
+            document.body.appendChild(temp);
+            
+            MathJax.typesetPromise([temp]).then(() => {
+                mathOutput.innerHTML = temp.innerHTML;
+                if (temp.parentNode) document.body.removeChild(temp);
+                isTypesetting = false;
+                
+                if (pendingTex) {
+                    let next = pendingTex;
+                    pendingTex = null;
+                    renderMathClean(next);
+                }
+            }).catch(err => {
+                if (temp.parentNode) document.body.removeChild(temp);
+                isTypesetting = false;
+            });
+        }
+
+        function updateMath() {
+            let w = parseFloat(slideW.value);
+            let R = parseFloat(slideR.value);
+            
+            valW.innerText = w.toFixed(1) + " rad/s";
+            valR.innerText = R.toFixed(1) + " m";
+            
+            let hMax = h0 + R;
+            let hMin = h0 - R;
+            
+            lblMax.textContent = `h_max = ${hMax.toFixed(1)}m`;
+            lblMin.textContent = `h_min = ${hMin.toFixed(1)}m`;
+            
+            document.getElementById('lineMax').setAttribute('y1', hMax);
+            document.getElementById('lineMax').setAttribute('y2', hMax);
+            document.getElementById('lineMin').setAttribute('y1', hMin);
+            document.getElementById('lineMin').setAttribute('y2', hMin);
+
+            let eq = `\\( h(t) = ${R.toFixed(1)} \\cdot \\sin(${w.toFixed(1)}t) + ${h0.toFixed(1)} \\)`;
+            renderMathClean(eq);
+        }
+
+        function drawWheel() {
+            let R = parseFloat(slideR.value);
+            let html = `<circle cx="0" cy="${h0}" r="${R}" class="wheel-rim" />`;
+            
+            for(let i = 0; i < 8; i++) {
+                let angle = time + (i * Math.PI / 4);
+                let cx = R * Math.cos(angle);
+                let cy = h0 + R * Math.sin(angle);
+                
+                html += `<line x1="0" y1="${h0}" x2="${cx}" y2="${cy}" class="wheel-struct" />`;
+                
+                if(i === 0) {
+                    html += `<circle cx="${cx}" cy="${cy}" class="cabin-active" />`;
+                } else {
+                    html += `<circle cx="${cx}" cy="${cy}" class="cabin" />`;
+                }
+            }
+            
+            wheelGroup.innerHTML = html;
+            
+            let activeX = R * Math.cos(time);
+            let activeY = h0 + R * Math.sin(time);
+            
+            traceLine.setAttribute('x1', activeX);
+            traceLine.setAttribute('y1', activeY);
+            traceLine.setAttribute('y2', activeY);
+            
+            graphTraceLine.setAttribute('y1', activeY);
+            graphTraceLine.setAttribute('y2', activeY);
+            
+            waveHistory.push({ t: time, y: activeY });
+            if(waveHistory.length > 250) waveHistory.shift();
+            
+            let d = "";
+            let latestT = time;
+            
+            for(let j = 0; j < waveHistory.length; j++) {
+                let pt = waveHistory[j];
+                let x = 20 - (latestT - pt.t) * 3;
+                if(x >= 0) {
+                    d += (d === "" ? "M" : "L") + ` ${x.toFixed(2)} ${pt.y.toFixed(2)}`;
+                }
+            }
+            
+            wavePath.setAttribute('d', d);
+            wavePt.setAttribute('cx', '20');
+            wavePt.setAttribute('cy', activeY);
+        }
+
+        function togglePlay() {
+            isPlaying = !isPlaying;
+            btnPlay.innerText = isPlaying ? "DURDUR" : "BAŞLAT";
+            if(isPlaying) animate();
+            else cancelAnimationFrame(animationId);
+        }
+
+        function animate() {
+            if(!isPlaying) return;
+            
+            let w = parseFloat(slideW.value);
+            time += 0.02 * w;
+            
+            drawWheel();
+            animationId = requestAnimationFrame(animate);
+        }
+
+        slideW.addEventListener('input', updateMath);
+        slideR.addEventListener('input', () => { waveHistory = []; updateMath(); });
+
+        window.onload = () => {
+            updateMath();
+            animate();
+        };
+    </script>
+</body>
+</html>

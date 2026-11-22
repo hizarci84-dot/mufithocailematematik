@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D İz Düşüm Animasyonu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F0E17; --surface: #1A1A24; --text: #F8FAFC;
+            --primary: #8B5CF6; --secondary: #10B981;
+            --tertiary: #06B6D4; --danger: #F43F5E;
+            --accent: #F59E0B;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, #161625 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(139, 92, 246, 0.2); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; margin-bottom: 20px;}
+        h1 { font-size: 2.2rem; color: var(--tertiary); font-weight: 900;}
+        .subtitle { color: #94A3B8; font-size: 1.1rem; margin-top: 5px;}
+
+        .canvas-area {
+            position: relative; width: 100%; max-width: 800px; height: 500px; 
+            background: #11111A; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.4); 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden;
+            perspective: 800px;
+        }
+
+        .expl-text {
+            position: absolute; top: 30px; font-size: 1.5rem; color: white; font-weight: 800;
+            opacity: 1; transition: 0.5s; text-align: center; width: 80%; text-shadow: 0 5px 10px black; z-index: 10;
+        }
+
+        /* 3D Environment */
+        .scene {
+            width: 200px; height: 200px; position: relative;
+            transform-style: preserve-3d; transform: rotateX(-20deg) rotateY(-45deg);
+            transition: transform 2s ease-in-out;
+        }
+
+        /* 3D Cube component */
+        .cube {
+            position: absolute; width: 50px; height: 50px; transform-style: preserve-3d;
+        }
+        .face {
+            position: absolute; width: 50px; height: 50px; border: 2px solid rgba(255,255,255,0.2);
+        }
+        .front  { transform: translateZ(25px); background: rgba(139, 92, 246, 0.8); }
+        .back   { transform: rotateY(180deg) translateZ(25px); background: rgba(139, 92, 246, 0.5); }
+        .right  { transform: rotateY(90deg) translateZ(25px); background: rgba(109, 40, 217, 0.8); }
+        .left   { transform: rotateY(-90deg) translateZ(25px); background: rgba(109, 40, 217, 0.5); }
+        .top    { transform: rotateX(90deg) translateZ(25px); background: rgba(167, 139, 250, 0.8); }
+        .bottom { transform: rotateX(-90deg) translateZ(25px); background: rgba(76, 29, 149, 0.8); }
+
+        /* Walls for projection */
+        .wall {
+            position: absolute; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1);
+            display: grid; grid-template-columns: repeat(3, 50px); grid-template-rows: repeat(3, 50px);
+            opacity: 0; transition: opacity 1s;
+        }
+        .wall-cell { border: 1px dashed rgba(255,255,255,0.1); transition: background 1s;}
+        
+        .wall-back { width: 150px; height: 150px; transform: translateZ(-100px); top: -100px; left: 0;}
+        .wall-left { width: 150px; height: 150px; transform: rotateY(90deg) translateZ(-100px); top: -100px; left: -100px;}
+        .wall-bottom { width: 150px; height: 150px; transform: rotateX(90deg) translateZ(-50px); top: 0; left: 0;}
+
+        /* Active cells on walls (shadows) */
+        .shadow-cell { background: var(--secondary); box-shadow: 0 0 15px var(--secondary);}
+
+        .btn-play {
+            background: var(--primary); color: white; border: none; padding: 15px 40px; border-radius: 50px;
+            font-size: 1.2rem; font-weight: 900; cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(139, 92, 246, 0.4); margin-top: 30px; z-index: 10;
+        }
+        .btn-play:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 15px 25px rgba(139, 92, 246, 0.6); }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.7.4.1. Yapılar ve Görünümleri (Animasyon)</div>
+    </div>
+
+    <div class="title-area">
+        <h1>Gölgelendirme İspatı</h1>
+        <p class="subtitle">3 Boyutlu yapıya farklı açılardan ışık vurulduğunda 2 boyutlu duvarlarda oluşan görünümleri izleyin.</p>
+    </div>
+
+    <div class="canvas-area">
+        
+        <div class="expl-text" id="explText">3 Boyutlu yapımız sahnede duruyor.</div>
+
+        <div class="scene" id="scene">
+            
+            <!-- Projection Walls -->
+            <!-- Front view is projected onto the BACK wall -->
+            <div class="wall wall-back" id="wallBack">
+                <!-- 3x3 cells. Row 0 is top, Row 2 is bottom -->
+                <!-- We will color them via JS -->
+            </div>
+            
+            <!-- Right view is projected onto the LEFT wall -->
+            <div class="wall wall-left" id="wallLeft"></div>
+
+            <!-- Top view is projected onto the BOTTOM wall -->
+            <div class="wall wall-bottom" id="wallBottom"></div>
+
+            <!-- Cubes -->
+            <!-- We build a small structure -->
+            <!-- Col 0, Depth 0, Height 0 -->
+            <div class="cube" style="transform: translate3d(0px, 0px, 0px);"><div class="face front"></div><div class="face back"></div><div class="face right"></div><div class="face left"></div><div class="face top"></div><div class="face bottom"></div></div>
+            <div class="cube" style="transform: translate3d(0px, -50px, 0px);"><div class="face front"></div><div class="face back"></div><div class="face right"></div><div class="face left"></div><div class="face top"></div><div class="face bottom"></div></div>
+            
+            <!-- Col 1, Depth 0, Height 0 -->
+            <div class="cube" style="transform: translate3d(50px, 0px, 0px);"><div class="face front"></div><div class="face back"></div><div class="face right"></div><div class="face left"></div><div class="face top"></div><div class="face bottom"></div></div>
+            
+            <!-- Col 1, Depth 1, Height 0 -->
+            <div class="cube" style="transform: translate3d(50px, 0px, -50px);"><div class="face front"></div><div class="face back"></div><div class="face right"></div><div class="face left"></div><div class="face top"></div><div class="face bottom"></div></div>
+            <div class="cube" style="transform: translate3d(50px, -50px, -50px);"><div class="face front"></div><div class="face back"></div><div class="face right"></div><div class="face left"></div><div class="face top"></div><div class="face bottom"></div></div>
+            <div class="cube" style="transform: translate3d(50px, -100px, -50px);"><div class="face front"></div><div class="face back"></div><div class="face right"></div><div class="face left"></div><div class="face top"></div><div class="face bottom"></div></div>
+
+        </div>
+
+    </div>
+
+    <button class="btn-play" id="btnPlay" onclick="runAnim()">Animasyonu Başlat</button>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        const btnPlay = document.getElementById('btnPlay');
+        const explText = document.getElementById('explText');
+        const scene = document.getElementById('scene');
+        
+        const wallBack = document.getElementById('wallBack');
+        const wallLeft = document.getElementById('wallLeft');
+        const wallBottom = document.getElementById('wallBottom');
+
+        // Populate walls with 9 cells each
+        for(let i=0; i<9; i++) {
+            wallBack.innerHTML += `<div class="wall-cell" id="wb-${i}"></div>`;
+            wallLeft.innerHTML += `<div class="wall-cell" id="wl-${i}"></div>`;
+            wallBottom.innerHTML += `<div class="wall-cell" id="wbt-${i}"></div>`;
+        }
+
+        async function runAnim() {
+            btnPlay.disabled = true;
+            btnPlay.style.opacity = 0.5;
+
+            // Reset
+            scene.style.transform = "rotateX(-20deg) rotateY(-45deg)";
+            wallBack.style.opacity = 0; wallLeft.style.opacity = 0; wallBottom.style.opacity = 0;
+            document.querySelectorAll('.shadow-cell').forEach(e => e.classList.remove('shadow-cell'));
+
+            await sleep(1000);
+
+            // FRONT VIEW (Projected to Back Wall)
+            explText.innerText = "Önden bakıldığında (Önden Görünüm), arkadaki duvara izdüşüm düşer.";
+            scene.style.transform = "rotateX(0deg) rotateY(0deg)";
+            wallBack.style.opacity = 1;
+            
+            await sleep(2000);
+            
+            // Shadows for Front View
+            // We have column 0 height 2, column 1 height 3
+            // Matrix:
+            // C0: 2, C1: 3, C2: 0
+            // Row 0 (Top): wb-1
+            // Row 1 (Mid): wb-3, wb-4
+            // Row 2 (Bot): wb-6, wb-7
+            ['wb-1', 'wb-3', 'wb-4', 'wb-6', 'wb-7'].forEach(id => document.getElementById(id).classList.add('shadow-cell'));
+            
+            await sleep(3000);
+
+            // RIGHT VIEW (Projected to Left Wall)
+            explText.innerText = "Sağdan bakıldığında (Sağdan Görünüm), sol duvara izdüşüm düşer.";
+            scene.style.transform = "rotateX(0deg) rotateY(-90deg)";
+            wallLeft.style.opacity = 1;
+
+            await sleep(2000);
+
+            // Shadows for Right View
+            // We have depth 0: height 2 (on col 0) and 1 (on col 1) -> max height 2
+            // Depth 1: height 3 (on col 1) -> max height 3
+            // So depth 0 is height 2, depth 1 is height 3.
+            // On left wall, rightmost col is depth 0, mid col is depth 1.
+            // Row 0: wl-1
+            // Row 1: wl-4, wl-5
+            // Row 2: wl-7, wl-8
+            ['wl-1', 'wl-4', 'wl-5', 'wl-7', 'wl-8'].forEach(id => document.getElementById(id).classList.add('shadow-cell'));
+
+            await sleep(3000);
+
+            // TOP VIEW (Projected to Bottom Wall)
+            explText.innerText = "Üstten bakıldığında (Üstten Görünüm), zemine izdüşüm düşer.";
+            scene.style.transform = "rotateX(-90deg) rotateY(0deg)";
+            wallBottom.style.opacity = 1;
+
+            await sleep(2000);
+
+            // Shadows for Top view
+            // Cubes at (C0,D0), (C1,D0), (C1,D1)
+            // Bottom wall grid: Top is D1, Bottom is D0?
+            // Actually just color the corresponding cells on the floor.
+            ['wbt-4', 'wbt-6', 'wbt-7'].forEach(id => document.getElementById(id).classList.add('shadow-cell'));
+
+            await sleep(3000);
+
+            explText.innerText = "İşte tüm görünümler üç boyutlu cismin düzleme olan izdüşümleridir.";
+            scene.style.transform = "rotateX(-20deg) rotateY(-45deg)";
+
+            btnPlay.disabled = false;
+            btnPlay.style.opacity = 1;
+            btnPlay.innerText = "Tekrar İzle";
+        }
+    </script>
+</body>
+</html>

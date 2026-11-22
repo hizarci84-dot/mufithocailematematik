@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İstatistik Dedektifi (Hatalı Grafikler)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A;
+            --surface: #1E293B;
+            --text: #F8FAFC;
+            --primary: #F43F5E; /* Rose / Danger */
+            --secondary: #3B82F6; /* Blue */
+            --tertiary: #10B981; /* Green */
+            --amber: #F59E0B; /* Amber */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, var(--surface) 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .container {
+            width: 100%; max-width: 1000px; display: grid; grid-template-columns: 1fr 350px; gap: 20px;
+        }
+
+        .canvas-area {
+            background: #0B1120; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            position: relative; height: 500px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5); overflow: hidden; padding: 20px;
+        }
+
+        .tools-area { display: flex; flex-direction: column; gap: 15px; }
+
+        .panel {
+            background: rgba(255,255,255,0.03); border-radius: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .level-badge {
+            background: var(--amber); color: #0F172A; padding: 5px 12px; border-radius: 10px;
+            font-weight: 900; font-size: 0.9rem; display: inline-block; margin-bottom: 10px;
+        }
+
+        .question-text { font-size: 1.1rem; line-height: 1.5; font-weight: 600; color: #E2E8F0; margin-bottom: 15px; }
+        
+        .opt-btn {
+            width: 100%; background: rgba(0,0,0,0.3); color: white; border: 2px solid rgba(255,255,255,0.1); padding: 12px; border-radius: 12px;
+            font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-bottom: 10px; text-align: left;
+        }
+        .opt-btn:hover { border-color: var(--secondary); background: rgba(59, 130, 246, 0.1); }
+        .opt-btn.correct { background: rgba(16, 185, 129, 0.2); border-color: var(--tertiary); color: var(--tertiary); }
+        .opt-btn.wrong { background: rgba(244, 63, 94, 0.2); border-color: var(--primary); color: var(--primary); }
+
+        .feedback {
+            padding: 12px; border-radius: 10px; font-weight: 800; text-align: center; margin-top: 10px;
+            opacity: 0; transform: translateY(-10px); transition: all 0.3s; display: none; line-height: 1.4;
+        }
+        .feedback.show { opacity: 1; transform: translateY(0); display: block; }
+        .feedback.success { background: rgba(16, 185, 129, 0.2); color: var(--tertiary); border: 1px solid var(--tertiary); }
+        .feedback.error { background: rgba(244, 63, 94, 0.2); color: var(--primary); border: 1px solid var(--primary); }
+
+        .next-btn {
+            width: 100%; background: var(--secondary); color: white; border: none; padding: 15px; border-radius: 12px;
+            font-size: 1.1rem; font-weight: 900; cursor: pointer; transition: all 0.3s; margin-top: 15px; display: none;
+        }
+        .next-btn:hover { transform: scale(1.02); }
+
+        /* Graph Simulations */
+        .fake-chart { width: 100%; height: 100%; position: relative; display: flex; align-items: flex-end; justify-content: center; gap: 40px; padding-bottom: 50px; padding-left: 60px;}
+        
+        /* Bar Chart */
+        .fc-y-axis { position: absolute; left: 20px; bottom: 50px; top: 20px; width: 40px; border-right: 2px solid white; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-end; padding-right: 10px; font-weight: 800; font-size: 14px;}
+        .fc-x-axis { position: absolute; left: 60px; right: 20px; bottom: 50px; height: 2px; background: white;}
+        .fc-bar { width: 80px; background: var(--secondary); border-radius: 5px 5px 0 0; position: relative; display: flex; justify-content: center; transition: all 1s ease-in-out;}
+        .fc-bar-lbl { position: absolute; bottom: -30px; font-weight: 800; color: white; font-size: 16px;}
+        .fc-bar-val { position: absolute; top: -25px; font-weight: 900; color: var(--amber); font-size: 18px;}
+
+        /* Pie Chart */
+        .pie-chart { width: 250px; height: 250px; border-radius: 50%; background: conic-gradient(var(--secondary) 0% 45%, var(--primary) 45% 90%, var(--tertiary) 90% 120%); position: relative; margin: auto; transition: all 1s;}
+        .pie-lbl { position: absolute; font-weight: 900; font-size: 1.2rem; text-shadow: 0 2px 5px rgba(0,0,0,0.8); }
+        .pl-1 { top: 30%; right: 20%; }
+        .pl-2 { bottom: 20%; left: 30%; }
+        .pl-3 { top: 20%; left: 10%; }
+
+        /* Confetti */
+        .confetti { position: absolute; width: 10px; height: 10px; background: red; animation: fall 3s linear forwards; }
+        @keyframes fall { to { transform: translateY(600px) rotate(720deg); opacity: 0; } }
+
+        @media (max-width: 768px) {
+            .container { grid-template-columns: 1fr; }
+            .canvas-area { height: 350px; }
+            .header { flex-direction: column; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.5.5.2. İstatistik Dedektifi (Hataları Bul)</div>
+    </div>
+
+    <div class="container">
+        
+        <div class="canvas-area" id="canvasArea">
+            <!-- Rendered by JS -->
+        </div>
+
+        <div class="tools-area">
+            <div class="panel">
+                <div class="level-badge" id="lvlBadge">DOSYA 1</div>
+                <div class="question-text" id="qText">Yükleniyor...</div>
+                
+                <div id="optionsDiv">
+                    <!-- Rendered by JS -->
+                </div>
+
+                <div class="feedback" id="feedbackBox"></div>
+                
+                <button class="next-btn" id="nextBtn" onclick="nextLevel()">Sıradaki Dosyaya Geç ➔</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const canvasArea = document.getElementById('canvasArea');
+        const lvlBadge = document.getElementById('lvlBadge');
+        const qText = document.getElementById('qText');
+        const optionsDiv = document.getElementById('optionsDiv');
+        const feedbackBox = document.getElementById('feedbackBox');
+        const nextBtn = document.getElementById('nextBtn');
+
+        let currentLevel = 0;
+
+        const levels = [
+            {
+                title: "Rakip Firmaların Yarışı",
+                qText: "A Firması, yandaki grafiği yayınlayarak <b>'B Firmasından KAT KAT DAHA BAŞARILIYIZ!'</b> diyor. Sence bu grafikteki <b>manipülasyon (yanıltma)</b> nerede?",
+                render: () => {
+                    return `
+                    <div style="position:absolute; top:20px; font-weight:800; font-size:1.5rem; color:var(--amber);">Firma Satışları</div>
+                    <div class="fake-chart">
+                        <div class="fc-y-axis"><span>100</span><span>98</span><span>96</span><span>94</span><span>92</span><span>90</span></div>
+                        <div class="fc-x-axis"></div>
+                        <div class="fc-bar" style="height: 250px; background:var(--tertiary);" id="barA">
+                            <div class="fc-bar-val">100</div><div class="fc-bar-lbl">A Firması</div>
+                        </div>
+                        <div class="fc-bar" style="height: 125px; background:var(--primary);" id="barB">
+                            <div class="fc-bar-val">95</div><div class="fc-bar-lbl">B Firması</div>
+                        </div>
+                    </div>`;
+                },
+                options: [
+                    "A Firmasının satışları aslında 100 değil.",
+                    "Dikey eksen 0'dan başlamadığı için aradaki küçük fark devasa gösterilmiş.",
+                    "Grafikte sütun renkleri yanlış seçilmiş."
+                ],
+                correct: 1,
+                feedbackText: "Harika Tespit! Y ekseni (dikey eksen) 0'dan değil 90'dan başladığı için, 95 ile 100 arasındaki sadece 5'lik fark, görsel olarak 2 katıymış gibi algılanıyor. Bu bir istatistik hilesidir!",
+                fixAnim: async () => {
+                    document.querySelector('.fc-y-axis').innerHTML = "<span>100</span><span>75</span><span>50</span><span>25</span><span>0</span>";
+                    document.getElementById('barA').style.height = "250px"; // 100%
+                    document.getElementById('barB').style.height = "237px"; // 95%
+                }
+            },
+            {
+                title: "Okulun Favori Dersleri",
+                qText: "Okul gazetesinde yayınlanan bir ankete göre öğrencilerin sevdikleri derslerin dağılımı yandaki daire grafiği ile verilmiş. Bu grafikteki <b>temel mantık hatası</b> nedir?",
+                render: () => {
+                    return `
+                    <div style="position:absolute; top:20px; font-weight:800; font-size:1.5rem; color:var(--amber);">En Sevilen Dersler</div>
+                    <div class="pie-chart" id="pieChart">
+                        <div class="pie-lbl pl-1">Matematik<br>%45</div>
+                        <div class="pie-lbl pl-2">Türkçe<br>%45</div>
+                        <div class="pie-lbl pl-3">Fen<br>%30</div>
+                    </div>`;
+                },
+                options: [
+                    "Matematik ve Türkçe eşit olamaz.",
+                    "Dilimlerin açıları yanlış çizilmiş.",
+                    "Yüzdelerin toplamı %100'ü geçiyor (%120 yapıyor)."
+                ],
+                correct: 2,
+                feedbackText: "Çok Yaşa Dedektif! Bir bütünü ifade eden daire grafiğinde yüzdelerin toplamı her zaman %100 olmalıdır. 45 + 45 + 30 = 120 eder. Bu veri tamamen hatalı veya uydurmadır!",
+                fixAnim: async () => {
+                    document.getElementById('pieChart').style.filter = "grayscale(1)";
+                    document.getElementById('pieChart').innerHTML = "<div style='position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:3rem; font-weight:900; color:white; background:red; padding:10px;'>HATA!</div>";
+                }
+            }
+        ];
+
+        function loadLevel() {
+            let lvl = levels[currentLevel];
+            lvlBadge.innerText = `VAKA DOSYASI ${currentLevel + 1} / ${levels.length}`;
+            qText.innerHTML = lvl.qText;
+            
+            canvasArea.innerHTML = lvl.render();
+            
+            optionsDiv.innerHTML = '';
+            lvl.options.forEach((opt, idx) => {
+                let btn = document.createElement('button');
+                btn.className = 'opt-btn';
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(idx, btn);
+                optionsDiv.appendChild(btn);
+            });
+
+            feedbackBox.classList.remove('show', 'success', 'error');
+            nextBtn.style.display = 'none';
+        }
+
+        function checkAnswer(idx, btn) {
+            let lvl = levels[currentLevel];
+            let allBtns = document.querySelectorAll('.opt-btn');
+            allBtns.forEach(b => b.disabled = true); // Lock answers
+
+            if(idx === lvl.correct) {
+                btn.classList.add('correct');
+                feedbackBox.innerHTML = lvl.feedbackText;
+                feedbackBox.classList.add('success', 'show');
+                fireConfetti();
+                lvl.fixAnim(); // Run the fix animation
+                
+                if(currentLevel < levels.length - 1) {
+                    nextBtn.style.display = 'block';
+                } else {
+                    nextBtn.innerText = "Tebrikler Dedektif! Vakalar Kapatıldı 🎉";
+                    nextBtn.style.display = 'block';
+                    nextBtn.onclick = () => location.reload();
+                }
+            } else {
+                btn.classList.add('wrong');
+                allBtns[lvl.correct].classList.add('correct'); // Show real answer
+                feedbackBox.innerHTML = "Maalesef yanlış. " + lvl.feedbackText;
+                feedbackBox.classList.add('error', 'show');
+                lvl.fixAnim();
+                
+                if(currentLevel < levels.length - 1) {
+                    nextBtn.style.display = 'block';
+                } else {
+                    nextBtn.innerText = "Tekrar Dene";
+                    nextBtn.style.display = 'block';
+                    nextBtn.onclick = () => location.reload();
+                }
+            }
+        }
+
+        function nextLevel() {
+            currentLevel++;
+            loadLevel();
+        }
+
+        function fireConfetti() {
+            for(let i=0; i<30; i++) {
+                let c = document.createElement('div');
+                c.className = 'confetti';
+                c.style.left = Math.random() * canvasArea.offsetWidth + 'px';
+                c.style.top = '-10px';
+                c.style.background = ['#F59E0B', '#3B82F6', '#10B981', '#F43F5E'][Math.floor(Math.random()*4)];
+                c.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                canvasArea.appendChild(c);
+                setTimeout(() => c.remove(), 4000);
+            }
+        }
+
+        // Init
+        loadLevel();
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Birim Kare Laboratuvarı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A;
+            --surface: #1E293B;
+            --text: #F8FAFC;
+            --primary: #3B82F6; /* Blue */
+            --secondary: #10B981; /* Green */
+            --tertiary: #F59E0B; /* Amber */
+            --danger: #F43F5E; /* Rose */
+            --purple: #8B5CF6; /* Purple */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, var(--surface) 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: #0F172A; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .container {
+            width: 100%; max-width: 1000px; display: grid; grid-template-columns: 1fr 320px; gap: 20px;
+        }
+
+        .canvas-area {
+            background: #0B1120; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            position: relative; height: 550px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5); overflow: hidden;
+        }
+
+        svg { width: 100%; height: 100%; }
+
+        .grid-line { stroke: rgba(255, 255, 255, 0.05); stroke-width: 1; }
+        
+        .rect-outline { fill: rgba(59, 130, 246, 0.1); stroke: var(--primary); stroke-width: 4; stroke-linejoin: round; transition: all 0.3s; }
+        
+        .unit-square {
+            fill: rgba(16, 185, 129, 0.7); stroke: var(--bg); stroke-width: 2;
+            opacity: 0; transform: scale(0); transform-origin: center;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .unit-square.show { opacity: 1; transform: scale(1); }
+        .unit-text { fill: white; font-weight: 800; font-size: 14px; text-anchor: middle; dominant-baseline: central; opacity: 0; transition: opacity 0.3s;}
+        .unit-text.show { opacity: 1; }
+
+        .edge-lbl { fill: var(--tertiary); font-weight: 900; font-size: 22px; text-anchor: middle; transition: all 0.3s;}
+        .edge-lbl.v { dominant-baseline: central; }
+
+        .tools-area { display: flex; flex-direction: column; gap: 15px; }
+
+        .panel {
+            background: rgba(255,255,255,0.03); border-radius: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .panel-title { font-size: 1.2rem; font-weight: 800; color: var(--primary); margin-bottom: 15px; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 10px;}
+        
+        .control-group { margin-bottom: 20px; }
+        .control-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #94A3B8; }
+        
+        .slider-container { display: flex; align-items: center; gap: 15px; }
+        input[type=range] { flex: 1; accent-color: var(--primary); cursor: pointer; }
+        .val-display { background: rgba(0,0,0,0.3); padding: 5px 12px; border-radius: 8px; font-weight: 800; font-size: 1.1rem; min-width: 45px; text-align: center; border: 1px solid rgba(255,255,255,0.1);}
+
+        .action-btn {
+            width: 100%; background: var(--secondary); color: white; border: none; padding: 15px; border-radius: 12px;
+            font-size: 1.1rem; font-weight: 800; cursor: pointer; transition: all 0.3s; margin-bottom: 10px;
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+        }
+        .action-btn:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(16, 185, 129, 0.5); }
+        .action-btn:disabled { background: #475569; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .clear-btn { background: var(--danger); box-shadow: 0 8px 20px rgba(244, 63, 94, 0.3); }
+        .clear-btn:hover { box-shadow: 0 12px 25px rgba(244, 63, 94, 0.5); }
+
+        .stats-box {
+            background: rgba(59, 130, 246, 0.1); border: 2px solid var(--primary); padding: 15px; border-radius: 15px;
+            text-align: center; font-size: 1.2rem; margin-top: 10px;
+        }
+        .stats-box .eq { font-weight: 800; color: white; margin-bottom: 5px;}
+        .stats-box .res { font-weight: 900; color: var(--tertiary); font-size: 1.6rem; margin-top: 10px; text-shadow: 0 2px 10px rgba(0,0,0,0.5);}
+        .stats-box .count { font-size: 2.5rem; color: var(--secondary); font-weight: 900; }
+
+        @media (max-width: 768px) {
+            .container { grid-template-columns: 1fr; }
+            .canvas-area { height: 400px; }
+            .header { flex-direction: column; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.5.4.2. Alan ve Birim Kare İlişkisi</div>
+    </div>
+
+    <div class="container">
+        
+        <div class="canvas-area">
+            <svg id="svgCanvas">
+                <g id="gridGroup"></g>
+                <rect id="rectOutline" class="rect-outline"></rect>
+                <g id="squaresGroup"></g>
+                
+                <text id="lblT" class="edge-lbl"></text>
+                <text id="lblL" class="edge-lbl v"></text>
+            </svg>
+        </div>
+
+        <div class="tools-area">
+            <div class="panel">
+                <div class="panel-title">Dikdörtgen Oluştur</div>
+                
+                <div class="control-group">
+                    <label>Genişlik (Satırdaki Kare Sayısı)</label>
+                    <div class="slider-container">
+                        <input type="range" id="wSlider" min="2" max="10" step="1" value="5" oninput="updateShape()">
+                        <div class="val-display" id="wVal">5</div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Yükseklik (Sütun Sayısı)</label>
+                    <div class="slider-container">
+                        <input type="range" id="hSlider" min="2" max="8" step="1" value="4" oninput="updateShape()">
+                        <div class="val-display" id="hVal">4</div>
+                    </div>
+                </div>
+
+                <button class="action-btn" id="fillBtn" onclick="startFilling()">Birim Kareleri Diz!</button>
+                <button class="action-btn clear-btn" id="clearBtn" onclick="clearSquares()" style="display:none;">Temizle</button>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">Alan Analizi</div>
+                <div class="stats-box">
+                    <div style="font-size: 0.9rem; color: #94A3B8; font-weight: 600;">Dizilen Kare Sayısı</div>
+                    <div class="count" id="countDisplay">0</div>
+                    <div class="eq" id="eqDisplay" style="opacity: 0;">5 (Genişlik) × 4 (Yükseklik)</div>
+                    <div class="res" id="resDisplay" style="opacity: 0;">Alan = 20 br²</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const svg = document.getElementById('svgCanvas');
+        const gridGroup = document.getElementById('gridGroup');
+        const rectOutline = document.getElementById('rectOutline');
+        const squaresGroup = document.getElementById('squaresGroup');
+        const lblT = document.getElementById('lblT');
+        const lblL = document.getElementById('lblL');
+        
+        const wSlider = document.getElementById('wSlider');
+        const hSlider = document.getElementById('hSlider');
+        const wVal = document.getElementById('wVal');
+        const hVal = document.getElementById('hVal');
+        
+        const fillBtn = document.getElementById('fillBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const countDisplay = document.getElementById('countDisplay');
+        const eqDisplay = document.getElementById('eqDisplay');
+        const resDisplay = document.getElementById('resDisplay');
+
+        let UNIT = 40; 
+        let W = 0, H = 0, CX = 0, CY = 0;
+        let currW = 5, currH = 4;
+        let isFilling = false;
+        let fillInterval = null;
+
+        function resize() {
+            let rect = svg.getBoundingClientRect();
+            W = rect.width;
+            H = rect.height;
+            CX = W / 2;
+            CY = H / 2;
+            drawGrid();
+            updateShape(true);
+        }
+
+        function drawGrid() {
+            gridGroup.innerHTML = '';
+            for(let i = 0; i <= W; i+=UNIT) {
+                let l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                l.setAttribute('x1', i); l.setAttribute('y1', 0); l.setAttribute('x2', i); l.setAttribute('y2', H);
+                l.setAttribute('class', 'grid-line');
+                gridGroup.appendChild(l);
+            }
+            for(let i = 0; i <= H; i+=UNIT) {
+                let l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                l.setAttribute('x1', 0); l.setAttribute('y1', i); l.setAttribute('x2', W); l.setAttribute('y2', i);
+                l.setAttribute('class', 'grid-line');
+                gridGroup.appendChild(l);
+            }
+        }
+
+        function updateShape(force = false) {
+            if(isFilling && !force) return; // Block slider while animating
+            currW = parseInt(wSlider.value);
+            currH = parseInt(hSlider.value);
+            wVal.innerText = currW;
+            hVal.innerText = currH;
+
+            let pxW = currW * UNIT;
+            let pxH = currH * UNIT;
+            
+            // Snap to grid
+            let startX = Math.floor((CX - pxW / 2) / UNIT) * UNIT;
+            let startY = Math.floor((CY - pxH / 2) / UNIT) * UNIT;
+
+            rectOutline.setAttribute('x', startX);
+            rectOutline.setAttribute('y', startY);
+            rectOutline.setAttribute('width', pxW);
+            rectOutline.setAttribute('height', pxH);
+
+            lblT.setAttribute('x', startX + pxW/2); lblT.setAttribute('y', startY - 10);
+            lblT.textContent = currW + ' br';
+            
+            lblL.setAttribute('x', startX - 20); lblL.setAttribute('y', startY + pxH/2);
+            lblL.textContent = currH + ' br';
+
+            clearSquares(true);
+        }
+
+        function clearSquares(silent = false) {
+            clearInterval(fillInterval);
+            squaresGroup.innerHTML = '';
+            countDisplay.innerText = '0';
+            eqDisplay.style.opacity = 0;
+            resDisplay.style.opacity = 0;
+            
+            isFilling = false;
+            wSlider.disabled = false;
+            hSlider.disabled = false;
+            
+            if(!silent) {
+                fillBtn.style.display = 'block';
+                clearBtn.style.display = 'none';
+            }
+        }
+
+        function startFilling() {
+            if(isFilling) return;
+            isFilling = true;
+            wSlider.disabled = true;
+            hSlider.disabled = true;
+            fillBtn.style.display = 'none';
+            clearBtn.style.display = 'block';
+
+            let pxW = currW * UNIT;
+            let pxH = currH * UNIT;
+            let startX = Math.floor((CX - pxW / 2) / UNIT) * UNIT;
+            let startY = Math.floor((CY - pxH / 2) / UNIT) * UNIT;
+
+            let total = currW * currH;
+            let count = 0;
+
+            fillInterval = setInterval(() => {
+                if(count >= total) {
+                    clearInterval(fillInterval);
+                    finishFilling();
+                    return;
+                }
+
+                let row = Math.floor(count / currW);
+                let col = count % currW;
+                
+                let x = startX + col * UNIT;
+                let y = startY + row * UNIT;
+
+                // Create square
+                let sq = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                sq.setAttribute('x', x);
+                sq.setAttribute('y', y);
+                sq.setAttribute('width', UNIT);
+                sq.setAttribute('height', UNIT);
+                sq.setAttribute('class', 'unit-square');
+                
+                // Set custom transform origin for scale animation
+                sq.style.transformOrigin = `${x + UNIT/2}px ${y + UNIT/2}px`;
+                
+                // Create text
+                let txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                txt.setAttribute('x', x + UNIT/2);
+                txt.setAttribute('y', y + UNIT/2);
+                txt.setAttribute('class', 'unit-text');
+                txt.textContent = count + 1;
+
+                squaresGroup.appendChild(sq);
+                squaresGroup.appendChild(txt);
+
+                // Trigger animation
+                setTimeout(() => {
+                    sq.classList.add('show');
+                    txt.classList.add('show');
+                }, 10);
+
+                count++;
+                countDisplay.innerText = count;
+
+            }, 60); // Speed of filling
+        }
+
+        function finishFilling() {
+            isFilling = false;
+            wSlider.disabled = false;
+            hSlider.disabled = false;
+            
+            eqDisplay.innerText = `${currW} (En) × ${currH} (Boy)`;
+            resDisplay.innerText = `Alan = ${currW * currH} br²`;
+            
+            eqDisplay.style.opacity = 1;
+            resDisplay.style.opacity = 1;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+    </script>
+</body>
+</html>

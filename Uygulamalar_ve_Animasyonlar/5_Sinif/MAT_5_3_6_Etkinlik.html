@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İç Açılar Laboratuvarı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A;
+            --surface: #1E293B;
+            --text: #F8FAFC;
+            --primary: #F59E0B; /* Amber */
+            --secondary: #3B82F6; /* Blue */
+            --tertiary: #10B981; /* Green */
+            --danger: #F43F5E; /* Rose */
+            --purple: #8B5CF6; /* Purple */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, var(--surface) 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: #0F172A; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .container {
+            width: 100%; max-width: 1000px; display: grid; grid-template-columns: 1fr 300px; gap: 20px;
+        }
+
+        .canvas-area {
+            background: #0B1120; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            position: relative; height: 550px; display: flex; flex-direction: column; align-items: center;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5); overflow: hidden;
+        }
+
+        .tools-area { display: flex; flex-direction: column; gap: 15px; }
+
+        .panel {
+            background: rgba(255,255,255,0.03); border-radius: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .panel-title { font-size: 1.2rem; font-weight: 800; color: var(--primary); margin-bottom: 15px; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 10px;}
+        
+        .mode-btn {
+            width: 100%; background: rgba(255,255,255,0.05); color: white; border: none; padding: 12px 15px; border-radius: 12px;
+            font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .mode-btn.active { background: var(--secondary); box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);}
+        .mode-btn:hover:not(.active) { background: rgba(255,255,255,0.1); }
+
+        .action-btn {
+            width: 100%; background: var(--danger); color: white; border: none; padding: 15px; border-radius: 12px;
+            font-size: 1.1rem; font-weight: 800; cursor: pointer; transition: all 0.3s; margin-bottom: 10px;
+            box-shadow: 0 8px 20px rgba(244, 63, 94, 0.3); text-transform: uppercase; letter-spacing: 1px;
+        }
+        .action-btn:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(244, 63, 94, 0.5); }
+        .action-btn.active { background: var(--tertiary); box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3); }
+
+        .diag-btn { background: var(--purple); box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3); }
+        .diag-btn:hover { box-shadow: 0 12px 25px rgba(139, 92, 246, 0.5); }
+
+        .info-box {
+            background: rgba(245, 158, 11, 0.1); border: 2px solid var(--primary); padding: 15px; border-radius: 15px;
+            margin-top: 15px; font-size: 0.95rem; line-height: 1.5; color: #FCD34D;
+        }
+        .info-box span { font-weight: 800; color: white; }
+
+        /* Toast */
+        .toast {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
+            background: var(--danger); color: white; padding: 15px 30px; border-radius: 30px;
+            font-weight: 800; font-size: 1.1rem; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); z-index: 100;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+
+        /* SVG Elements */
+        svg { width: 100%; height: 100%; }
+        
+        .polygon-shape { fill: rgba(255, 255, 255, 0.05); stroke: white; stroke-width: 4; stroke-linejoin: round; }
+        
+        .vertex { fill: white; r: 10; cursor: grab; stroke: var(--bg); stroke-width: 3; transition: r 0.2s;}
+        .vertex:hover { r: 14; fill: var(--primary); }
+        .vertex.disabled { cursor: not-allowed; opacity: 0.5; }
+
+        .diagonal { stroke: var(--purple); stroke-width: 3; stroke-dasharray: 10 10; opacity: 0; transition: opacity 0.5s; }
+
+        .wedge { transition: transform 1.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .wedge-path { stroke: rgba(0,0,0,0.3); stroke-width: 2; }
+        
+        /* Transition is applied via JS so it can be disabled on drag */
+        .wedge-text { font-size: 18px; font-weight: 800; fill: white; text-anchor: middle; dominant-baseline: central; text-shadow: 0 2px 5px rgba(0,0,0,0.8); }
+
+        /* Result Arc */
+        .result-arc { fill: none; stroke: white; stroke-width: 4; stroke-dasharray: 4 4; opacity: 0; transition: opacity 1s 1s; }
+        .result-text { font-size: 32px; font-weight: 900; fill: var(--primary); text-anchor: middle; opacity: 0; transition: opacity 1s 1s; text-shadow: 0 5px 15px rgba(0,0,0,1);}
+
+        @media (max-width: 768px) {
+            .container { grid-template-columns: 1fr; }
+            .canvas-area { height: 400px; }
+            .header { flex-direction: column; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.5.3.6. İç Açılar ve Köşegenler</div>
+    </div>
+
+    <div class="container">
+        
+        <div class="canvas-area">
+            <div id="toast" class="toast">Üçgenin köşegeni yoktur!</div>
+            <svg id="svgCanvas" viewBox="0 0 700 550">
+                <polygon id="polyShape" class="polygon-shape"></polygon>
+                
+                <g id="diagonalsGroup"></g>
+                <g id="wedgesGroup"></g>
+                <g id="verticesGroup"></g>
+
+                <!-- Merge Result Helpers -->
+                <path id="resultArc" class="result-arc"></path>
+                <text id="resultText" class="result-text" x="350" y="470">180°</text>
+            </svg>
+        </div>
+
+        <div class="tools-area">
+            <div class="panel">
+                <div class="panel-title">Çokgen Seçimi</div>
+                <button class="mode-btn active" onclick="setMode(3)" id="btn3">Üçgen <span>△</span></button>
+                <button class="mode-btn" onclick="setMode(4)" id="btn4">Dörtgen <span>▱</span></button>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">İnteraktif Deney</div>
+                <button class="action-btn" id="mergeBtn" onclick="toggleMerge()">Açıları Birleştir!</button>
+                <button class="action-btn diag-btn" id="diagBtn" onclick="toggleDiagonals()">Köşegenleri Göster</button>
+                
+                <div class="info-box" id="infoBox">
+                    Köşelerden tutup şekli dilediğiniz gibi değiştirin. Ardından <span>Açıları Birleştir</span> butonuna basarak iç açıların toplamının büyüsünü izleyin!
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const svgCanvas = document.getElementById('svgCanvas');
+        const polyShape = document.getElementById('polyShape');
+        const wedgesGroup = document.getElementById('wedgesGroup');
+        const verticesGroup = document.getElementById('verticesGroup');
+        const diagonalsGroup = document.getElementById('diagonalsGroup');
+        
+        const mergeBtn = document.getElementById('mergeBtn');
+        const diagBtn = document.getElementById('diagBtn');
+        const toast = document.getElementById('toast');
+        const resultArc = document.getElementById('resultArc');
+        const resultText = document.getElementById('resultText');
+
+        let mode = 3;
+        let isMerged = false;
+        let isDiag = false;
+        let points = [];
+        let draggingPoint = null;
+
+        const colors = [
+            'rgba(244, 63, 94, 0.9)', // Rose
+            'rgba(59, 130, 246, 0.9)', // Blue
+            'rgba(16, 185, 129, 0.9)', // Green
+            'rgba(245, 158, 11, 0.9)'  // Amber
+        ];
+
+        function initPoints() {
+            if(mode === 3) {
+                points = [
+                    {x: 350, y: 150}, 
+                    {x: 550, y: 400}, 
+                    {x: 150, y: 400}
+                ];
+            } else {
+                points = [
+                    {x: 250, y: 150}, 
+                    {x: 550, y: 150}, 
+                    {x: 600, y: 400}, 
+                    {x: 150, y: 400}
+                ];
+            }
+        }
+
+        // Generate wedge SVG path
+        function makeWedgePath(r, thetaDeg) {
+            let rad = thetaDeg * Math.PI / 180;
+            let x = r * Math.cos(rad);
+            let y = r * Math.sin(rad); 
+            let largeArc = thetaDeg > 180 ? 1 : 0;
+            return `M 0 0 L ${r} 0 A ${r} ${r} 0 ${largeArc} 1 ${x} ${y} Z`;
+        }
+
+        function calculateAngles() {
+            let n = points.length;
+            let data = [];
+            for(let i=0; i<n; i++) {
+                let p = points[i];
+                let pNext = points[(i+1)%n];
+                let pPrev = points[(i-1+n)%n];
+
+                let dx1 = pNext.x - p.x; let dy1 = pNext.y - p.y;
+                let dx2 = pPrev.x - p.x; let dy2 = pPrev.y - p.y;
+                
+                let cross = dx1 * dy2 - dy1 * dx2;
+                let dot = dx1 * dx2 + dy1 * dy2;
+                let theta = Math.atan2(cross, dot) * 180 / Math.PI;
+                if (theta < 0) theta += 360; // Inner angle
+
+                let baseRot = Math.atan2(dy1, dx1) * 180 / Math.PI;
+
+                data.push({ theta, baseRot, x: p.x, y: p.y });
+            }
+            return data;
+        }
+
+        function buildDOM() {
+            wedgesGroup.innerHTML = '';
+            verticesGroup.innerHTML = '';
+            diagonalsGroup.innerHTML = '';
+
+            for(let i=0; i<points.length; i++) {
+                // Diagonals (only for mode 4, P0-P2 and P1-P3)
+                if (mode === 4 && i < 2) {
+                    let d = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    d.setAttribute('id', `diag${i}`);
+                    d.setAttribute('class', 'diagonal');
+                    diagonalsGroup.appendChild(d);
+                }
+
+                // Wedges
+                let g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                g.setAttribute('id', `wedgeG${i}`);
+                g.setAttribute('class', 'wedge');
+                g.style.transition = 'transform 1.5s cubic-bezier(0.4, 0, 0.2, 1)';
+                
+                let path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('id', `wedgePath${i}`);
+                path.setAttribute('class', 'wedge-path');
+                path.setAttribute('fill', colors[i]);
+                
+                let text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('id', `wedgeText${i}`);
+                text.setAttribute('class', 'wedge-text');
+                text.style.transition = 'transform 1.5s cubic-bezier(0.4, 0, 0.2, 1)';
+                
+                g.appendChild(path);
+                g.appendChild(text);
+                wedgesGroup.appendChild(g);
+
+                // Vertices
+                let circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('class', 'vertex');
+                circle.setAttribute('id', `vertex${i}`);
+                circle.addEventListener('mousedown', (e) => startDrag(e, i));
+                circle.addEventListener('touchstart', (e) => startDrag(e, i), {passive: false});
+                verticesGroup.appendChild(circle);
+            }
+        }
+
+        function render() {
+            let pointsStr = points.map(p => `${p.x},${p.y}`).join(' ');
+            polyShape.setAttribute('points', pointsStr);
+
+            let data = calculateAngles();
+
+            let currentMergeRot = mode === 3 ? 180 : 0;
+            let mergeCX = 350;
+            let mergeCY = mode === 3 ? 400 : 275;
+
+            for(let i=0; i<points.length; i++) {
+                let d = data[i];
+                let g = document.getElementById(`wedgeG${i}`);
+                let path = document.getElementById(`wedgePath${i}`);
+                let text = document.getElementById(`wedgeText${i}`);
+                let v = document.getElementById(`vertex${i}`);
+
+                // Update geometry
+                let r = 60;
+                path.setAttribute('d', makeWedgePath(r, d.theta));
+                
+                let textRad = (d.theta / 2) * Math.PI / 180;
+                let textX = (r - 25) * Math.cos(textRad);
+                let textY = (r - 25) * Math.sin(textRad);
+
+                text.setAttribute('x', textX);
+                text.setAttribute('y', textY);
+                text.textContent = Math.round(d.theta) + "°";
+
+                v.setAttribute('cx', d.x);
+                v.setAttribute('cy', d.y);
+                
+                let targetRot = 0;
+                if (isMerged) {
+                    v.classList.add('disabled');
+                    targetRot = currentMergeRot;
+                    g.style.transform = `translate(${mergeCX}px, ${mergeCY}px) rotate(${currentMergeRot}deg)`;
+                    currentMergeRot += d.theta;
+                } else {
+                    v.classList.remove('disabled');
+                    targetRot = d.baseRot;
+                    g.style.transform = `translate(${d.x}px, ${d.y}px) rotate(${d.baseRot}deg)`;
+                }
+
+                // Counter-rotate the text around its local anchor so it's always upright!
+                text.style.transformOrigin = `${textX}px ${textY}px`;
+                text.style.transform = `rotate(${-targetRot}deg)`;
+
+                // Update Diagonals
+                if (mode === 4 && i < 2) {
+                    let diag = document.getElementById(`diag${i}`);
+                    diag.setAttribute('x1', points[i].x);
+                    diag.setAttribute('y1', points[i].y);
+                    diag.setAttribute('x2', points[i+2].x);
+                    diag.setAttribute('y2', points[i+2].y);
+                    diag.style.opacity = isDiag && !isMerged ? 1 : 0;
+                }
+            }
+
+            // Update Result Arc
+            if (isMerged) {
+                if (mode === 3) {
+                    resultArc.setAttribute('d', `M 250 400 A 100 100 0 0 1 450 400`);
+                    resultText.setAttribute('x', 350);
+                    resultText.setAttribute('y', 430);
+                    resultText.textContent = "Toplam: 180° (Doğru Açı)";
+                } else {
+                    resultArc.setAttribute('d', `M 250 275 A 100 100 0 1 1 250 275.01`);
+                    resultText.setAttribute('x', 350);
+                    resultText.setAttribute('y', 420);
+                    resultText.textContent = "Toplam: 360° (Tam Açı)";
+                }
+                resultArc.style.opacity = 1;
+                resultText.style.opacity = 1;
+            } else {
+                resultArc.style.opacity = 0;
+                resultText.style.opacity = 0;
+            }
+        }
+
+        window.setMode = function(m) {
+            if (isMerged) toggleMerge();
+            mode = m;
+            isDiag = false;
+            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`btn${m}`).classList.add('active');
+            
+            initPoints();
+            buildDOM();
+            
+            // Disable transitions temporarily so it snaps instantly on mode switch
+            document.querySelectorAll('.wedge, .wedge-text').forEach(el => el.style.transition = 'none');
+            render();
+            // Flush CSS
+            void svgCanvas.offsetWidth;
+            // Re-enable
+            document.querySelectorAll('.wedge, .wedge-text').forEach(el => el.style.transition = 'transform 1.5s cubic-bezier(0.4, 0, 0.2, 1)');
+        }
+
+        window.toggleMerge = function() {
+            isMerged = !isMerged;
+            if (isMerged) {
+                mergeBtn.classList.add('active');
+                mergeBtn.innerText = "Açıları Dağıt";
+                if(isDiag) toggleDiagonals();
+            } else {
+                mergeBtn.classList.remove('active');
+                mergeBtn.innerText = "Açıları Birleştir!";
+            }
+            render();
+        }
+
+        function showToast(msg) {
+            toast.innerText = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        window.toggleDiagonals = function() {
+            if (isMerged) return;
+            if (mode === 3) {
+                showToast("Üçgenin köşegeni yoktur!");
+                return;
+            }
+            isDiag = !isDiag;
+            render();
+        }
+
+        // Drag Logic
+        function startDrag(e, index) {
+            if (isMerged) return;
+            e.preventDefault();
+            draggingPoint = index;
+            // Disable transitions for instant drag feedback
+            document.querySelectorAll('.wedge, .wedge-text').forEach(el => el.style.transition = 'none');
+        }
+
+        function onDrag(e) {
+            if (draggingPoint === null || isMerged) return;
+            e.preventDefault();
+
+            let clientX = e.clientX || e.touches[0].clientX;
+            let clientY = e.clientY || e.touches[0].clientY;
+
+            let rect = svgCanvas.getBoundingClientRect();
+            let scaleX = 700 / rect.width;
+            let scaleY = 550 / rect.height;
+
+            points[draggingPoint].x = (clientX - rect.left) * scaleX;
+            points[draggingPoint].y = (clientY - rect.top) * scaleY;
+
+            render();
+        }
+
+        function endDrag() { 
+            if(draggingPoint !== null) {
+                draggingPoint = null; 
+                // Re-enable transitions
+                document.querySelectorAll('.wedge, .wedge-text').forEach(el => el.style.transition = 'transform 1.5s cubic-bezier(0.4, 0, 0.2, 1)');
+            }
+        }
+
+        window.addEventListener('mousemove', onDrag);
+        window.addEventListener('touchmove', onDrag, {passive: false});
+        window.addEventListener('mouseup', endDrag);
+        window.addEventListener('touchend', endDrag);
+
+        // Init
+        initPoints();
+        buildDOM();
+        render();
+
+    </script>
+</body>
+</html>

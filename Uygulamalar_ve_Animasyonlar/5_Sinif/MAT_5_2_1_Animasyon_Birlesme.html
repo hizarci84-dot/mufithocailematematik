@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Çarpmanın Birleşme Özelliği</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0F172A;
+            --bg-light: #1E293B;
+            --text-main: #F8FAFC;
+            --c-paket: #38BDF8; /* Light blue */
+            --c-kutu: #F472B6;  /* Pink */
+            --c-koli: #FDE047;  /* Yellow */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body { 
+            background: linear-gradient(135deg, var(--bg-light) 0%, var(--bg-dark) 100%); 
+            color: var(--text-main); 
+            min-height: 100vh; 
+            display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; 
+            overflow: hidden; 
+        }
+
+        .brand-header { 
+            position: absolute; top: 20px; 
+            display: flex; align-items: center; gap: 15px; 
+            background: rgba(255, 255, 255, 0.05); 
+            padding: 8px 20px; border-radius: 50px; 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            backdrop-filter: blur(10px); z-index: 100; 
+        }
+        .brand-header img { width: 40px; height: 40px; border-radius: 50%; object-fit: contain; background: white; padding: 2px;}
+        .brand-header span { color: #E2E8F0; font-weight: 600; font-size: 1.1rem; }
+
+        .kazanim-box { 
+            position: absolute; bottom: 20px; 
+            padding: 12px 25px; background: rgba(255, 255, 255, 0.05); 
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; 
+            text-align: center; z-index: 100; max-width: 90%;
+        }
+        .kazanim-box p { font-size: 0.9rem; color: #94A3B8; }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 1100px;
+            gap: 30px;
+            padding: 20px;
+            margin-top: 40px;
+        }
+
+        .title { 
+            font-size: 2.2rem; 
+            color: var(--c-koli); 
+            text-align: center;
+            opacity: 0; 
+            transition: all 0.8s ease; 
+            height: 50px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .show-title .title { opacity: 1; }
+        
+        /* 3D Cards */
+        .cards-container {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 20px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 1s ease;
+            width: 100%;
+            justify-content: center;
+        }
+        .show-cards .cards-container { opacity: 1; transform: translateY(0); }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            width: 260px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s;
+        }
+        .card:hover { transform: translateY(-10px); }
+        
+        .card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 5px;
+        }
+        .c-paket::before { background: var(--c-paket); }
+        .c-kutu::before { background: var(--c-kutu); }
+        .c-koli::before { background: var(--c-koli); }
+
+        .icon { font-size: 4rem; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5)); }
+        
+        .card-text { font-size: 1.5rem; font-weight: 800; text-align: center; line-height: 1.3;}
+        .card-sub { font-size: 1rem; color: #94A3B8; font-weight: 600;}
+
+        /* Equation Board */
+        .board {
+            background: #F8FAFC;
+            border-radius: 20px;
+            padding: 30px 40px;
+            width: 100%;
+            max-width: 800px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            opacity: 0;
+            transform: scale(0.95);
+            transition: all 0.8s ease;
+        }
+        .show-board .board { opacity: 1; transform: scale(1); }
+
+        .eq-row {
+            display: flex;
+            align-items: center;
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #1E293B;
+            opacity: 0;
+            transform: translateX(-20px);
+            transition: all 0.5s ease;
+        }
+        .show-eq1 .eq1 { opacity: 1; transform: translateX(0); }
+        .show-eq2 .eq2 { opacity: 1; transform: translateX(0); }
+        .show-eq3 .eq3 { opacity: 1; transform: translateX(0); }
+        
+        .eq-badge {
+            background: #E2E8F0;
+            color: #475569;
+            font-size: 1rem;
+            padding: 5px 15px;
+            border-radius: 20px;
+            margin-right: 20px;
+            text-transform: uppercase;
+        }
+
+        .math-part { flex: 1; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;}
+        
+        /* Highlight colors for math */
+        .t-paket { color: #0284C7; }
+        .t-kutu { color: #BE185D; }
+        .t-koli { color: #B45309; }
+
+        .final-rule {
+            text-align: center;
+            font-size: 2.8rem;
+            color: #10B981;
+            margin-top: 10px;
+            padding-top: 20px;
+            border-top: 2px dashed #CBD5E1;
+        }
+
+        #replayBtn { 
+            position: absolute; right: 20px; bottom: 20px; 
+            background: var(--c-koli); color: #0F172A; border: none; 
+            padding: 10px 20px; border-radius: 8px; font-size: 1rem; font-weight: 800; 
+            cursor: pointer; opacity: 0; pointer-events: none; transition: opacity 0.5s ease; z-index: 100; 
+        }
+        #replayBtn.visible { opacity: 1; pointer-events: auto; }
+        #replayBtn:hover { background: #EAB308; }
+
+        @media (max-width: 768px) {
+            .cards-container { flex-direction: column; align-items: center; gap: 15px;}
+            .card { width: 100%; max-width: 300px; padding: 15px; flex-direction: row; justify-content: flex-start;}
+            .icon { font-size: 2.5rem; }
+            .card-text { font-size: 1.2rem; text-align: left;}
+            .eq-row { font-size: 1.5rem; flex-direction: column; align-items: flex-start; gap: 10px; border-bottom: 1px solid #E2E8F0; padding-bottom: 10px;}
+            .math-part { gap: 5px; }
+            .final-rule { font-size: 1.8rem; border-top: none; padding-top: 0;}
+            .board { padding: 20px; }
+            .title { font-size: 1.5rem; height: auto;}
+        }
+    </style>
+</head>
+<body>
+    <div class="brand-header">
+        <img src="../../logom.png" alt="Logo">
+        <span>@mufithocailematematik</span>
+    </div>
+    
+    <div class="container" id="mainScene">
+        <div class="title" id="titleText">Bir kolide toplam kaç bisküvi var?</div>
+        
+        <div class="cards-container" id="cards">
+            <div class="card c-paket">
+                <div class="icon">🍪</div>
+                <div>
+                    <div class="card-sub">1 Paket</div>
+                    <div class="card-text" style="color: var(--c-paket);">10 Bisküvi</div>
+                </div>
+            </div>
+            
+            <div class="card c-kutu">
+                <div class="icon">📦</div>
+                <div>
+                    <div class="card-sub">1 Kutu</div>
+                    <div class="card-text" style="color: var(--c-kutu);">20 Paket</div>
+                </div>
+            </div>
+            
+            <div class="card c-koli">
+                <div class="icon">🗃️</div>
+                <div>
+                    <div class="card-sub">1 Koli</div>
+                    <div class="card-text" style="color: var(--c-koli);">25 Kutu</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="board" id="board">
+            <div class="eq-row eq1">
+                <div class="eq-badge">1. Yol</div>
+                <div class="math-part">
+                    <span>(</span><span class="t-kutu">20</span> <span>x</span> <span class="t-paket">10</span><span>)</span> 
+                    <span>x</span> <span class="t-koli">25</span> 
+                    <span>=</span> <span>200 x 25</span> 
+                    <span>=</span> <span>5000</span>
+                </div>
+            </div>
+            
+            <div class="eq-row eq2">
+                <div class="eq-badge">2. Yol</div>
+                <div class="math-part">
+                    <span class="t-kutu">20</span> <span>x</span> 
+                    <span>(</span><span class="t-paket">10</span> <span>x</span> <span class="t-koli">25</span><span>)</span> 
+                    <span>=</span> <span>20 x 250</span> 
+                    <span>=</span> <span>5000</span>
+                </div>
+            </div>
+
+            <div class="eq-row eq3">
+                <div class="math-part final-rule" style="justify-content: center;">
+                    (20 x 10) x 25 = 20 x (10 x 25)
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="kazanim-box">
+        <p><strong>MAT.5.2.1.</strong> Çarpma işleminde birleşme özelliği.</p>
+    </div>
+    
+    <button id="replayBtn" onclick="startSequence()">Tekrar Oynat</button>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        
+        async function startSequence() {
+            const scene = document.getElementById('mainScene');
+            const title = document.getElementById('titleText');
+            const btn = document.getElementById('replayBtn');
+
+            // Reset
+            scene.classList.remove('show-title', 'show-cards', 'show-board', 'show-eq1', 'show-eq2', 'show-eq3');
+            title.innerText = "Bir kolide toplam kaç bisküvi var?";
+            btn.classList.remove('visible');
+
+            await sleep(500);
+
+            // 1. Show Title & Cards
+            scene.classList.add('show-title', 'show-cards');
+            await sleep(2500);
+
+            // 2. Show Board
+            scene.classList.add('show-board');
+            await sleep(500);
+            
+            // Step 1
+            scene.classList.add('show-eq1');
+            await sleep(2500);
+
+            // Step 2
+            scene.classList.add('show-eq2');
+            await sleep(2500);
+
+            // Step 3
+            title.innerText = "Sayıların gruplanması sonucu değiştirmez! (Birleşme Özelliği)";
+            scene.classList.add('show-eq3');
+            
+            await sleep(2000);
+            btn.classList.add('visible');
+        }
+        
+        window.onload = startSequence;
+    </script>
+</body>
+</html>

@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10.5.1 - Analitik Uzaklık ve Oran Radarı</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            /* Radar / GPS Style Colors */
+            --bg-color: #051008; 
+            --panel-bg: rgba(5, 30, 15, 0.85); 
+            --radar-grid: rgba(57, 255, 20, 0.15);
+            --radar-axis: rgba(57, 255, 20, 0.5);
+            
+            --primary: #39FF14; /* Neon Green */
+            --accent-red: #FF3333;
+            --accent-yellow: #FFFF33;
+            
+            --text-main: #E0FFE0;
+            --text-muted: #559955;
+            
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            background-color: var(--bg-color); color: var(--text-main);
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; padding: 20px; overflow-x: hidden;
+            /* Subdued scanline effect */
+            background-image: linear-gradient(rgba(0,0,0,0) 50%, rgba(0,0,0,0.2) 50%);
+            background-size: 100% 4px;
+        }
+
+        .header {
+            width: 100%; max-width: 1200px; display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 25px; background: var(--panel-bg);
+            border-radius: 10px; border: 1px solid var(--primary);
+            margin-bottom: 20px; box-shadow: 0 0 20px rgba(57, 255, 20, 0.2);
+        }
+        
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: bold; color: var(--primary); font-size: 1.2rem; }
+        .header-left img { width: 40px; height: 40px; border-radius: 10px; filter: grayscale(100%) sepia(100%) hue-rotate(80deg) saturate(300%) contrast(150%); }
+        .kazanim { background: rgba(57, 255, 20, 0.1); padding: 5px 15px; border-radius: 5px; color: var(--primary); border: 1px solid var(--radar-grid); }
+
+        h1 { font-size: 2rem; margin-bottom: 10px; text-align: center; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 10px var(--primary); }
+        .subtitle { color: var(--text-muted); font-size: 1rem; margin-bottom: 20px; text-align: center; max-width: 800px; }
+
+        .workspace { display: flex; flex-direction: row; gap: 20px; width: 100%; max-width: 1200px; }
+        @media (max-width: 900px) { .workspace { flex-direction: column; } }
+
+        .controls {
+            flex: 1; display: flex; flex-direction: column; gap: 15px; background: var(--panel-bg);
+            padding: 20px; border-radius: 10px; border: 1px solid var(--radar-axis);
+            box-shadow: inset 0 0 20px rgba(57, 255, 20, 0.05);
+        }
+
+        .data-panel { border: 1px dashed var(--primary); padding: 15px; border-radius: 5px; background: rgba(0,20,0,0.5); }
+        .data-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 1.1rem; border-bottom: 1px solid var(--radar-grid); padding-bottom: 5px; }
+        .data-val { color: var(--primary); font-weight: bold; }
+
+        .slider-group { margin-top: 15px; }
+        .slider-header { display: flex; justify-content: space-between; margin-bottom: 5px; color: var(--accent-yellow); }
+        
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: var(--radar-axis); }
+        input[type=range]::-webkit-slider-thumb { height: 16px; width: 8px; background: var(--accent-yellow); cursor: pointer; -webkit-appearance: none; margin-top: -6px; box-shadow: 0 0 5px var(--accent-yellow); }
+
+        .math-box {
+            margin-top: auto; padding: 15px; background: rgba(0,0,0,0.8);
+            border-left: 4px solid var(--primary); font-size: 1.1rem;
+        }
+
+        .graph-container {
+            flex: 2; position: relative; background: #010a05;
+            border-radius: 10px; border: 2px solid var(--primary);
+            overflow: hidden; min-height: 550px;
+            box-shadow: 0 0 30px rgba(57, 255, 20, 0.2), inset 0 0 50px rgba(0,0,0,1);
+            touch-action: none; display: flex; justify-content: center; align-items: center;
+        }
+        
+        /* Sweep animation */
+        .radar-sweep {
+            position: absolute; top: 50%; left: 50%; width: 200%; height: 200%;
+            background: conic-gradient(from 0deg, transparent 70%, rgba(57, 255, 20, 0.1) 100%);
+            transform-origin: 0 0; animation: sweep 8s linear infinite; pointer-events: none;
+        }
+        @keyframes sweep { from { transform: rotate(0deg) translate(-50%, -50%); } to { transform: rotate(360deg) translate(-50%, -50%); } }
+
+        /* SVG Graph Styling */
+        svg { width: 100%; height: 100%; display: block; position: relative; z-index: 10; }
+        
+        .svg-grid { stroke: var(--radar-grid); stroke-width: 0.5; }
+        .svg-axis { stroke: var(--radar-axis); stroke-width: 1.5; }
+        .svg-label { fill: var(--text-muted); font-size: 12px; font-family: 'Share Tech Mono'; }
+        
+        .line-ab { stroke: var(--primary); stroke-width: 3; filter: drop-shadow(0 0 5px var(--primary)); }
+        .line-triangle { stroke: var(--text-muted); stroke-width: 1.5; stroke-dasharray: 5,5; }
+        
+        .node { fill: #000; stroke: var(--primary); stroke-width: 2; r: 6; cursor: grab; filter: drop-shadow(0 0 5px var(--primary)); transition: 0.1s; }
+        .node:active { cursor: grabbing; r: 8; fill: var(--primary); }
+        .node-c { fill: var(--accent-yellow); stroke: #000; stroke-width: 2; r: 5; filter: drop-shadow(0 0 8px var(--accent-yellow)); pointer-events: none; }
+        
+        .node-text { fill: var(--primary); font-size: 14px; font-weight: bold; pointer-events: none; filter: drop-shadow(0 0 2px #000); }
+        .node-c-text { fill: var(--accent-yellow); font-size: 14px; font-weight: bold; pointer-events: none; filter: drop-shadow(0 0 2px #000); }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=39FF14&color=000'">
+            <span>@mufithocailematematik [RADAR_SYS]</span>
+        </div>
+        <div class="kazanim">MAT.10.5.1. Uzaklık ve İçten Bölen Nokta</div>
+    </div>
+    
+    <h1>Analitik Uzaklık ve Oran Radarı</h1>
+    <p class="subtitle">A ve B hedeflerini sürükleyerek konumlarını değiştirin. Uzaklığın (Pisagor) ve aradaki C noktasının koordinatlarının (Benzerlik) nasıl hesaplandığını anlık takip edin.</p>
+    
+    <div class="workspace">
+        <div class="controls">
+            
+            <div class="data-panel">
+                <div class="data-row"><span>Hedef A (x₁, y₁):</span> <span class="data-val" id="valA">(-4, 3)</span></div>
+                <div class="data-row"><span>Hedef B (x₂, y₂):</span> <span class="data-val" id="valB">(4, -3)</span></div>
+                <div class="data-row" style="color:var(--accent-red); margin-top: 10px;">
+                    <span>A-B Uzaklığı |AB|:</span> <span class="data-val" id="valDist">10.00 br</span>
+                </div>
+            </div>
+            
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span>İçten Bölen Nokta (C) Oranı (k)</span>
+                    <span class="data-val" style="color:var(--accent-yellow);" id="valK">|AC|/|CB| = 1</span>
+                </div>
+                <input type="range" id="slideK" min="0.1" max="5" step="0.1" value="1">
+                <div style="font-size: 0.9rem; color: var(--text-muted); margin-top: 5px;">k < 1 ise C noktası A'ya, k > 1 ise B'ye daha yakındır.</div>
+            </div>
+            
+            <div class="data-panel" style="border-color: var(--accent-yellow);">
+                <div class="data-row">
+                    <span style="color:var(--accent-yellow);">C(x₀, y₀) Konumu:</span> 
+                    <span class="data-val" style="color:var(--accent-yellow);" id="valC">(0, 0)</span>
+                </div>
+            </div>
+            
+            <div class="math-box">
+                <div id="mathDist">\( |AB| = \sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2} \)</div>
+                <hr style="border:0; border-top:1px dashed var(--radar-grid); margin:10px 0;">
+                <div id="mathDiv">\( x_0 = \frac{x_1 + k \cdot x_2}{1+k} \)</div>
+            </div>
+        </div>
+        
+        <div class="graph-container">
+            <div class="radar-sweep"></div>
+            <!-- Grid is 20x20, center is (0,0) -> viewBox -10 to 10 -->
+            <!-- But to make it precise with pixels, let's use fixed SVG size and map it. -->
+            <svg id="graphSvg" viewBox="-10 -10 20 20" preserveAspectRatio="xMidYMid meet">
+                <g id="transformGroup" transform="scale(1, -1)"> <!-- Invert Y -->
+                    
+                    <!-- Grid -->
+                    <g id="gridGroup"></g>
+                    
+                    <!-- Axes -->
+                    <line x1="-10" y1="0" x2="10" y2="0" class="svg-axis" />
+                    <line x1="0" y1="-10" x2="0" y2="10" class="svg-axis" />
+                    
+                    <!-- Triangle (dx, dy) -->
+                    <line id="lineDX" class="line-triangle" x1="0" y1="0" x2="0" y2="0" />
+                    <line id="lineDY" class="line-triangle" x1="0" y1="0" x2="0" y2="0" />
+                    
+                    <!-- Distance Line -->
+                    <line id="lineAB" class="line-ab" x1="-4" y1="3" x2="4" y2="-3" />
+                    
+                    <!-- Nodes -->
+                    <circle id="nodeA" class="node" cx="-4" cy="3" r="0.4" />
+                    <circle id="nodeB" class="node" cx="4" cy="-3" r="0.4" />
+                    <circle id="nodeC" class="node-c" cx="0" cy="0" r="0.3" />
+                </g>
+                
+                <!-- Labels (Outside inverted group) -->
+                <g id="labelsGroup"></g>
+                <text id="lblA" class="node-text" x="0" y="0">A</text>
+                <text id="lblB" class="node-text" x="0" y="0">B</text>
+                <text id="lblC" class="node-c-text" x="0" y="0">C</text>
+                
+                <text id="lblDX" fill="var(--text-muted)" font-size="0.8" text-anchor="middle" font-family="Share Tech Mono"></text>
+                <text id="lblDY" fill="var(--text-muted)" font-size="0.8" dominant-baseline="middle" font-family="Share Tech Mono"></text>
+            </svg>
+        </div>
+    </div>
+
+    <script>
+        const svg = document.getElementById('graphSvg');
+        const nodeA = document.getElementById('nodeA');
+        const nodeB = document.getElementById('nodeB');
+        const nodeC = document.getElementById('nodeC');
+        const lineAB = document.getElementById('lineAB');
+        const lineDX = document.getElementById('lineDX');
+        const lineDY = document.getElementById('lineDY');
+        const slideK = document.getElementById('slideK');
+        
+        let posA = { x: -4, y: 3 };
+        let posB = { x: 4, y: -3 };
+        
+        let draggedNode = null;
+        let debounceTimer;
+
+        function drawGrid() {
+            let gridHtml = '';
+            let labelHtml = '';
+            for(let i = -10; i <= 10; i++) {
+                if(i !== 0) {
+                    gridHtml += `<line x1="${i}" y1="-10" x2="${i}" y2="10" class="svg-grid" />`;
+                    gridHtml += `<line x1="-10" y1="${i}" x2="10" y2="${i}" class="svg-grid" />`;
+                    // Labels
+                    if(i % 2 === 0) {
+                        labelHtml += `<text x="${i}" y="0.8" class="svg-label" text-anchor="middle">${i}</text>`;
+                        labelHtml += `<text x="-0.2" y="${-i + 0.3}" class="svg-label" text-anchor="end">${i}</text>`;
+                    }
+                }
+            }
+            document.getElementById('gridGroup').innerHTML = gridHtml;
+            document.getElementById('labelsGroup').innerHTML = labelHtml;
+        }
+
+        function updateMathjax(k, cx, cy, dist) {
+            let dx = posB.x - posA.x;
+            let dy = posB.y - posA.y;
+            
+            let strDist = `\\( |AB| = \\sqrt{(${posB.x} - ${posA.x})^2 + (${posB.y} - ${posA.y})^2} = \\sqrt{${dx*dx + dy*dy}} = ${dist.toFixed(2)} \\)`;
+            
+            let strDiv = `\\( x_0 = \\frac{${posA.x} + (${k.toFixed(1)})(${posB.x})}{1+${k.toFixed(1)}} = ${cx.toFixed(2)} \\)<br>
+                          \\( y_0 = \\frac{${posA.y} + (${k.toFixed(1)})(${posB.y})}{1+${k.toFixed(1)}} = ${cy.toFixed(2)} \\)`;
+                          
+            document.getElementById('mathDist').innerHTML = strDist;
+            document.getElementById('mathDiv').innerHTML = strDiv;
+            
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                MathJax.typesetPromise([document.getElementById('mathDist'), document.getElementById('mathDiv')]);
+            }, 100);
+        }
+
+        function updateVisuals() {
+            // Update Nodes
+            nodeA.setAttribute('cx', posA.x); nodeA.setAttribute('cy', posA.y);
+            nodeB.setAttribute('cx', posB.x); nodeB.setAttribute('cy', posB.y);
+            lineAB.setAttribute('x1', posA.x); lineAB.setAttribute('y1', posA.y);
+            lineAB.setAttribute('x2', posB.x); lineAB.setAttribute('y2', posB.y);
+            
+            // Triangle (dx, dy)
+            // Let's draw horizontal from A, vertical from B
+            lineDX.setAttribute('x1', posA.x); lineDX.setAttribute('y1', posA.y);
+            lineDX.setAttribute('x2', posB.x); lineDX.setAttribute('y2', posA.y);
+            
+            lineDY.setAttribute('x1', posB.x); lineDY.setAttribute('y1', posA.y);
+            lineDY.setAttribute('x2', posB.x); lineDY.setAttribute('y2', posB.y);
+            
+            // Calc C
+            let k = parseFloat(slideK.value);
+            let cx = (posA.x + k * posB.x) / (1 + k);
+            let cy = (posA.y + k * posB.y) / (1 + k);
+            
+            nodeC.setAttribute('cx', cx); nodeC.setAttribute('cy', cy);
+            
+            // Dist
+            let dx = posB.x - posA.x; let dy = posB.y - posA.y;
+            let dist = Math.hypot(dx, dy);
+            
+            // UI Updates
+            document.getElementById('valA').innerText = `(${posA.x.toFixed(1)}, ${posA.y.toFixed(1)})`;
+            document.getElementById('valB').innerText = `(${posB.x.toFixed(1)}, ${posB.y.toFixed(1)})`;
+            document.getElementById('valC').innerText = `(${cx.toFixed(1)}, ${cy.toFixed(1)})`;
+            document.getElementById('valDist').innerText = `${dist.toFixed(2)} br`;
+            document.getElementById('valK').innerText = `|AC|/|CB| = ${k.toFixed(1)}`;
+            
+            // Labels (SVG Y is inverted in group, text is outside so Y must be negated for text)
+            document.getElementById('lblA').setAttribute('x', posA.x - 0.5);
+            document.getElementById('lblA').setAttribute('y', -posA.y - 0.5);
+            
+            document.getElementById('lblB').setAttribute('x', posB.x + 0.5);
+            document.getElementById('lblB').setAttribute('y', -posB.y + 0.5);
+            
+            document.getElementById('lblC').setAttribute('x', cx + 0.3);
+            document.getElementById('lblC').setAttribute('y', -cy - 0.3);
+            
+            // Delta Labels
+            let lblDX = document.getElementById('lblDX');
+            lblDX.setAttribute('x', (posA.x + posB.x)/2);
+            lblDX.setAttribute('y', -posA.y + (posA.y > posB.y ? 0.8 : -0.5));
+            lblDX.textContent = `Δx=${Math.abs(dx).toFixed(1)}`;
+            
+            let lblDY = document.getElementById('lblDY');
+            lblDY.setAttribute('x', posB.x + (posB.x > posA.x ? 0.5 : -2));
+            lblDY.setAttribute('y', -(posA.y + posB.y)/2);
+            lblDY.textContent = `Δy=${Math.abs(dy).toFixed(1)}`;
+            
+            updateMathjax(k, cx, cy, dist);
+        }
+
+        // --- Dragging ---
+        function getMousePos(evt) {
+            let CTM = svg.getScreenCTM();
+            let pt = svg.createSVGPoint();
+            if(evt.touches) { pt.x = evt.touches[0].clientX; pt.y = evt.touches[0].clientY; }
+            else { pt.x = evt.clientX; pt.y = evt.clientY; }
+            let svgPt = pt.matrixTransform(CTM.inverse());
+            return { x: svgPt.x, y: -svgPt.y }; // Invert Y back to math coords
+        }
+
+        svg.addEventListener('mousedown', (e) => {
+            if(e.target.id === 'nodeA') draggedNode = 'A';
+            else if(e.target.id === 'nodeB') draggedNode = 'B';
+            if(draggedNode) e.preventDefault();
+        });
+        svg.addEventListener('touchstart', (e) => {
+            if(e.target.id === 'nodeA') draggedNode = 'A';
+            else if(e.target.id === 'nodeB') draggedNode = 'B';
+            if(draggedNode) e.preventDefault();
+        }, {passive: false});
+
+        window.addEventListener('mousemove', (e) => {
+            if(draggedNode) {
+                let pos = getMousePos(e);
+                // constrain to grid
+                pos.x = Math.max(-10, Math.min(10, pos.x));
+                pos.y = Math.max(-10, Math.min(10, pos.y));
+                // optionally snap to 0.5
+                pos.x = Math.round(pos.x * 2) / 2;
+                pos.y = Math.round(pos.y * 2) / 2;
+                
+                if(draggedNode === 'A') posA = pos;
+                else posB = pos;
+                updateVisuals();
+            }
+        });
+        window.addEventListener('touchmove', (e) => {
+            if(draggedNode) {
+                let pos = getMousePos(e);
+                pos.x = Math.max(-10, Math.min(10, pos.x)); pos.y = Math.max(-10, Math.min(10, pos.y));
+                pos.x = Math.round(pos.x * 2) / 2; pos.y = Math.round(pos.y * 2) / 2;
+                if(draggedNode === 'A') posA = pos; else posB = pos;
+                updateVisuals();
+            }
+        }, {passive: false});
+
+        window.addEventListener('mouseup', () => draggedNode = null);
+        window.addEventListener('touchend', () => draggedNode = null);
+        
+        slideK.addEventListener('input', updateVisuals);
+
+        window.onload = () => { drawGrid(); updateVisuals(); };
+    </script>
+</body>
+</html>

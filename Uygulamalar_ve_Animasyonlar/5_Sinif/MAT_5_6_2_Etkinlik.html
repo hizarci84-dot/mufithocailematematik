@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Şans Topları Laboratuvarı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A;
+            --surface: #1E293B;
+            --text: #F8FAFC;
+            --red: #F43F5E;
+            --blue: #3B82F6;
+            --tertiary: #10B981;
+            --amber: #F59E0B;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, var(--surface) 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--tertiary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .container {
+            width: 100%; max-width: 1000px; display: grid; grid-template-columns: 1fr 350px; gap: 20px;
+        }
+
+        .jar-area {
+            background: #0B1120; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            position: relative; height: 550px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5); padding-bottom: 40px; overflow: hidden;
+        }
+
+        /* Glass Jar */
+        .glass-jar {
+            width: 300px; height: 350px; border: 10px solid rgba(255,255,255,0.2); border-top: none;
+            border-radius: 0 0 40px 40px; position: relative; background: rgba(255,255,255,0.02);
+            display: flex; flex-wrap: wrap-reverse; align-content: flex-start; justify-content: center;
+            gap: 10px; padding: 20px;
+        }
+        .jar-lid {
+            position: absolute; top: -30px; left: -20px; right: -20px; height: 30px;
+            background: rgba(255,255,255,0.1); border-radius: 10px 10px 0 0;
+        }
+
+        .ball {
+            width: 40px; height: 40px; border-radius: 50%; box-shadow: inset -5px -5px 10px rgba(0,0,0,0.5), 0 5px 10px rgba(0,0,0,0.5);
+            animation: dropIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .ball.red { background: radial-gradient(circle at 30% 30%, #fb7185, var(--red)); }
+        .ball.blue { background: radial-gradient(circle at 30% 30%, #60a5fa, var(--blue)); }
+
+        @keyframes dropIn { 0% { transform: translateY(-300px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+
+        .tools-area { display: flex; flex-direction: column; gap: 15px; }
+
+        .panel {
+            background: rgba(255,255,255,0.03); border-radius: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .panel-title { font-size: 1.2rem; font-weight: 800; color: var(--tertiary); margin-bottom: 15px; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 10px;}
+        
+        .control-group { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px;}
+        .lbl { font-weight: 800; font-size: 1.1rem; display: flex; align-items: center; gap: 10px;}
+        .lbl.red { color: var(--red); }
+        .lbl.blue { color: var(--blue); }
+        
+        .counter-btn {
+            background: rgba(255,255,255,0.1); color: white; border: none; width: 35px; height: 35px; border-radius: 8px;
+            font-size: 1.2rem; font-weight: 900; cursor: pointer; transition: all 0.2s;
+        }
+        .counter-btn:hover { background: rgba(255,255,255,0.3); }
+        .count-val { font-size: 1.5rem; font-weight: 900; width: 40px; text-align: center;}
+        
+        .flex-row { display: flex; align-items: center; gap: 5px;}
+
+        .result-box {
+            text-align: center; margin-top: 20px; padding: 15px; border-radius: 12px; font-weight: 800; font-size: 1.1rem;
+            background: rgba(245, 158, 11, 0.1); color: var(--amber); border: 1px dashed var(--amber);
+        }
+        .result-box span { color: white; font-weight: 900; }
+
+        .btn-draw {
+            width: 100%; background: var(--tertiary); color: white; border: none; padding: 15px; border-radius: 12px;
+            font-size: 1.2rem; font-weight: 900; cursor: pointer; transition: all 0.3s; margin-top: 15px;
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4); display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        .btn-draw:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(16, 185, 129, 0.6); }
+        
+        /* Draw Results */
+        .sim-results { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; justify-content: center;}
+        .sim-ball { width: 25px; height: 25px; border-radius: 50%; opacity: 0; transform: scale(0); transition: all 0.3s;}
+        .sim-ball.show { opacity: 1; transform: scale(1); }
+
+        .sim-stats { margin-top: 15px; font-size: 1rem; font-weight: 600; color: #94A3B8; text-align: center;}
+        .sim-stats strong { color: white; }
+
+        @media (max-width: 768px) {
+            .container { grid-template-columns: 1fr; }
+            .jar-area { height: 400px; }
+            .header { flex-direction: column; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.5.6.2. Az veya Çok Olasılıklı Olaylar</div>
+    </div>
+
+    <div class="container">
+        
+        <div class="jar-area">
+            <div class="glass-jar" id="jar">
+                <div class="jar-lid"></div>
+                <!-- Balls go here -->
+            </div>
+        </div>
+
+        <div class="tools-area">
+            <div class="panel">
+                <div class="panel-title">Torba Ayarları</div>
+                
+                <div class="control-group">
+                    <div class="lbl red">Kırmızı Top</div>
+                    <div class="flex-row">
+                        <button class="counter-btn" onclick="updateBall('red', -1)">-</button>
+                        <div class="count-val" id="cntRed">3</div>
+                        <button class="counter-btn" onclick="updateBall('red', 1)">+</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="lbl blue">Mavi Top</div>
+                    <div class="flex-row">
+                        <button class="counter-btn" onclick="updateBall('blue', -1)">-</button>
+                        <div class="count-val" id="cntBlue">1</div>
+                        <button class="counter-btn" onclick="updateBall('blue', 1)">+</button>
+                    </div>
+                </div>
+
+                <div class="result-box" id="analysis">
+                    Kırmızı top sayısı daha fazla olduğu için, Kırmızı çekmek <span>ÇOK OLASILIKLI</span>, Mavi çekmek <span>AZ OLASILIKLI</span>.
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">Deney: Gerçekleşme Testi</div>
+                <div style="color:#94A3B8; font-size:0.9rem; font-weight:600; text-align:center; line-height: 1.4;">Matematiğin haklı olduğunu kanıtlamak için peş peşe 10 kere kura çekelim! Bakalım hangisi daha çok çıkacak?</div>
+                
+                <button class="btn-draw" onclick="runSim()">🎲 10 Kez Çekiliş Yap</button>
+                
+                <div class="sim-results" id="simResults"></div>
+                <div class="sim-stats" id="simStats"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const jar = document.getElementById('jar');
+        const cntRed = document.getElementById('cntRed');
+        const cntBlue = document.getElementById('cntBlue');
+        const analysis = document.getElementById('analysis');
+        const simResults = document.getElementById('simResults');
+        const simStats = document.getElementById('simStats');
+
+        let rCount = 3;
+        let bCount = 1;
+
+        function renderJar() {
+            // Keep lid
+            let html = '<div class="jar-lid"></div>';
+            for(let i=0; i<rCount; i++) {
+                html += '<div class="ball red"></div>';
+            }
+            for(let i=0; i<bCount; i++) {
+                html += '<div class="ball blue"></div>';
+            }
+            jar.innerHTML = html;
+        }
+
+        function updateBall(type, delta) {
+            if(type === 'red') {
+                if(rCount + delta >= 0 && rCount + bCount + delta <= 30) rCount += delta;
+            } else {
+                if(bCount + delta >= 0 && rCount + bCount + delta <= 30) bCount += delta;
+            }
+            
+            cntRed.innerText = rCount;
+            cntBlue.innerText = bCount;
+            
+            updateAnalysis();
+            renderJar();
+            
+            // clear sim
+            simResults.innerHTML = '';
+            simStats.innerHTML = '';
+        }
+
+        function updateAnalysis() {
+            let total = rCount + bCount;
+            if(total === 0) {
+                analysis.innerHTML = "Torba boş!";
+                return;
+            }
+
+            if(rCount > bCount) {
+                if(bCount === 0) analysis.innerHTML = "Kırmızı çekmek <span>KESİN OLAY (1)</span>, Mavi çekmek <span>İMKANSIZ (0)</span>.";
+                else analysis.innerHTML = "Kırmızı sayısı fazla. Kırmızı çekmek <span>ÇOK OLASILIKLI</span>, Mavi çekmek <span>AZ OLASILIKLI</span>.";
+            } else if(bCount > rCount) {
+                if(rCount === 0) analysis.innerHTML = "Mavi çekmek <span>KESİN OLAY (1)</span>, Kırmızı çekmek <span>İMKANSIZ (0)</span>.";
+                else analysis.innerHTML = "Mavi sayısı fazla. Mavi çekmek <span>ÇOK OLASILIKLI</span>, Kırmızı çekmek <span>AZ OLASILIKLI</span>.";
+            } else {
+                analysis.innerHTML = "Sayıları eşit! İkisini de çekmek <span>EŞİT OLASILIKLI</span>.";
+            }
+        }
+
+        async function runSim() {
+            let total = rCount + bCount;
+            if(total === 0) return alert("Önce torbaya top ekleyin!");
+
+            simResults.innerHTML = '';
+            simStats.innerHTML = '';
+            
+            let simRed = 0;
+            let simBlue = 0;
+
+            let ballsArr = [];
+            for(let i=0; i<rCount; i++) ballsArr.push('red');
+            for(let i=0; i<bCount; i++) ballsArr.push('blue');
+
+            for(let i=0; i<10; i++) {
+                let pick = ballsArr[Math.floor(Math.random() * ballsArr.length)];
+                if(pick === 'red') simRed++; else simBlue++;
+
+                let s = document.createElement('div');
+                s.className = `sim-ball ball ${pick}`;
+                simResults.appendChild(s);
+
+                await new Promise(r => setTimeout(r, 150));
+                s.classList.add('show');
+            }
+
+            simStats.innerHTML = `Çıkan Sonuç:<br><strong>${simRed} Kırmızı</strong> vs <strong>${simBlue} Mavi</strong>`;
+        }
+
+        // Init
+        renderJar();
+        updateAnalysis();
+
+    </script>
+</body>
+</html>

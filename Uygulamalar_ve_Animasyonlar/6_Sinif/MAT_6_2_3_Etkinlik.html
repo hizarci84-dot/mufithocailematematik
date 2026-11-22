@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algoritma Fabrikası</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A; --surface: #1E293B; --text: #F8FAFC;
+            --primary: #3B82F6; --secondary: #10B981;
+            --tertiary: #F59E0B; --danger: #F43F5E;
+            --purple: #8B5CF6; --cyan: #06B6D4;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, var(--surface) 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--danger); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .container {
+            width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 20px;
+        }
+
+        .factory-panel {
+            background: rgba(255,255,255,0.03); border-radius: 20px; padding: 30px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; position: relative;
+        }
+
+        .target-box {
+            background: rgba(0,0,0,0.4); padding: 15px; border-radius: 15px; border: 2px dashed var(--danger);
+            margin-bottom: 30px;
+        }
+        .target-title { color: #94A3B8; font-size: 1.2rem; font-weight: 800; margin-bottom: 10px;}
+        .target-val { font-size: 2.5rem; font-weight: 900; color: white;}
+
+        .machine-line {
+            display: flex; align-items: center; justify-content: center; gap: 15px; flex-wrap: wrap; margin-bottom: 30px;
+        }
+
+        .node {
+            background: #0B1120; border: 2px solid rgba(255,255,255,0.1); border-radius: 15px;
+            padding: 20px; display: flex; flex-direction: column; align-items: center; min-width: 150px;
+        }
+        .node-title { color: #94A3B8; font-weight: 800; margin-bottom: 10px;}
+        
+        .arrow { font-size: 2rem; color: #3B82F6; font-weight: 900; }
+
+        select {
+            background: rgba(255,255,255,0.05); border: 2px solid var(--danger); color: white;
+            font-size: 1.1rem; font-weight: 800; padding: 10px; border-radius: 10px; cursor: pointer; outline: none;
+            width: 100%;
+        }
+        
+        .output-node {
+            border-color: var(--secondary); background: rgba(16, 185, 129, 0.05);
+        }
+        .out-val { font-size: 1.8rem; font-weight: 900; color: var(--secondary); margin-top: 10px;}
+
+        .btn-test {
+            background: var(--danger); color: white; border: none; padding: 15px 40px; border-radius: 50px;
+            font-size: 1.2rem; font-weight: 900; cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(244, 63, 94, 0.4);
+        }
+        .btn-test:hover { transform: translateY(-2px); box-shadow: 0 15px 25px rgba(244, 63, 94, 0.6); }
+
+        .feedback {
+            margin-top: 20px; font-size: 1.2rem; font-weight: 800; padding: 15px; border-radius: 15px;
+            display: none;
+        }
+        .feedback.success { background: rgba(16, 185, 129, 0.1); color: var(--secondary); border: 1px solid var(--secondary); display: block;}
+        .feedback.error { background: rgba(244, 63, 94, 0.1); color: var(--danger); border: 1px solid var(--danger); display: block;}
+
+        .btn-next {
+            background: var(--cyan); color: white; border: none; padding: 10px 30px; border-radius: 20px;
+            font-size: 1.1rem; font-weight: 800; cursor: pointer; margin-top: 15px; display: none;
+        }
+
+        @media (max-width: 768px) {
+            .header { flex-direction: column; gap: 10px; }
+            .machine-line { flex-direction: column; }
+            .arrow { transform: rotate(90deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=3B82F6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.6.2.3. Algoritma Fabrikası</div>
+    </div>
+
+    <div class="container">
+        
+        <div class="factory-panel">
+            
+            <div class="target-box">
+                <div class="target-title">Hedef Çıktı (İstenen Cebirsel İfade)</div>
+                <div class="target-val" id="tVal">2(x + 5)</div>
+            </div>
+
+            <p style="color:#94A3B8; margin-bottom: 20px;">'x' girdisini hedef çıktıya dönüştürecek işlem sırasını (algoritmayı) seç.</p>
+
+            <div class="machine-line">
+                <div class="node" style="border-color: var(--primary);">
+                    <div class="node-title">Girdi</div>
+                    <div style="font-size: 2.5rem; font-weight:900; color:var(--primary);">x</div>
+                </div>
+
+                <div class="arrow">➔</div>
+
+                <div class="node">
+                    <div class="node-title">1. Adım</div>
+                    <select id="s1">
+                        <option value="">İşlem Seç</option>
+                        <option value="+5">5 Ekle</option>
+                        <option value="-5">5 Çıkar</option>
+                        <option value="*2">2 ile Çarp</option>
+                        <option value="/2">2'ye Böl</option>
+                    </select>
+                </div>
+
+                <div class="arrow">➔</div>
+
+                <div class="node">
+                    <div class="node-title">2. Adım</div>
+                    <select id="s2">
+                        <option value="">İşlem Seç</option>
+                        <option value="+5">5 Ekle</option>
+                        <option value="-5">5 Çıkar</option>
+                        <option value="*2">2 ile Çarp</option>
+                        <option value="/2">2'ye Böl</option>
+                    </select>
+                </div>
+
+                <div class="arrow">➔</div>
+
+                <div class="node output-node">
+                    <div class="node-title">Senin Çıktın</div>
+                    <div class="out-val" id="myOut">?</div>
+                </div>
+            </div>
+
+            <button class="btn-test" onclick="testMachine()" id="testBtn">Çalıştır ve Test Et</button>
+
+            <div class="feedback" id="fbBox"></div>
+            <button class="btn-next" onclick="nextLvl()" id="nextBtn">Sonraki Görev ➔</button>
+
+        </div>
+
+    </div>
+
+    <script>
+        const levels = [
+            {
+                targetText: "2(x + 5)",
+                ops: [ {val:"+5", lbl:"5 Ekle"}, {val:"-5", lbl:"5 Çıkar"}, {val:"*2", lbl:"2 ile Çarp"}, {val:"/2", lbl:"2'ye Böl"} ],
+                ans: ["+5", "*2"],
+                evalFn: (a,b) => {
+                    if(a=="+5" && b=="*2") return "2(x + 5)";
+                    if(a=="*2" && b=="+5") return "2x + 5";
+                    if(a=="+5" && b=="-5") return "x";
+                    if(a=="*2" && b=="/2") return "x";
+                    return "Hatalı Yapı";
+                }
+            },
+            {
+                targetText: "3x - 4",
+                ops: [ {val:"+4", lbl:"4 Ekle"}, {val:"-4", lbl:"4 Çıkar"}, {val:"*3", lbl:"3 ile Çarp"}, {val:"/3", lbl:"3'e Böl"} ],
+                ans: ["*3", "-4"],
+                evalFn: (a,b) => {
+                    if(a=="*3" && b=="-4") return "3x - 4";
+                    if(a=="-4" && b=="*3") return "3(x - 4)";
+                    return "Hatalı Yapı";
+                }
+            },
+            {
+                targetText: "(x - 2) / 4",
+                ops: [ {val:"-2", lbl:"2 Çıkar"}, {val:"+2", lbl:"2 Ekle"}, {val:"*4", lbl:"4 ile Çarp"}, {val:"/4", lbl:"4'e Böl"} ],
+                ans: ["-2", "/4"],
+                evalFn: (a,b) => {
+                    if(a=="-2" && b=="/4") return "(x - 2) / 4";
+                    if(a=="/4" && b=="-2") return "(x / 4) - 2";
+                    return "Hatalı Yapı";
+                }
+            }
+        ];
+
+        let currLvl = 0;
+
+        function loadLevel() {
+            let l = levels[currLvl];
+            document.getElementById('tVal').innerText = l.targetText;
+            
+            let s1 = document.getElementById('s1');
+            let s2 = document.getElementById('s2');
+            s1.innerHTML = '<option value="">İşlem Seç</option>';
+            s2.innerHTML = '<option value="">İşlem Seç</option>';
+            
+            l.ops.forEach(o => {
+                s1.innerHTML += `<option value="${o.val}">${o.lbl}</option>`;
+                s2.innerHTML += `<option value="${o.val}">${o.lbl}</option>`;
+            });
+
+            document.getElementById('myOut').innerText = "?";
+            document.getElementById('fbBox').className = "feedback";
+            document.getElementById('nextBtn').style.display = "none";
+            document.getElementById('testBtn').style.display = "inline-block";
+        }
+
+        function testMachine() {
+            let a = document.getElementById('s1').value;
+            let b = document.getElementById('s2').value;
+            
+            if(!a || !b) {
+                alert("Lütfen iki makine için de işlem seçin.");
+                return;
+            }
+
+            let l = levels[currLvl];
+            let outText = l.evalFn(a, b);
+            document.getElementById('myOut').innerText = outText;
+
+            let fb = document.getElementById('fbBox');
+            if(a === l.ans[0] && b === l.ans[1]) {
+                fb.className = "feedback success";
+                fb.innerText = "Tebrikler! Doğru algoritmayı kurdun.";
+                document.getElementById('testBtn').style.display = "none";
+                if(currLvl < levels.length - 1) {
+                    document.getElementById('nextBtn').style.display = "inline-block";
+                } else {
+                    document.getElementById('nextBtn').style.display = "inline-block";
+                    document.getElementById('nextBtn').innerText = "Tüm Görevler Tamamlandı!";
+                    document.getElementById('nextBtn').disabled = true;
+                }
+            } else {
+                fb.className = "feedback error";
+                fb.innerText = "Maalesef hedef çıktıya ulaşılamadı. İşlem önceliğine (sırasına) dikkat et!";
+            }
+        }
+
+        function nextLvl() {
+            if(currLvl < levels.length - 1) {
+                currLvl++;
+                loadLevel();
+            }
+        }
+
+        loadLevel();
+    </script>
+</body>
+</html>

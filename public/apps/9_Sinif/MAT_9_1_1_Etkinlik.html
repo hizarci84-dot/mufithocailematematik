@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sayıların Gösterimleri Etkinliği</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg:#0F0E17; --primary:#8B5CF6; --secondary:#10B981; --tertiary:#06B6D4; --danger:#F43F5E; --accent:#F59E0B; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Outfit',sans-serif; }
+        body { background:linear-gradient(135deg,var(--bg),#161625); color:#F8FAFC; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:20px; overflow-x:hidden; }
+        
+        /* Header */
+        .header { width:100%; max-width:1100px; display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); padding:15px 25px; border-radius:20px; border:1px solid rgba(139,92,246,0.2); margin-bottom:20px; backdrop-filter:blur(10px); }
+        .header-left { display:flex; align-items:center; gap:15px; font-weight:600; font-size:1.2rem; }
+        .header-left img { width:50px; height:50px; border-radius:50%; background:white; padding:2px; }
+        .kazanim { background:var(--primary); color:white; padding:8px 20px; border-radius:20px; font-weight:800; font-size:1rem; box-shadow: 0 0 20px rgba(139,92,246,0.4); }
+        
+        h1 { font-size:2.5rem; color:var(--tertiary); font-weight:900; text-align:center; margin-bottom:5px; }
+        .subtitle { color:#94A3B8; font-size:1.15rem; text-align:center; margin-bottom:25px; font-weight:600; }
+        
+        .main-grid { display:grid; grid-template-columns:1fr 1fr; gap:30px; width:100%; max-width:1200px; }
+        @media (max-width:900px) { .main-grid { grid-template-columns:1fr; } }
+        
+        .card { background:#11111A; border:1px solid rgba(255,255,255,0.1); border-radius:24px; padding:30px; box-shadow:inset 0 0 30px rgba(0,0,0,0.5); display:flex; flex-direction:column; position:relative; }
+        .card-title { font-size:1.5rem; font-weight:900; color:var(--primary); margin-bottom:15px; display:flex; align-items:center; gap:10px; }
+        
+        /* Sci Not Activity */
+        .sci-display { font-family:'Courier New', monospace; font-size:2.5rem; font-weight:900; background:rgba(0,0,0,0.5); padding:20px; border-radius:15px; border:2px solid var(--tertiary); color:white; text-align:center; margin:20px 0; min-height:90px; display:flex; align-items:center; justify-content:center; gap:5px; transition:0.3s; }
+        .sci-display.success { border-color:var(--secondary); background:rgba(16,185,129,0.1); box-shadow:0 0 20px rgba(16,185,129,0.3); }
+        .sup { transform:translateY(-40%) scale(0.65); color:var(--tertiary); }
+        .sci-display.success .sup { color:var(--secondary); }
+        
+        .slider-container { width:100%; margin-bottom:20px; }
+        input[type=range] { -webkit-appearance:none; width:100%; background:transparent; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; height:25px; width:25px; border-radius:50%; background:var(--primary); cursor:pointer; margin-top:-10px; box-shadow:0 0 10px var(--primary); }
+        input[type=range]::-webkit-slider-runnable-track { width:100%; height:6px; cursor:pointer; background:rgba(255,255,255,0.2); border-radius:5px; }
+        
+        .status-badge { align-self:center; padding:8px 20px; border-radius:20px; font-weight:800; font-size:1.1rem; opacity:0; transition:0.3s; }
+        .status-badge.show { opacity:1; }
+        .status-badge.success { background:var(--secondary); color:white; }
+        .status-badge.error { background:var(--danger); color:white; }
+        
+        /* Root Margin Activity */
+        .room-box { width:100%; height:250px; background:#1A202C; border:2px solid #334155; margin:20px 0; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+        .room-text { font-size:1.5rem; font-weight:900; color:#475569; }
+        
+        .baseboard { position:absolute; bottom:0; left:0; height:12px; background:var(--accent); border-radius:0 5px 5px 0; transition:width 0.1s linear; }
+        .gap-indicator { position:absolute; bottom:0; right:0; height:12px; background:var(--danger); opacity:0; transition:0.3s; }
+        
+        .root-form { display:flex; align-items:center; gap:10px; font-size:1.5rem; font-weight:900; margin-bottom:15px; }
+        .math-expr { display:inline-flex; align-items:baseline; color:white; }
+        
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.9.1.1. Üslü/Köklü Gösterimler (Uygulama)</div>
+    </div>
+    
+    <h1>Gösterimleri Keşfet</h1>
+    <p class="subtitle">Kaydırıcıları kullanarak bilimsel gösterimin mantığını ve köklü sayıların yaklaşık değer hassasiyetini bizzat test edin.</p>
+    
+    <div class="main-grid">
+        
+        <!-- Activity 1: Scientific Notation -->
+        <div class="card">
+            <div class="card-title">🚀 Işık Hızı (Bilimsel Gösterim)</div>
+            <div style="font-size:1.1rem; color:#94A3B8;">Işık hızı saniyede yaklaşık <b>300.000.000</b> metredir. Virgülü kaydırarak "Bilimsel Gösterim" formuna ( $a \times 10^n$, $1 \le a < 10$ ) ulaşın.</div>
+            
+            <div class="sci-display" id="sciDisplay">
+                <span id="sciBase">300.000.000</span> &times; 10<span class="sup" id="sciPower">0</span>
+            </div>
+            
+            <div class="slider-container">
+                <input type="range" id="sciSlider" min="0" max="8" value="0" step="1" oninput="updateSci()">
+                <div style="display:flex; justify-content:space-between; margin-top:5px; color:#64748B; font-weight:600;">
+                    <span>Sıfır</span>
+                    <span>Sola Kaydır</span>
+                </div>
+            </div>
+            
+            <div class="status-badge" id="sciStatus">Harika! Bilimsel Gösterim Sağlandı.</div>
+        </div>
+        
+        <!-- Activity 2: Root Error Margin -->
+        <div class="card">
+            <div class="card-title">📏 Hassas Mühendislik (Karekök)</div>
+            <div style="font-size:1.1rem; color:#94A3B8;">Alanı 20 m² olan kare odanın bir kenarına süpürgelik döşenecek. <b>√20</b> uzunluğunu (4.0 ile 5.0 arası) ayarlayın.</div>
+            
+            <div class="room-box">
+                <div class="room-text">Alan = 20 m²</div>
+                <div class="baseboard" id="baseboard"></div>
+                <div class="gap-indicator" id="gapInd"></div>
+            </div>
+            
+            <div class="root-form">
+                <div class="math-expr">
+                    <span style="color:#F59E0B; margin-right:5px;">√</span><span style="text-decoration:overline; color:#F59E0B; padding-top:2px;">20</span> 
+                </div>
+                <span> ≈ </span>
+                <span id="rootVal" style="color:white; min-width:60px;">4.00</span> <span>m</span>
+            </div>
+            
+            <div class="slider-container">
+                <input type="range" id="rootSlider" min="4.00" max="5.00" value="4.00" step="0.01" oninput="updateRoot()">
+            </div>
+            
+            <div class="status-badge" id="rootStatus">Çit kısa kaldı! Boşluk var.</div>
+        </div>
+        
+    </div>
+
+    <script>
+        // Activity 1 Logic
+        function updateSci() {
+            const slider = document.getElementById('sciSlider');
+            const display = document.getElementById('sciDisplay');
+            const sBase = document.getElementById('sciBase');
+            const sPower = document.getElementById('sciPower');
+            const status = document.getElementById('sciStatus');
+            
+            let val = parseInt(slider.value); // 0 to 8
+            let num = 300000000;
+            let currentBase = num / Math.pow(10, val);
+            
+            // Format base with commas if it's large, else exact
+            if(val === 0) sBase.innerHTML = "300.000.000";
+            else if(val === 1) sBase.innerHTML = "30.000.000";
+            else if(val === 2) sBase.innerHTML = "3.000.000";
+            else if(val === 3) sBase.innerHTML = "300.000";
+            else if(val === 4) sBase.innerHTML = "30.000";
+            else if(val === 5) sBase.innerHTML = "3.000";
+            else if(val === 6) sBase.innerHTML = "300";
+            else if(val === 7) sBase.innerHTML = "30";
+            else if(val === 8) sBase.innerHTML = "3";
+            
+            sPower.innerHTML = val;
+            
+            if(val === 8) {
+                display.classList.add('success');
+                status.className = 'status-badge show success';
+                status.textContent = 'Harika! 1 ≤ a < 10 şartı sağlandı.';
+            } else {
+                display.classList.remove('success');
+                status.className = 'status-badge show error';
+                status.textContent = 'a değeri henüz 1 ile 10 arasında değil.';
+                if(val === 0) status.classList.remove('show');
+            }
+        }
+        
+        // Activity 2 Logic
+        function updateRoot() {
+            const slider = document.getElementById('rootSlider');
+            const valDisplay = document.getElementById('rootVal');
+            const baseboard = document.getElementById('baseboard');
+            const gapInd = document.getElementById('gapInd');
+            const status = document.getElementById('rootStatus');
+            
+            let v = parseFloat(slider.value).toFixed(2);
+            valDisplay.textContent = v;
+            
+            // √20 is approx 4.472. We map 4.00 - 5.00 to percentages.
+            // Let's say 4.47 is exactly 100% width.
+            let target = 4.47;
+            let pct = (v / target) * 100;
+            
+            if(v < target) {
+                baseboard.style.width = pct + "%";
+                baseboard.style.background = "var(--danger)";
+                gapInd.style.opacity = "0.5";
+                gapInd.style.width = (100 - pct) + "%";
+                
+                status.className = 'status-badge show error';
+                status.textContent = "Uyarı: Süpürgelik kısa kaldı. Kenarı tam kapatmıyor.";
+            } else if (v > target) {
+                baseboard.style.width = "100%";
+                baseboard.style.background = "var(--danger)";
+                gapInd.style.opacity = "0";
+                
+                status.className = 'status-badge show error';
+                status.textContent = "Uyarı: Malzeme israfı! Fazla kestiniz.";
+            } else {
+                // Exactly 4.47
+                baseboard.style.width = "100%";
+                baseboard.style.background = "var(--secondary)";
+                gapInd.style.opacity = "0";
+                
+                status.className = 'status-badge show success';
+                status.textContent = "Tebrikler! √20 ≈ 4.47. Tam oturdu!";
+            }
+        }
+        
+        // Init
+        updateSci();
+        updateRoot();
+    </script>
+</body>
+</html>

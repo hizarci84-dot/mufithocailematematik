@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ortak Bölen ve Katlar - Animasyon</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A; --text: #F8FAFC;
+            --primary: #3B82F6; --secondary: #10B981;
+            --tertiary: #F59E0B; --danger: #F43F5E;
+            --purple: #8B5CF6; --cyan: #06B6D4;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 900px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--cyan); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; width: 100%; max-width: 800px; margin-bottom: 20px; height: 110px;}
+        h1 { font-size: 2.2rem; color: var(--cyan); text-shadow: 0 5px 15px rgba(0,0,0,0.5); line-height: 1.3;}
+        .subtitle { font-size: 1.2rem; color: #94A3B8; margin-top: 10px; line-height: 1.5; min-height: 55px;}
+        .subtitle span { color: white; font-weight: 800; background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 5px;}
+
+        .canvas-area {
+            position: relative; width: 100%; max-width: 800px; height: 450px; 
+            background: #0B1120; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.3); 
+            overflow: hidden; display: flex; align-items: center; justify-content: center;
+        }
+
+        .scene { position: absolute; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.8s; pointer-events: none;}
+        .scene.active { opacity: 1; z-index: 10; }
+
+        /* Scene 1: Traffic Lights (Multiples) */
+        .traffic-container { display: flex; gap: 50px; margin-bottom: 30px;}
+        .light-box { display: flex; flex-direction: column; align-items: center; gap: 10px;}
+        .traffic-light {
+            background: #334155; width: 60px; height: 60px; border-radius: 50%;
+            border: 4px solid #1E293B; transition: all 0.2s; box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+        }
+        .traffic-light.red-active { background: var(--danger); box-shadow: 0 0 30px var(--danger); }
+        .traffic-light.green-active { background: var(--secondary); box-shadow: 0 0 30px var(--secondary); }
+        .t-label { font-size: 1.2rem; font-weight: 800; color: #94A3B8; }
+        .timer-display { font-size: 3rem; font-weight: 900; color: white; background: rgba(255,255,255,0.1); padding: 10px 30px; border-radius: 20px; font-variant-numeric: tabular-nums;}
+
+        /* Scene 2: Ropes (Factors) */
+        .rope-container { display: flex; flex-direction: column; gap: 20px; width: 80%; align-items: flex-start;}
+        .rope-row { display: flex; align-items: center; gap: 15px; width: 100%;}
+        .rope-label { width: 80px; font-weight: 800; font-size: 1.2rem; color: #94A3B8; text-align: right;}
+        
+        .rope { height: 30px; border-radius: 15px; display: flex; position: relative; overflow: hidden; transition: width 0.5s; }
+        .rope-12 { width: 60%; background: var(--primary); }
+        .rope-18 { width: 90%; background: var(--tertiary); }
+        
+        .cut-line { position: absolute; top:0; bottom:0; width: 2px; background: white; z-index: 2;}
+
+        .btn-start {
+            margin-top: 30px; background: var(--cyan); color: white; border: none; padding: 15px 40px; border-radius: 50px;
+            font-size: 1.2rem; font-weight: 800; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 20px rgba(6, 182, 212, 0.4);
+        }
+        .btn-start:hover { transform: scale(1.05); }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=3B82F6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.6.1.4. Ortak Kat ve Ortak Bölen</div>
+    </div>
+
+    <div class="title-area">
+        <h1 id="mTitle">Matematikte Buluşma Noktası</h1>
+        <p class="subtitle" id="mSub">Farklı sayıların <span>ortak katlarda</span> ve <span>ortak bölenlerde</span> nasıl buluştuğunu görelim.</p>
+    </div>
+
+    <div class="canvas-area">
+        
+        <!-- SCENE 1: Ortak Katlar -->
+        <div class="scene active" id="sc1">
+            <div class="traffic-container">
+                <div class="light-box">
+                    <div class="traffic-light red-active" id="tl1"></div>
+                    <div class="t-label">3 sn'de bir Yeşil</div>
+                </div>
+                <div class="light-box">
+                    <div class="traffic-light red-active" id="tl2"></div>
+                    <div class="t-label">4 sn'de bir Yeşil</div>
+                </div>
+            </div>
+            <div class="timer-display">Süre: <span id="timer">0</span> sn</div>
+            <div style="font-size:1.2rem; color:#94A3B8; margin-top:20px; font-weight:800; text-align:center;" id="tMessage">İkisi aynı anda ne zaman YEŞİL yanacak?</div>
+        </div>
+
+        <!-- SCENE 2: Ortak Bölenler -->
+        <div class="scene" id="sc2">
+            <div class="rope-container">
+                <div class="rope-row">
+                    <div class="rope-label">12m İp</div>
+                    <div class="rope rope-12" id="r12"></div>
+                </div>
+                <div class="rope-row">
+                    <div class="rope-label">18m İp</div>
+                    <div class="rope rope-18" id="r18"></div>
+                </div>
+            </div>
+            <div style="font-size:1.5rem; color:white; margin-top:40px; font-weight:900; text-align:center;" id="rMessage">Bu ipleri HİÇ ARTMAYACAK şekilde EŞİT parçalara nasıl böleriz?</div>
+        </div>
+
+    </div>
+
+    <button class="btn-start" id="startBtn" onclick="runTimeline()">Animasyonu Başlat</button>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        const mTitle = document.getElementById('mTitle');
+        const mSub = document.getElementById('mSub');
+        const startBtn = document.getElementById('startBtn');
+        const timer = document.getElementById('timer');
+        const tl1 = document.getElementById('tl1');
+        const tl2 = document.getElementById('tl2');
+        const tMessage = document.getElementById('tMessage');
+        const r12 = document.getElementById('r12');
+        const r18 = document.getElementById('r18');
+        const rMessage = document.getElementById('rMessage');
+
+        async function runTimeline() {
+            startBtn.style.display = 'none';
+
+            // SCENE 1: Ortak Kat
+            document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+            document.getElementById('sc1').classList.add('active');
+            mTitle.innerText = "Ortak Katlar (İleriye Dönük Buluşma)";
+            mSub.innerHTML = "Sayılar büyürken nerede aynı olurlar? Trafik lambalarına bakalım.";
+            
+            tl1.className = 'traffic-light red-active';
+            tl2.className = 'traffic-light red-active';
+            tMessage.innerText = "İkisi aynı anda ne zaman YEŞİL yanacak?";
+
+            for(let i=0; i<=12; i++) {
+                timer.innerText = i;
+                
+                // Lamb 1 (3sn)
+                if(i > 0 && i % 3 === 0) { tl1.className = 'traffic-light green-active'; } 
+                else { tl1.className = 'traffic-light red-active'; }
+                
+                // Lamb 2 (4sn)
+                if(i > 0 && i % 4 === 0) { tl2.className = 'traffic-light green-active'; } 
+                else { tl2.className = 'traffic-light red-active'; }
+
+                if(i === 12) {
+                    tMessage.innerHTML = "<span style='color:var(--secondary);'>BİNGO!</span> İkisi de 12. saniyede aynı anda yeşil yandı. Çünkü 12, 3 ve 4'ün <span style='color:white;'>ORTAK KATIDIR.</span>";
+                }
+
+                await sleep(600);
+            }
+            await sleep(3500);
+
+            // SCENE 2: Ortak Bölen
+            document.getElementById('sc1').classList.remove('active');
+            document.getElementById('sc2').classList.add('active');
+            mTitle.innerText = "Ortak Bölenler (Parçalara Ayırma)";
+            mSub.innerHTML = "Sayıları küçültürken, ikisini de tam bölebilen sayılar hangileridir?";
+            
+            r12.innerHTML = ''; r18.innerHTML = '';
+            rMessage.innerText = "Bu ipleri HİÇ ARTMAYACAK şekilde EŞİT parçalara nasıl böleriz?";
+            await sleep(2000);
+
+            // 1m cuts
+            addCuts(12, r12); addCuts(18, r18);
+            rMessage.innerHTML = "Örneğin <span>1'er metrelik</span> parçalara bölebiliriz. (1 her sayının ortak bölenidir)";
+            await sleep(3000);
+            
+            // 2m cuts
+            r12.innerHTML = ''; r18.innerHTML = '';
+            addCuts(6, r12); addCuts(9, r18);
+            rMessage.innerHTML = "İkisi de çift sayı olduğu için <span>2'şer metrelik</span> parçalara da tam bölünür.";
+            await sleep(3000);
+
+            // 6m cuts (Biggest)
+            r12.innerHTML = ''; r18.innerHTML = '';
+            addCuts(2, r12); addCuts(3, r18);
+            rMessage.innerHTML = "Fark ettiniz mi? İkisini bölen <span style='color:var(--tertiary);'>EN BÜYÜK parça 6 metredir.</span> Buna Ortak Bölen denir.";
+
+            setTimeout(() => {
+                startBtn.style.display = 'block';
+                startBtn.innerText = "Tekrar İzle";
+            }, 4000);
+        }
+
+        function addCuts(parts, element) {
+            let pct = 100 / parts;
+            for(let i=1; i<parts; i++) {
+                let cut = document.createElement('div');
+                cut.className = 'cut-line';
+                cut.style.left = (pct * i) + '%';
+                element.appendChild(cut);
+            }
+        }
+    </script>
+</body>
+</html>

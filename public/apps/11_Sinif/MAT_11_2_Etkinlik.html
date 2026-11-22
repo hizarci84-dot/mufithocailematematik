@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>11.2 - Düzgün Çokgenler Etkinliği</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0A0A12;
+            --panel-bg: #151522;
+            --primary: #00F0FF; 
+            --secondary: #FF00E4; 
+            --accent: #FFE600; 
+            --text-main: #FFFFFF;
+            --text-muted: #8A8A9E;
+            --grid-line: rgba(0, 240, 255, 0.12);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background-color: var(--bg-color); color: var(--text-main);
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; padding: 20px; overflow-x: hidden;
+            background-image: 
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        .header {
+            width: 100%; max-width: 1200px; display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 25px; background: rgba(21, 21, 34, 0.85); backdrop-filter: blur(10px);
+            border-radius: 16px; border: 1px solid rgba(0, 240, 255, 0.3);
+            margin-bottom: 20px; box-shadow: 0 0 20px rgba(0, 240, 255, 0.15);
+        }
+        
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 800; color: var(--primary); font-size: 1.1rem; }
+        .header-left img { width: 45px; height: 45px; border-radius: 10px; border: 1px solid var(--primary); }
+        .kazanim { background: rgba(0, 240, 255, 0.1); padding: 8px 15px; border-radius: 8px; color: var(--primary); font-weight: 600; font-size: 0.85rem; border: 1px solid rgba(0, 240, 255, 0.3); }
+
+        h1 { font-size: 2rem; font-weight: 900; margin-bottom: 8px; text-align: center; text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 0 10px rgba(0, 240, 255, 0.5); }
+        .subtitle { color: var(--text-muted); font-size: 1rem; margin-bottom: 25px; text-align: center; max-width: 900px; }
+
+        .workspace { display: flex; flex-direction: row; gap: 20px; width: 100%; max-width: 1200px; }
+        @media (max-width: 900px) { .workspace { flex-direction: column; } }
+
+        .controls {
+            flex: 1; display: flex; flex-direction: column; gap: 16px; background: var(--panel-bg);
+            padding: 22px; border-radius: 16px; border: 1px solid rgba(0, 240, 255, 0.3);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5); min-width: 350px;
+        }
+
+        .slider-group { background: rgba(0,0,0,0.4); padding: 16px; border-radius: 8px; border-left: 4px solid var(--primary); margin-bottom: 10px; }
+        .slider-header { display: flex; justify-content: space-between; margin-bottom: 12px; font-weight: 600; color: var(--text-main); font-size: 1rem; }
+        .slider-val { color: var(--primary); font-family: monospace; font-size: 1.4rem; font-weight: bold; }
+        
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; }
+        input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border-radius: 50%; background: var(--primary); cursor: pointer; -webkit-appearance: none; margin-top: -8px; box-shadow: 0 0 12px var(--primary); }
+
+        .math-box {
+            background: rgba(0,0,0,0.6); border: 1px dashed var(--secondary); padding: 20px;
+            border-radius: 12px; font-size: 1.1rem; text-align: left; margin-top: auto; color: var(--text-main);
+            line-height: 1.8; min-height: 200px; display: flex; flex-direction: column; justify-content: center;
+            overflow-x: auto; overflow-y: hidden;
+        }
+
+        .visual-container { flex: 2.2; display: flex; flex-direction: column; gap: 15px; }
+        
+        .graph-container {
+            display: flex; width: 100%; height: 500px; position: relative; justify-content: center; align-items: center;
+            background: #0A0A12; border-radius: 16px; border: 2px solid var(--primary);
+            overflow: hidden; box-shadow: 0 0 30px rgba(0, 240, 255, 0.1) inset;
+        }
+
+        svg { width: 100%; height: 100%; display: block; }
+        
+        .circumcircle { fill: none; stroke: rgba(255,255,255,0.1); stroke-width: 1.5; stroke-dasharray: 5,5; }
+        .polygon-path { fill: rgba(0, 240, 255, 0.1); stroke: var(--primary); stroke-width: 1.5; stroke-linejoin: round; filter: drop-shadow(0 0 10px var(--primary)); transition: 0.3s; }
+        .center-point { fill: var(--secondary); r: 4; filter: drop-shadow(0 0 5px var(--secondary)); }
+        .radius-line { stroke: rgba(255, 0, 228, 0.3); stroke-width: 1.5; stroke-dasharray: 4,4; }
+        
+        .angle-arc-int { fill: rgba(255, 230, 0, 0.3); stroke: var(--accent); stroke-width: 1.5; }
+        .angle-text { fill: white; font-size: 14px; font-weight: bold; text-anchor: middle; dominant-baseline: middle; }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=00F0FF&color=000'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.11.2. Geometrik Şekiller - Çokgenler</div>
+    </div>
+    
+    <h1>Düzgün Çokgen Analizi</h1>
+    <p class="subtitle">Kenar sayısını (n) değiştirerek düzgün çokgenin iç açısı, dış açısı ve iç açılar toplamı formüllerini interaktif olarak gözlemleyin.</p>
+    
+    <div class="workspace">
+        <div class="controls">
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span>Kenar Sayısı (n)</span>
+                    <span class="slider-val" id="valN">6</span>
+                </div>
+                <input type="range" id="slideN" min="3" max="15" step="1" value="6">
+            </div>
+
+            <div class="math-box" id="mathOutput">
+                <!-- Double buffered MathJax rendered Tex -->
+            </div>
+        </div>
+        
+        <div class="visual-container">
+            <div class="graph-container">
+                <svg id="polySvg" viewBox="-200 -200 400 400">
+                    <circle cx="0" cy="0" r="150" class="circumcircle" />
+                    <g id="radiiGroup"></g>
+                    <path id="polyPath" class="polygon-path" d="" />
+                    <g id="anglesGroup"></g>
+                    <circle cx="0" cy="0" class="center-point" />
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const slideN = document.getElementById('slideN'); 
+        const valN = document.getElementById('valN');
+        const mathOutput = document.getElementById('mathOutput');
+        
+        const polyPath = document.getElementById('polyPath');
+        const radiiGroup = document.getElementById('radiiGroup');
+        const anglesGroup = document.getElementById('anglesGroup');
+        
+        let isTypesetting = false;
+        let pendingTex = null;
+
+        function renderMathClean(texString) {
+            if (isTypesetting) {
+                pendingTex = texString;
+                return;
+            }
+            isTypesetting = true;
+            
+            let temp = document.createElement('div');
+            temp.style.position = 'absolute';
+            temp.style.top = '-9999px';
+            temp.style.left = '-9999px';
+            temp.style.visibility = 'hidden';
+            temp.innerHTML = texString;
+            document.body.appendChild(temp);
+            
+            MathJax.typesetPromise([temp]).then(() => {
+                mathOutput.innerHTML = temp.innerHTML;
+                if (temp.parentNode) document.body.removeChild(temp);
+                isTypesetting = false;
+                
+                if (pendingTex) {
+                    let next = pendingTex;
+                    pendingTex = null;
+                    renderMathClean(next);
+                }
+            }).catch(err => {
+                if (temp.parentNode) document.body.removeChild(temp);
+                isTypesetting = false;
+            });
+        }
+        
+        function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
+            var angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
+            return {
+                x: centerX + (radius * Math.cos(angleInRadians)),
+                y: centerY + (radius * Math.sin(angleInRadians))
+            };
+        }
+
+        function describeArc(x, y, radius, startAngle, endAngle){
+            var start = polarToCartesian(x, y, radius, endAngle);
+            var end = polarToCartesian(x, y, radius, startAngle);
+            var largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+            var d = [
+                "M", start.x, start.y, 
+                "A", radius, radius, 0, largeArcFlag, 0, end.x, end.y,
+                "L", x, y,
+                "Z"
+            ].join(" ");
+            return d;       
+        }
+
+        function updateVisuals() {
+            let n = parseInt(slideN.value);
+            valN.innerText = n;
+            
+            let R = 150;
+            let d = "";
+            let radiiHtml = "";
+            let anglesHtml = "";
+            
+            let extAngle = 360 / n;
+            let intAngle = 180 - extAngle;
+            let sumAngles = (n - 2) * 180;
+            
+            let vertices = [];
+            
+            for(let i = 0; i < n; i++) {
+                let deg = i * extAngle;
+                let pt = polarToCartesian(0, 0, R, deg);
+                vertices.push(pt);
+                
+                d += (i === 0 ? "M" : "L") + ` ${pt.x} ${pt.y}`;
+                radiiHtml += `<line x1="0" y1="0" x2="${pt.x}" y2="${pt.y}" class="radius-line" />`;
+            }
+            d += " Z";
+            
+            polyPath.setAttribute("d", d);
+            radiiGroup.innerHTML = radiiHtml;
+            
+            // Draw one interior angle arc on the first vertex (top vertex)
+            let v1 = vertices[0];
+            
+            // The top vertex bisector points down towards the center (180 degrees in our polarToCartesian)
+            let startA = 180 - (intAngle / 2);
+            let endA = 180 + (intAngle / 2);
+            
+            let arcPath = describeArc(v1.x, v1.y, 30, startA, endA);
+            anglesHtml += `<path d="${arcPath}" fill="rgba(255, 230, 0, 0.2)" stroke="var(--accent)" stroke-width="2" />`;
+            
+            // Text position on the bisector (180 degrees) slightly further away
+            let textPos = polarToCartesian(v1.x, v1.y, 45, 180);
+            anglesHtml += `<text x="${textPos.x}" y="${textPos.y}" class="angle-text" fill="var(--accent)">${intAngle.toFixed(1)}°</text>`;
+            
+            anglesGroup.innerHTML = anglesHtml;
+            
+            let name = n + "gen";
+            if(n===3) name="Eşkenar Üçgen";
+            if(n===4) name="Kare";
+            if(n===5) name="Düzgün Beşgen";
+            if(n===6) name="Düzgün Altıgen";
+            if(n===8) name="Düzgün Sekizgen";
+            
+            let statusTex = `\\( \\mathbf{${name} \\ (n = ${n})} \\)<br><br>`;
+            statusTex += `\\( \\text{1 Dış Açı: } \\frac{360^\\circ}{n} = \\frac{360^\\circ}{${n}} = \\mathbf{${extAngle.toFixed(1)}^\\circ} \\) <br><br>`;
+            statusTex += `\\( \\text{1 İç Açı: } 180^\\circ - ${extAngle.toFixed(1)}^\\circ = \\mathbf{${intAngle.toFixed(1)}^\\circ} \\) <br><br>`;
+            statusTex += `\\( \\text{İç Açılar Toplamı: } \\)<br> \\( (n-2) \\times 180^\\circ = (${n}-2) \\times 180^\\circ = \\mathbf{${sumAngles}^\\circ} \\)`;
+            
+            renderMathClean(statusTex);
+        }
+
+        slideN.addEventListener('input', updateVisuals);
+
+        window.onload = () => {
+            updateVisuals();
+        };
+    </script>
+</body>
+</html>

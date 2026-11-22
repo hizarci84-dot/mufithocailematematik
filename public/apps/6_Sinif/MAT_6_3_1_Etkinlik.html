@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Açı Avcısı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A; --surface: #1E293B; --text: #F8FAFC;
+            --primary: #3B82F6; --secondary: #10B981;
+            --tertiary: #F59E0B; --danger: #F43F5E;
+            --purple: #8B5CF6; --cyan: #06B6D4;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, var(--surface) 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--purple); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .container {
+            width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 20px;
+        }
+
+        .hunter-panel {
+            background: rgba(255,255,255,0.03); border-radius: 20px; padding: 40px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; position: relative; overflow: hidden;
+        }
+
+        .hunter-panel h2 { font-size: 2rem; color: var(--purple); margin-bottom: 10px; font-weight: 900;}
+
+        .canvas-area {
+            position: relative; width: 100%; height: 400px; margin-top: 30px;
+            background: #0B1120; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.5); overflow: hidden;
+        }
+
+        /* Drawing Lines */
+        .line-h {
+            position: absolute; width: 80%; left: 10%; height: 4px; background: #64748B; border-radius: 2px;
+        }
+        .l1 { top: 120px; }
+        .l2 { top: 280px; }
+
+        .line-v {
+            position: absolute; width: 4px; height: 120%; top: -10%; left: 50%; background: var(--tertiary); border-radius: 2px;
+            transform: rotate(20deg);
+        }
+
+        /* Inputs for Angles */
+        .ang-box {
+            position: absolute; width: 60px; height: 35px; background: rgba(0,0,0,0.7);
+            border: 2px solid var(--purple); border-radius: 8px; transform: translate(-50%, -50%);
+            display: flex; align-items: center; justify-content: center; z-index: 10;
+        }
+        .ang-input {
+            width: 100%; height: 100%; background: transparent; border: none; color: white;
+            font-size: 1.2rem; font-weight: 900; text-align: center; outline: none;
+        }
+        .ang-input:disabled { color: var(--secondary); }
+
+        .ang-box.solved { border-color: var(--secondary); background: rgba(16, 185, 129, 0.2); box-shadow: 0 0 10px var(--secondary);}
+        .ang-box.error { border-color: var(--danger); animation: shake 0.3s; }
+
+        @keyframes shake {
+            0% { transform: translate(-50%, -50%) translateX(0); }
+            25% { transform: translate(-50%, -50%) translateX(-5px); }
+            50% { transform: translate(-50%, -50%) translateX(5px); }
+            75% { transform: translate(-50%, -50%) translateX(-5px); }
+            100% { transform: translate(-50%, -50%) translateX(0); }
+        }
+
+        /* Position tweaking based on center of intersections */
+        /* Top intersection: top: 120px, left ~50% (shifted due to rotate) => say left: 47% */
+        /* Bottom intersection: top: 280px, left ~50% (shifted) => say left: 41% */
+        
+        .b1 { top: 80px; left: 41%; } /* a */
+        .b2 { top: 80px; left: 56%; } /* b */
+        .b3 { top: 160px; left: 38%; } /* c */
+        .b4 { top: 160px; left: 53%; } /* d */
+
+        .b5 { top: 240px; left: 35%; } /* x */
+        .b6 { top: 240px; left: 50%; } /* y */
+        .b7 { top: 320px; left: 32%; } /* z */
+        .b8 { top: 320px; left: 47%; } /* t */
+
+        .overlay-msg {
+            position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(15, 23, 42, 0.9);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20;
+            opacity: 0; pointer-events: none; transition: all 0.3s; backdrop-filter: blur(5px);
+        }
+        .overlay-msg.show { opacity: 1; pointer-events: auto; }
+        
+        .om-title { font-size: 3rem; font-weight: 900; margin-bottom: 10px; color: var(--secondary);}
+        .btn-next {
+            background: var(--purple); color: white; border: none; padding: 15px 40px; border-radius: 50px;
+            font-size: 1.2rem; font-weight: 800; cursor: pointer; transition: all 0.3s; margin-top: 20px;
+        }
+        .btn-next:hover { transform: scale(1.05); }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=3B82F6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.6.3.1. Açı Avcısı</div>
+    </div>
+
+    <div class="container">
+        
+        <div class="hunter-panel">
+            <h2>🎯 Açı Avcısı</h2>
+            <p style="color:#94A3B8;">Paralel doğrularda 1 açıyı biliyorsan, yöndeş, ters ve bütünler kurallarıyla diğer 7 açıyı bulabilirsin. Tüm gizli açıları tespit et!</p>
+            
+            <div class="canvas-area">
+                <div class="line-h l1"></div>
+                <div class="line-h l2"></div>
+                <div class="line-v"></div>
+
+                <div class="ang-box b1" id="box0"><input type="text" class="ang-input" id="inp0" onchange="checkAng(0)"></div>
+                <div class="ang-box b2" id="box1"><input type="text" class="ang-input" id="inp1" onchange="checkAng(1)"></div>
+                <div class="ang-box b3" id="box2"><input type="text" class="ang-input" id="inp2" onchange="checkAng(2)"></div>
+                <div class="ang-box b4" id="box3"><input type="text" class="ang-input" id="inp3" onchange="checkAng(3)"></div>
+                
+                <div class="ang-box b5" id="box4"><input type="text" class="ang-input" id="inp4" onchange="checkAng(4)"></div>
+                <div class="ang-box b6" id="box5"><input type="text" class="ang-input" id="inp5" onchange="checkAng(5)"></div>
+                <div class="ang-box b7" id="box6"><input type="text" class="ang-input" id="inp6" onchange="checkAng(6)"></div>
+                <div class="ang-box b8" id="box7"><input type="text" class="ang-input" id="inp7" onchange="checkAng(7)"></div>
+            </div>
+
+            <div class="overlay-msg" id="overlay">
+                <div class="om-title">Harika Dedektiflik! 🏆</div>
+                <p style="color:#94A3B8; font-size:1.2rem; font-weight:600;">Kuralları kullanarak tüm açıları deşifre ettin.</p>
+                <button class="btn-next" onclick="nextLevel()" id="nextBtn">Yeni Görev ➔</button>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // Data structure: Acute angle (dar), Obtuse angle (geniş).
+        // For the given rotation (20deg top-right), 
+        // a=Obtuse, b=Acute, c=Acute, d=Obtuse
+        // x=Obtuse, y=Acute, z=Acute, t=Obtuse
+        // Indices mapping:
+        // 0: Obtuse (a), 1: Acute (b), 2: Acute (c), 3: Obtuse (d)
+        // 4: Obtuse (x), 5: Acute (y), 6: Acute (z), 7: Obtuse (t)
+
+        const isAcute = [false, true, true, false, false, true, true, false];
+
+        const levels = [
+            { acute: 70, obtuse: 110, givenIdx: 1 }, // b is 70
+            { acute: 45, obtuse: 135, givenIdx: 6 }, // z is 45
+            { acute: 80, obtuse: 100, givenIdx: 3 }  // d is 100
+        ];
+
+        let currLvl = 0;
+        let solvedCount = 0;
+
+        function loadLevel() {
+            let l = levels[currLvl];
+            solvedCount = 1; // given is solved
+            
+            for(let i=0; i<8; i++) {
+                let box = document.getElementById(`box${i}`);
+                let inp = document.getElementById(`inp${i}`);
+                box.className = `ang-box b${i+1}`;
+                
+                if(i === l.givenIdx) {
+                    box.classList.add('solved');
+                    inp.value = isAcute[i] ? l.acute + "°" : l.obtuse + "°";
+                    inp.disabled = true;
+                } else {
+                    inp.value = "";
+                    inp.disabled = false;
+                }
+            }
+
+            document.getElementById('overlay').classList.remove('show');
+        }
+
+        function checkAng(idx) {
+            let l = levels[currLvl];
+            let inp = document.getElementById(`inp${idx}`);
+            let box = document.getElementById(`box${idx}`);
+            
+            let val = parseInt(inp.value);
+            if(isNaN(val)) return;
+
+            let correctAns = isAcute[idx] ? l.acute : l.obtuse;
+
+            if(val === correctAns) {
+                box.classList.remove('error');
+                box.classList.add('solved');
+                inp.value = val + "°";
+                inp.disabled = true;
+                solvedCount++;
+
+                if(solvedCount === 8) {
+                    setTimeout(() => {
+                        document.getElementById('overlay').classList.add('show');
+                        if(currLvl === levels.length - 1) {
+                            document.getElementById('nextBtn').innerText = "Tüm Görevler Bitti!";
+                            document.getElementById('nextBtn').disabled = true;
+                        }
+                    }, 500);
+                }
+            } else {
+                box.classList.remove('error');
+                void box.offsetWidth; // trigger reflow for animation
+                box.classList.add('error');
+                setTimeout(() => { inp.value = ""; }, 500);
+            }
+        }
+
+        function nextLevel() {
+            if(currLvl < levels.length - 1) {
+                currLvl++;
+                loadLevel();
+            }
+        }
+
+        loadLevel();
+    </script>
+</body>
+</html>

@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>11.1.4 - Fonksiyonlarda İşlemler Etkinliği</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0A0A12;
+            --panel-bg: #151522;
+            --primary: #00F0FF; 
+            --secondary: #FF00E4; 
+            --accent: #FFE600; 
+            --text-main: #FFFFFF;
+            --text-muted: #8A8A9E;
+            --grid-line: rgba(0, 240, 255, 0.12);
+            --axis-line: rgba(0, 240, 255, 0.5);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background-color: var(--bg-color); color: var(--text-main);
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; padding: 20px; overflow-x: hidden;
+            background-image: 
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        .header {
+            width: 100%; max-width: 1200px; display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 25px; background: rgba(21, 21, 34, 0.85); backdrop-filter: blur(10px);
+            border-radius: 16px; border: 1px solid rgba(0, 240, 255, 0.3);
+            margin-bottom: 20px; box-shadow: 0 0 20px rgba(0, 240, 255, 0.15);
+        }
+        
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 800; color: var(--primary); font-size: 1.1rem; }
+        .header-left img { width: 45px; height: 45px; border-radius: 10px; border: 1px solid var(--primary); }
+        .kazanim { background: rgba(0, 240, 255, 0.1); padding: 8px 15px; border-radius: 8px; color: var(--primary); font-weight: 600; font-size: 0.85rem; border: 1px solid rgba(0, 240, 255, 0.3); }
+
+        h1 { font-size: 2rem; font-weight: 900; margin-bottom: 8px; text-align: center; text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 0 10px rgba(0, 240, 255, 0.5); }
+        .subtitle { color: var(--text-muted); font-size: 1rem; margin-bottom: 25px; text-align: center; max-width: 900px; }
+
+        .workspace { display: flex; flex-direction: row; gap: 20px; width: 100%; max-width: 1200px; }
+        @media (max-width: 900px) { .workspace { flex-direction: column; } }
+
+        .controls {
+            flex: 1; display: flex; flex-direction: column; gap: 16px; background: var(--panel-bg);
+            padding: 22px; border-radius: 16px; border: 1px solid rgba(255, 0, 228, 0.3);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5); min-width: 320px;
+        }
+
+        .op-selector { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 5px; }
+        .btn-op {
+            padding: 12px 5px; background: rgba(255,255,255,0.05); border: 1px solid var(--text-muted);
+            color: var(--text-muted); font-weight: 800; border-radius: 8px; cursor: pointer; transition: 0.3s;
+            font-size: 1.4rem; text-align: center;
+        }
+        .btn-op:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-op.active { background: rgba(255, 230, 0, 0.2); border-color: var(--accent); color: var(--accent); box-shadow: 0 0 10px rgba(255, 230, 0, 0.3); }
+
+        .function-group {
+            background: rgba(0,0,0,0.4); padding: 16px; border-radius: 8px;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .function-group.cyan-border { border-left: 4px solid var(--primary); }
+        .function-group.pink-border { border-left: 4px solid var(--secondary); }
+        
+        .func-label { font-weight: 600; font-size: 1rem; color: var(--text-main); }
+        .func-select {
+            width: 100%; padding: 10px; background: #000; color: white; border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px; font-family: 'Outfit'; font-size: 1rem; outline: none; cursor: pointer;
+        }
+
+        .math-box {
+            background: rgba(0,0,0,0.6); border: 1px dashed var(--accent); padding: 20px;
+            border-radius: 12px; font-size: 1.1rem; text-align: center; margin-top: auto; color: var(--text-main);
+            line-height: 1.8; min-height: 140px; display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+
+        .visual-container { flex: 2.2; display: flex; flex-direction: column; gap: 15px; }
+        
+        .graph-container {
+            display: flex; width: 100%; height: 500px; position: relative;
+            background: #0A0A12; border-radius: 16px; border: 2px solid var(--accent);
+            overflow: hidden; box-shadow: 0 0 30px rgba(255, 230, 0, 0.1) inset;
+        }
+
+        svg { width: 100%; height: 100%; display: block; cursor: crosshair; }
+        
+        .svg-grid { stroke: rgba(255,255,255,0.06); stroke-width: 0.05; }
+        .svg-axis { stroke: var(--axis-line); stroke-width: 0.15; }
+        
+        .path-f { fill: none; stroke: var(--primary); stroke-width: 0.1; stroke-dasharray: 0.2, 0.2; }
+        .path-g { fill: none; stroke: var(--secondary); stroke-width: 0.1; stroke-dasharray: 0.2, 0.2; }
+        .path-h { fill: none; stroke: var(--accent); stroke-width: 0.15; stroke-linecap: round; filter: drop-shadow(0 0 5px var(--accent)); }
+        
+        .svg-label { fill: var(--text-muted); font-size: 0.3px; font-weight: 600; }
+        
+        .point-marker { fill: var(--bg-color); stroke-width: 0.1; r: 0.15; }
+        .marker-f { stroke: var(--primary); }
+        .marker-g { stroke: var(--secondary); }
+        .marker-h { stroke: var(--accent); fill: var(--accent); r: 0.2; filter: drop-shadow(0 0 8px var(--accent)); }
+        
+        .calc-line { stroke: rgba(255,255,255,0.3); stroke-width: 0.05; stroke-dasharray: 0.1, 0.1; }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=00F0FF&color=000'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.11.1.4. Fonksiyonlarda İşlemler</div>
+    </div>
+    
+    <h1>Fonksiyon Aritmetiği</h1>
+    <p class="subtitle">İki fonksiyon arasında yapılan <strong>Toplama, Çıkarma, Çarpma</strong> ve <strong>Bölme</strong> işlemlerinin yeni oluşan grafik <strong>(h)</strong> üzerindeki etkilerini canlı olarak inceleyin.</p>
+    
+    <div class="workspace">
+        <div class="controls">
+            <div class="op-selector">
+                <button class="btn-op active" onclick="setOp('+')" id="btnAdd">+</button>
+                <button class="btn-op" onclick="setOp('-')" id="btnSub">-</button>
+                <button class="btn-op" onclick="setOp('*')" id="btnMul">×</button>
+                <button class="btn-op" onclick="setOp('/')" id="btnDiv">÷</button>
+            </div>
+
+            <div class="function-group cyan-border">
+                <div class="func-label" style="color:var(--primary)">f(x) Fonksiyonu:</div>
+                <select class="func-select" id="selF" onchange="updateVisuals()">
+                    <option value="x">x</option>
+                    <option value="x^2">x²</option>
+                    <option value="sin(x)">sin(x)</option>
+                    <option value="2">2 (Sabit)</option>
+                </select>
+            </div>
+            
+            <div class="function-group pink-border">
+                <div class="func-label" style="color:var(--secondary)">g(x) Fonksiyonu:</div>
+                <select class="func-select" id="selG" onchange="updateVisuals()">
+                    <option value="1">1 (Sabit)</option>
+                    <option value="x">x</option>
+                    <option value="0.5x^2">0.5x²</option>
+                    <option value="cos(x)">cos(x)</option>
+                </select>
+            </div>
+
+            <div class="math-box" id="mathOutput">
+                <!-- Double buffered MathJax rendered Tex -->
+            </div>
+        </div>
+        
+        <div class="visual-container">
+            <div class="graph-container">
+                <svg id="graphSvg" viewBox="-5 -5 10 10" preserveAspectRatio="xMidYMid meet">
+                    <g transform="scale(1, -1)">
+                        <g id="gridGroup"></g>
+                        
+                        <!-- Axes -->
+                        <line x1="-5" y1="0" x2="5" y2="0" class="svg-axis" />
+                        <line x1="0" y1="-5" x2="0" y2="5" class="svg-axis" />
+                        
+                        <!-- Curves -->
+                        <path id="pathF" class="path-f" d="" />
+                        <path id="pathG" class="path-g" d="" />
+                        <path id="pathH" class="path-h" d="" />
+                        
+                        <!-- Interactive points -->
+                        <g id="interactiveGroup"></g>
+                    </g>
+                    <g id="labelsGroup"></g>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const selF = document.getElementById('selF');
+        const selG = document.getElementById('selG');
+        const mathOutput = document.getElementById('mathOutput');
+        
+        const pathF = document.getElementById('pathF');
+        const pathG = document.getElementById('pathG');
+        const pathH = document.getElementById('pathH');
+        
+        const graphSvg = document.getElementById('graphSvg');
+        const interactiveGroup = document.getElementById('interactiveGroup');
+        
+        let isTypesetting = false;
+        let pendingTex = null;
+        let activeOp = '+';
+
+        function setOp(op) {
+            activeOp = op;
+            document.getElementById('btnAdd').classList.toggle('active', op === '+');
+            document.getElementById('btnSub').classList.toggle('active', op === '-');
+            document.getElementById('btnMul').classList.toggle('active', op === '*');
+            document.getElementById('btnDiv').classList.toggle('active', op === '/');
+            updateVisuals();
+        }
+
+        function evalMath(funcStr, x) {
+            if(funcStr === 'x') return x;
+            if(funcStr === 'x^2') return x*x;
+            if(funcStr === '0.5x^2') return 0.5*x*x;
+            if(funcStr === 'sin(x)') return Math.sin(x);
+            if(funcStr === 'cos(x)') return Math.cos(x);
+            if(funcStr === '2') return 2;
+            if(funcStr === '1') return 1;
+            return 0;
+        }
+        
+        function getTexString(funcStr) {
+            if(funcStr === 'x^2') return 'x^2';
+            if(funcStr === '0.5x^2') return '\\frac{1}{2}x^2';
+            if(funcStr === 'sin(x)') return '\\sin(x)';
+            if(funcStr === 'cos(x)') return '\\cos(x)';
+            return funcStr; // 'x', '1', '2'
+        }
+
+        function drawGrid() {
+            let gridHtml = '';
+            let labelHtml = '';
+            
+            for(let i = -5; i <= 5; i += 1) {
+                if(i !== 0) {
+                    gridHtml += `<line x1="-5" y1="${i}" x2="5" y2="${i}" class="svg-grid" />`;
+                    gridHtml += `<line x1="${i}" y1="-5" x2="${i}" y2="5" class="svg-grid" />`;
+                    
+                    labelHtml += `<text x="-0.15" y="${-i + 0.1}" class="svg-label" text-anchor="end">${i}</text>`;
+                    labelHtml += `<text x="${i}" y="0.4" class="svg-label" text-anchor="middle">${i}</text>`;
+                }
+            }
+            
+            document.getElementById('gridGroup').innerHTML = gridHtml;
+            document.getElementById('labelsGroup').innerHTML = labelHtml;
+        }
+
+        function renderMathClean(texString) {
+            if (isTypesetting) {
+                pendingTex = texString;
+                return;
+            }
+            isTypesetting = true;
+            
+            let temp = document.createElement('div');
+            temp.style.position = 'absolute';
+            temp.style.top = '-9999px';
+            temp.style.left = '-9999px';
+            temp.style.visibility = 'hidden';
+            temp.innerHTML = texString;
+            document.body.appendChild(temp);
+            
+            MathJax.typesetPromise([temp]).then(() => {
+                mathOutput.innerHTML = temp.innerHTML;
+                if (temp.parentNode) document.body.removeChild(temp);
+                isTypesetting = false;
+                
+                if (pendingTex) {
+                    let next = pendingTex;
+                    pendingTex = null;
+                    renderMathClean(next);
+                }
+            }).catch(err => {
+                if (temp.parentNode) document.body.removeChild(temp);
+                isTypesetting = false;
+            });
+        }
+
+        function updateVisuals() {
+            let fStr = selF.value;
+            let gStr = selG.value;
+            
+            let step = 0.05;
+            let dF = "";
+            let dG = "";
+            let dH = "";
+            
+            let lastY_h = null;
+            
+            for(let x = -5.5; x <= 5.5; x += step) {
+                let yF = evalMath(fStr, x);
+                let yG = evalMath(gStr, x);
+                let yH = 0;
+                
+                if(activeOp === '+') yH = yF + yG;
+                if(activeOp === '-') yH = yF - yG;
+                if(activeOp === '*') yH = yF * yG;
+                if(activeOp === '/') {
+                    yH = Math.abs(yG) > 0.01 ? yF / yG : NaN;
+                }
+                
+                if(yF >= -10 && yF <= 10) dF += (dF === "" ? "M" : "L") + ` ${x.toFixed(3)} ${yF.toFixed(3)}`;
+                if(yG >= -10 && yG <= 10) dG += (dG === "" ? "M" : "L") + ` ${x.toFixed(3)} ${yG.toFixed(3)}`;
+                
+                if(!isNaN(yH) && yH >= -15 && yH <= 15) {
+                    // prevent asymptote jumps
+                    if(activeOp === '/' && lastY_h !== null && Math.abs(yH - lastY_h) > 5) {
+                        dH += ` M ${x.toFixed(3)} ${yH.toFixed(3)}`;
+                    } else {
+                        dH += (dH === "" ? "M" : "L") + ` ${x.toFixed(3)} ${yH.toFixed(3)}`;
+                    }
+                    lastY_h = yH;
+                } else {
+                    lastY_h = null;
+                }
+            }
+            
+            pathF.setAttribute("d", dF);
+            pathG.setAttribute("d", dG);
+            pathH.setAttribute("d", dH);
+            
+            // Math Display
+            let opSymbol = activeOp;
+            if(activeOp === '*') opSymbol = '\\cdot';
+            if(activeOp === '/') opSymbol = '\\div';
+            
+            let texH = "";
+            let fTex = getTexString(fStr);
+            let gTex = getTexString(gStr);
+            
+            if(activeOp === '/') {
+                texH = `h(x) = \\frac{${fTex}}{${gTex}}`;
+            } else if (activeOp === '*') {
+                texH = `h(x) = (${fTex}) \\cdot (${gTex})`;
+            } else {
+                texH = `h(x) = (${fTex}) ${activeOp} (${gTex})`;
+            }
+            
+            let statusTex = `\\( f(x) = ${fTex} \\)<br>`;
+            statusTex += `\\( g(x) = ${gTex} \\)<br><br>`;
+            statusTex += `\\( \\mathbf{ (f ${opSymbol} g)(x) } \\)<br>`;
+            statusTex += `\\( ${texH} \\)`;
+            
+            if(activeOp === '/' && (gStr === 'x' || gStr === 'sin(x)')) {
+                statusTex += `<br><span style="color:red; font-size:0.9rem;">Dikkat: Paydayı sıfır yapan noktalarda tanımsızdır.</span>`;
+            }
+            
+            renderMathClean(statusTex);
+            clearInteraction();
+        }
+
+        // SVG Interaction
+        function getMousePos(evt) {
+            let CTM = graphSvg.getScreenCTM();
+            return {
+                x: (evt.clientX - CTM.e) / CTM.a,
+                y: -((evt.clientY - CTM.f) / CTM.d)
+            };
+        }
+
+        graphSvg.addEventListener('mousemove', (e) => {
+            let pos = getMousePos(e);
+            let px = pos.x;
+            if(px < -5 || px > 5) { clearInteraction(); return; }
+            
+            let fStr = selF.value;
+            let gStr = selG.value;
+            let yF = evalMath(fStr, px);
+            let yG = evalMath(gStr, px);
+            let yH = 0;
+            
+            if(activeOp === '+') yH = yF + yG;
+            if(activeOp === '-') yH = yF - yG;
+            if(activeOp === '*') yH = yF * yG;
+            if(activeOp === '/') yH = Math.abs(yG) > 0.01 ? yF / yG : NaN;
+            
+            let html = "";
+            html += `<line x1="${px}" y1="-5" x2="${px}" y2="5" class="calc-line" />`;
+            
+            if(yF >= -5 && yF <= 5) html += `<circle cx="${px}" cy="${yF}" class="point-marker marker-f" />`;
+            if(yG >= -5 && yG <= 5) html += `<circle cx="${px}" cy="${yG}" class="point-marker marker-g" />`;
+            
+            if(!isNaN(yH) && yH >= -5 && yH <= 5) {
+                html += `<circle cx="${px}" cy="${yH}" class="point-marker marker-h" />`;
+            }
+            
+            interactiveGroup.innerHTML = html;
+        });
+
+        graphSvg.addEventListener('mouseleave', clearInteraction);
+
+        function clearInteraction() {
+            interactiveGroup.innerHTML = "";
+        }
+
+        window.onload = () => {
+            drawGrid();
+            updateVisuals();
+        };
+    </script>
+</body>
+</html>

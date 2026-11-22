@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Silindir Simülatörü</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg:#0F0E17; --surface:#1A1A24; --primary:#8B5CF6; --secondary:#10B981; --tertiary:#06B6D4; --danger:#F43F5E; --accent:#F59E0B; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Outfit',sans-serif; }
+        body { background:linear-gradient(135deg,var(--bg),#161625); color:#F8FAFC; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:20px; }
+        .header { width:100%; max-width:1000px; display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); padding:15px 25px; border-radius:20px; border:1px solid rgba(139,92,246,0.2); margin-bottom:20px; }
+        .header-left { display:flex; align-items:center; gap:15px; font-weight:600; font-size:1.2rem; }
+        .header-left img { width:50px; height:50px; border-radius:50%; background:white; padding:2px; }
+        .kazanim { background:var(--primary); color:white; padding:5px 15px; border-radius:20px; font-weight:800; font-size:0.9rem; }
+        .title-area { text-align:center; margin-bottom:20px; }
+        h1 { font-size:2.2rem; color:var(--tertiary); font-weight:900; }
+        .subtitle { color:#94A3B8; font-size:1.1rem; margin-top:5px; }
+        .panel { background:#11111A; border-radius:24px; border:1px solid rgba(255,255,255,0.05); box-shadow:inset 0 0 30px rgba(0,0,0,0.5); padding:30px; display:flex; width:100%; max-width:1000px; gap:30px; align-items:center; justify-content:center; flex-wrap:wrap; }
+        .controls { display:flex; flex-direction:column; gap:15px; width:280px; }
+        .card { background:var(--surface); padding:15px; border-radius:15px; display:flex; flex-direction:column; gap:8px; }
+        .c-lbl { font-weight:800; color:white; font-size:1.1rem; }
+        .c-val { font-size:1.8rem; font-weight:900; }
+        input[type=range] { width:100%; cursor:pointer; accent-color:var(--primary); }
+        .result-card { background:rgba(0,0,0,0.3); border:1px solid #334155; padding:15px; border-radius:12px; }
+        .r-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+        .r-formula { color:#94A3B8; font-weight:600; font-size:0.95rem; }
+        .r-val { font-weight:900; font-size:1.2rem; }
+        .canvas-area { width:380px; height:380px; background:#161625; border:2px dashed #334155; border-radius:15px; display:flex; align-items:center; justify-content:center; }
+        svg { overflow:visible; }
+        /* Cylinder 3D look */
+        ellipse { transition:all 0.3s; }
+        rect.body { transition:all 0.3s; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.8.4.3. Silindir (Etkinlik)</div>
+    </div>
+    <div class="title-area">
+        <h1>Silindir Hacmi ve Yüzey Alanı</h1>
+        <p class="subtitle">Yarıçap ve yüksekliği değiştirerek silindirin hacmini ve yüzey alanını keşfedin.</p>
+    </div>
+    <div class="panel">
+        <div class="controls">
+            <div class="card">
+                <span class="c-lbl">Yarıçap (r)</span>
+                <span class="c-val" style="color:var(--tertiary);" id="valR">5 cm</span>
+                <input type="range" id="sliderR" min="1" max="10" value="5" oninput="update()">
+            </div>
+            <div class="card">
+                <span class="c-lbl">Yükseklik (h)</span>
+                <span class="c-val" style="color:var(--danger);" id="valH">8 cm</span>
+                <input type="range" id="sliderH" min="1" max="16" value="8" oninput="update()">
+            </div>
+            <div class="result-card">
+                <div class="r-row">
+                    <span class="r-formula">Hacim = πr²h</span>
+                    <span class="r-val" style="color:var(--accent);" id="rHacim">628.3 cm³</span>
+                </div>
+                <div class="r-row">
+                    <span class="r-formula">Yanal Alan = 2πrh</span>
+                    <span class="r-val" style="color:var(--secondary);" id="rYanal">251.3 cm²</span>
+                </div>
+                <div class="r-row" style="margin-bottom:0;">
+                    <span class="r-formula">Tüm Yüzey = 2πr(r+h)</span>
+                    <span class="r-val" style="color:var(--primary);" id="rYuzey">408.4 cm²</span>
+                </div>
+            </div>
+        </div>
+        <div class="canvas-area">
+            <svg width="300" height="340" viewBox="0 0 300 340" id="svgCyl">
+                <!-- Cylinder body -->
+                <rect id="cylBody" x="60" y="50" width="180" height="200" fill="rgba(6,182,212,0.15)" stroke="var(--tertiary)" stroke-width="3"/>
+                <!-- Top ellipse -->
+                <ellipse id="cylTop" cx="150" cy="50" rx="90" ry="30" fill="rgba(6,182,212,0.3)" stroke="var(--tertiary)" stroke-width="3"/>
+                <!-- Bottom ellipse -->
+                <ellipse id="cylBot" cx="150" cy="250" rx="90" ry="30" fill="rgba(6,182,212,0.2)" stroke="var(--tertiary)" stroke-width="3"/>
+                <!-- r label -->
+                <line id="rLine" x1="150" y1="50" x2="240" y2="50" stroke="var(--secondary)" stroke-width="2" stroke-dasharray="5,4"/>
+                <text id="rLbl" x="200" y="40" text-anchor="middle" fill="var(--secondary)" font-weight="900" font-family="Outfit" font-size="16">r=5</text>
+                <!-- h label -->
+                <line x1="260" y1="50" x2="260" y2="250" stroke="var(--danger)" stroke-width="2" stroke-dasharray="5,4"/>
+                <text id="hLbl" x="275" y="155" text-anchor="start" fill="var(--danger)" font-weight="900" font-family="Outfit" font-size="16">h=8</text>
+                <!-- Volume label -->
+                <text id="volLbl" x="150" y="155" text-anchor="middle" fill="var(--accent)" font-weight="900" font-family="Outfit" font-size="18">628.3 cm³</text>
+            </svg>
+        </div>
+    </div>
+    <script>
+        const PI = Math.PI;
+        function update() {
+            let r = parseInt(document.getElementById('sliderR').value);
+            let h = parseInt(document.getElementById('sliderH').value);
+            document.getElementById('valR').textContent = r + ' cm';
+            document.getElementById('valH').textContent = h + ' cm';
+            let hacim = (PI*r*r*h).toFixed(1);
+            let yanal = (2*PI*r*h).toFixed(1);
+            let yuzey = (2*PI*r*(r+h)).toFixed(1);
+            document.getElementById('rHacim').textContent = hacim + ' cm³';
+            document.getElementById('rYanal').textContent = yanal + ' cm²';
+            document.getElementById('rYuzey').textContent = yuzey + ' cm²';
+            // SVG update
+            let maxR = 10, maxH = 16;
+            let svgRx = 20 + (r/maxR)*70; // 20 to 90
+            let svgH = 30 + (h/maxH)*200; // 30 to 230
+            let svgRy = svgRx * 0.33; // ellipse ry
+            let topY = 170 - svgH/2;
+            let botY = 170 + svgH/2;
+            document.getElementById('cylBody').setAttribute('x', 150-svgRx);
+            document.getElementById('cylBody').setAttribute('y', topY);
+            document.getElementById('cylBody').setAttribute('width', svgRx*2);
+            document.getElementById('cylBody').setAttribute('height', svgH);
+            document.getElementById('cylTop').setAttribute('cx', 150);
+            document.getElementById('cylTop').setAttribute('cy', topY);
+            document.getElementById('cylTop').setAttribute('rx', svgRx);
+            document.getElementById('cylTop').setAttribute('ry', svgRy);
+            document.getElementById('cylBot').setAttribute('cx', 150);
+            document.getElementById('cylBot').setAttribute('cy', botY);
+            document.getElementById('cylBot').setAttribute('rx', svgRx);
+            document.getElementById('cylBot').setAttribute('ry', svgRy);
+            document.getElementById('rLine').setAttribute('x1', 150);
+            document.getElementById('rLine').setAttribute('y1', topY);
+            document.getElementById('rLine').setAttribute('x2', 150+svgRx);
+            document.getElementById('rLine').setAttribute('y2', topY);
+            document.getElementById('rLbl').setAttribute('x', 150+svgRx/2);
+            document.getElementById('rLbl').setAttribute('y', topY-8);
+            document.getElementById('rLbl').textContent = 'r=' + r;
+            document.getElementById('hLbl').setAttribute('y', 170);
+            document.getElementById('hLbl').textContent = 'h=' + h;
+            document.getElementById('volLbl').setAttribute('y', 175);
+            document.getElementById('volLbl').textContent = hacim + ' cm³';
+        }
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'BUTTON' && !e.target.hasAttribute('data-spam-locked')) {
+                e.target.setAttribute('data-spam-locked','true'); e.target.style.opacity='0.7'; e.target.style.pointerEvents='none';
+                setTimeout(() => { e.target.removeAttribute('data-spam-locked'); e.target.style.opacity='1'; e.target.style.pointerEvents='auto'; }, 400);
+            }
+        });
+        update();
+    </script>
+</body>
+</html>

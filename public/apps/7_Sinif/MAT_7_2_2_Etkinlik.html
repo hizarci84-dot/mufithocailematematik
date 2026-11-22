@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terazi ile Denklem Çözme</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F0E17; --surface: #1A1A24; --text: #F8FAFC;
+            --primary: #8B5CF6; --secondary: #10B981;
+            --tertiary: #06B6D4; --danger: #F43F5E;
+            --accent: #F59E0B;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, #161625 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(139, 92, 246, 0.2); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; margin-bottom: 20px;}
+        h1 { font-size: 2.2rem; color: var(--tertiary); font-weight: 900;}
+        .subtitle { color: #94A3B8; font-size: 1.1rem; margin-top: 5px;}
+
+        .canvas-area {
+            position: relative; width: 100%; max-width: 900px; height: 500px; 
+            background: #11111A; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.4); 
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 40px;
+        }
+
+        /* Scale Elements */
+        .scale-base {
+            width: 150px; height: 20px; background: #334155; border-radius: 10px 10px 0 0;
+            position: relative; z-index: 10; border: 2px solid #475569;
+        }
+        .scale-pillar {
+            width: 20px; height: 150px; background: #334155; position: absolute; bottom: 20px; left: 65px;
+            border: 2px solid #475569; z-index: 9;
+        }
+        .scale-beam {
+            width: 500px; height: 10px; background: #94A3B8; position: absolute; bottom: 160px; left: -175px;
+            transform-origin: center; transition: transform 0.5s ease-in-out; border-radius: 5px; z-index: 11;
+        }
+        .scale-pan {
+            width: 150px; height: 20px; background: rgba(139, 92, 246, 0.3); border: 2px solid var(--primary);
+            position: absolute; border-radius: 0 0 20px 20px; display: flex; align-items: flex-end; justify-content: center;
+            padding-bottom: 5px; gap: 5px; transition: transform 0.5s ease-in-out; flex-wrap: wrap; align-content: flex-end;
+        }
+        /* Pan strings */
+        .scale-pan::before, .scale-pan::after {
+            content: ''; position: absolute; width: 2px; height: 100px; background: #64748B; top: -100px;
+        }
+        .scale-pan::before { left: 10px; transform: rotate(15deg); transform-origin: bottom; }
+        .scale-pan::after { right: 10px; transform: rotate(-15deg); transform-origin: bottom;}
+        
+        .pan-left { left: 0; top: 100px; transform: translateX(-50%); }
+        .pan-right { right: 0; top: 100px; transform: translateX(50%); }
+
+        /* Objects on pan */
+        .obj-x {
+            width: 40px; height: 40px; background: var(--secondary); display: flex; align-items: center; justify-content: center;
+            font-weight: 900; color: white; border-radius: 8px; box-shadow: inset 0 -5px 10px rgba(0,0,0,0.3);
+            animation: dropIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .obj-1 {
+            width: 25px; height: 25px; background: var(--tertiary); display: flex; align-items: center; justify-content: center;
+            font-weight: 900; color: white; border-radius: 50%; box-shadow: inset 0 -3px 5px rgba(0,0,0,0.3);
+            animation: dropIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes dropIn { 0% { transform: translateY(-50px) scale(0); opacity:0;} 100% { transform: translateY(0) scale(1); opacity:1;} }
+
+        /* Equation display */
+        .eq-display {
+            position: absolute; top: 30px; font-size: 3rem; font-weight: 900; color: white;
+            letter-spacing: 5px; text-shadow: 0 5px 10px rgba(0,0,0,0.5);
+            display: flex; gap: 20px; align-items: center;
+        }
+        .eq-part { transition: color 0.3s; }
+        .eq-equals { color: var(--tertiary); }
+
+        /* Action Panel */
+        .action-panel {
+            width: 100%; max-width: 900px; display: flex; gap: 15px; margin-top: 20px; justify-content: center;
+            flex-wrap: wrap;
+        }
+        .btn-action {
+            background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); padding: 15px 30px; border-radius: 50px;
+            font-size: 1.1rem; font-weight: 800; cursor: pointer; transition: all 0.3s;
+        }
+        .btn-action:hover:not(:disabled) { background: var(--primary); border-color: var(--primary); box-shadow: 0 5px 15px rgba(139, 92, 246, 0.4); transform: translateY(-2px);}
+        .btn-action:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        .alert-box {
+            position: absolute; top: 120px; background: rgba(244, 63, 94, 0.2); border: 2px solid var(--danger);
+            color: var(--danger); padding: 10px 20px; border-radius: 15px; font-weight: 800; font-size: 1.2rem;
+            opacity: 0; transform: translateY(-20px); transition: all 0.5s; text-align: center; z-index: 20;
+        }
+
+        .success-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(16, 185, 129, 0.2);
+            backdrop-filter: blur(5px); z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: 0.5s;
+        }
+        .success-overlay h2 { font-size: 4rem; color: var(--secondary); text-shadow: 0 5px 10px rgba(0,0,0,0.5); margin-bottom: 20px;}
+
+        @media (max-width: 768px) {
+            .scale-beam { width: 300px; left: -75px;}
+            .scale-pan { width: 100px; }
+            .pan-left { top: 70px; } .pan-right { top: 70px; }
+            .scale-pan::before, .scale-pan::after { height: 70px; top: -70px;}
+            .eq-display { font-size: 2rem; }
+            .obj-x { width: 30px; height: 30px; font-size: 0.9rem;}
+            .obj-1 { width: 20px; height: 20px; font-size: 0.8rem;}
+            .action-panel { flex-direction: column; align-items: center;}
+            .btn-action { width: 80%; text-align: center;}
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.7.2.2. Denge Terazisi ile Denklem Çözümü</div>
+    </div>
+
+    <div class="title-area">
+        <h1>Eşitliği Koru!</h1>
+        <p class="subtitle">Amacımız X'i terazinin bir kefesinde yalnız bırakmak. Ancak bir tarafa ne yaparsan, denge bozulmasın diye diğer tarafa da aynısını yapmalısın!</p>
+    </div>
+
+    <div class="canvas-area">
+        
+        <div class="alert-box" id="alertBox">Denge Bozuldu!</div>
+
+        <div class="eq-display">
+            <div class="eq-part" id="eqLeft">2x + 4</div>
+            <div class="eq-equals" id="eqSign">=</div>
+            <div class="eq-part" id="eqRight">10</div>
+        </div>
+
+        <div class="scale-base">
+            <div class="scale-pillar"></div>
+            <div class="scale-beam" id="beam">
+                <div class="scale-pan pan-left" id="panLeft">
+                    <!-- Objects -->
+                </div>
+                <div class="scale-pan pan-right" id="panRight">
+                    <!-- Objects -->
+                </div>
+            </div>
+        </div>
+
+        <div class="success-overlay" id="successScreen">
+            <h2>TEBRİKLER!</h2>
+            <div style="font-size: 3rem; font-weight:900; color:white; background:rgba(0,0,0,0.5); padding: 20px 40px; border-radius:20px; border: 2px solid var(--secondary);">x = 3</div>
+        </div>
+
+    </div>
+
+    <div class="action-panel" id="actPanel">
+        <button class="btn-action" onclick="applyOp('sub', 4)">Her İki Taraftan 4 Çıkar</button>
+        <button class="btn-action" onclick="applyOp('add', 2)">Her İki Tarafa 2 Ekle</button>
+        <button class="btn-action" onclick="applyOp('div', 2)">Her İki Tarafı 2'ye Böl</button>
+        <button class="btn-action" onclick="applyOp('sub', 2)">Sadece Sol Taraftan 2 Çıkar</button>
+    </div>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        
+        const panLeft = document.getElementById('panLeft');
+        const panRight = document.getElementById('panRight');
+        const beam = document.getElementById('beam');
+        const eqLeft = document.getElementById('eqLeft');
+        const eqRight = document.getElementById('eqRight');
+        const alertBox = document.getElementById('alertBox');
+        const successScreen = document.getElementById('successScreen');
+        const actPanel = document.getElementById('actPanel');
+
+        // Initial State: 2x + 4 = 10
+        let state = {
+            leftX: 2,
+            leftNum: 4,
+            rightX: 0,
+            rightNum: 10
+        };
+
+        function renderPans() {
+            panLeft.innerHTML = '';
+            panRight.innerHTML = '';
+
+            for(let i=0; i<state.leftX; i++) panLeft.innerHTML += `<div class="obj-x">x</div>`;
+            for(let i=0; i<state.leftNum; i++) panLeft.innerHTML += `<div class="obj-1">1</div>`;
+
+            for(let i=0; i<state.rightX; i++) panRight.innerHTML += `<div class="obj-x">x</div>`;
+            for(let i=0; i<state.rightNum; i++) panRight.innerHTML += `<div class="obj-1">1</div>`;
+
+            updateEqText();
+        }
+
+        function updateEqText() {
+            let lTxt = "";
+            if(state.leftX > 0) lTxt += state.leftX === 1 ? "x" : state.leftX + "x";
+            if(state.leftNum > 0) lTxt += (lTxt ? " + " : "") + state.leftNum;
+            if(!lTxt) lTxt = "0";
+
+            let rTxt = "";
+            if(state.rightX > 0) rTxt += state.rightX === 1 ? "x" : state.rightX + "x";
+            if(state.rightNum > 0) rTxt += (rTxt ? " + " : "") + state.rightNum;
+            if(!rTxt) rTxt = "0";
+
+            eqLeft.innerText = lTxt;
+            eqRight.innerText = rTxt;
+
+            checkWin();
+        }
+
+        function checkWin() {
+            if(state.leftX === 1 && state.leftNum === 0 && state.rightX === 0) {
+                // x = something
+                setTimeout(() => {
+                    successScreen.style.opacity = 1;
+                    successScreen.style.pointerEvents = "auto";
+                    actPanel.style.pointerEvents = "none";
+                    actPanel.style.opacity = 0.5;
+                }, 1000);
+            }
+        }
+
+        async function applyOp(op, val) {
+            // Check if illegal op (like only doing one side)
+            if(op === 'sub' && val === 2 && state.leftNum >= 2) {
+                // Sadece Sol Taraftan 2 Çıkar (Bad Move)
+                state.leftNum -= 2;
+                renderPans();
+                beam.style.transform = "rotate(10deg)"; // Right is heavier now (actually left is lighter, right goes down)
+                
+                alertBox.innerText = "Denge Bozuldu! Diğer tarafa da aynı işlemi yapmalısın.";
+                alertBox.style.opacity = 1;
+                alertBox.style.transform = "translateY(0)";
+
+                // Disable all buttons
+                let btns = document.querySelectorAll('.btn-action');
+                btns.forEach(b => b.disabled = true);
+
+                await sleep(3000);
+                
+                // Revert
+                state.leftNum += 2;
+                renderPans();
+                beam.style.transform = "rotate(0deg)";
+                alertBox.style.opacity = 0;
+                alertBox.style.transform = "translateY(-20px)";
+                btns.forEach(b => b.disabled = false);
+                return;
+            }
+
+            // Legal ops
+            if(op === 'sub' && val === 4) {
+                if(state.leftNum >= 4 && state.rightNum >= 4) {
+                    state.leftNum -= 4;
+                    state.rightNum -= 4;
+                    
+                    // Visual tilt for fun then back
+                    beam.style.transform = "rotate(-5deg)";
+                    await sleep(300);
+                    beam.style.transform = "rotate(5deg)";
+                    await sleep(300);
+                    beam.style.transform = "rotate(0deg)";
+
+                    renderPans();
+                }
+            } else if (op === 'add' && val === 2) {
+                state.leftNum += 2;
+                state.rightNum += 2;
+                renderPans();
+            } else if (op === 'div' && val === 2) {
+                if(state.leftX % 2 === 0 && state.leftNum % 2 === 0 && state.rightX % 2 === 0 && state.rightNum % 2 === 0) {
+                    state.leftX /= 2;
+                    state.leftNum /= 2;
+                    state.rightX /= 2;
+                    state.rightNum /= 2;
+
+                    beam.style.transform = "rotate(-5deg)";
+                    await sleep(300);
+                    beam.style.transform = "rotate(5deg)";
+                    await sleep(300);
+                    beam.style.transform = "rotate(0deg)";
+
+                    renderPans();
+                } else {
+                    alertBox.innerText = "Şu an 2'ye bölünemeyen nesneler var!";
+                    alertBox.style.background = "var(--tertiary)";
+                    alertBox.style.borderColor = "var(--tertiary)";
+                    alertBox.style.color = "white";
+                    alertBox.style.opacity = 1;
+                    alertBox.style.transform = "translateY(0)";
+                    await sleep(2000);
+                    alertBox.style.opacity = 0;
+                }
+            }
+        }
+
+        // Init
+        renderPans();
+
+    </script>
+
+    <script>
+        // Global spam click prevention for Etkinlik files
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'BUTTON' && !e.target.hasAttribute('data-spam-locked')) {
+                e.target.setAttribute('data-spam-locked', 'true');
+                let originalOpacity = e.target.style.opacity || '1';
+                e.target.style.opacity = '0.7';
+                e.target.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    e.target.removeAttribute('data-spam-locked');
+                    e.target.style.opacity = originalOpacity;
+                    e.target.style.pointerEvents = 'auto';
+                }, 400);
+            }
+        });
+    </script>
+</body>
+</html>

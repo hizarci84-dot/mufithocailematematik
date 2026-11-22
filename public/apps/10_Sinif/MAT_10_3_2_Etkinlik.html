@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10.3.2 - Faktöriyel Algoritma Simülatörü</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #020617; /* Very dark slate */
+            --panel-bg: #0F172A; 
+            --primary: #10B981; /* Hacker green */
+            --primary-glow: rgba(16, 185, 129, 0.6);
+            --secondary: #3B82F6; 
+            --accent: #F59E0B;
+            --text-main: #F8FAFC;
+            --text-muted: #64748B;
+            --code-font: 'JetBrains Mono', monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background-color: var(--bg-color); color: var(--text-main);
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 25px; background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px); border-radius: 20px; border: 1px solid rgba(16, 185, 129, 0.3);
+            margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 800; color: var(--primary); }
+        .header-left img { width: 40px; height: 40px; border-radius: 10px; }
+        .kazanim { background: rgba(16, 185, 129, 0.1); padding: 8px 15px; border-radius: 12px; color: var(--primary); font-weight: 600; font-size: 0.9rem; font-family: var(--code-font); }
+
+        h1 { font-size: 2.5rem; font-weight: 900; margin-bottom: 10px; text-align: center; 
+             color: var(--primary); text-shadow: 0 0 15px var(--primary-glow); }
+             
+        .subtitle { color: var(--text-muted); font-size: 1.1rem; margin-bottom: 30px; text-align: center; max-width: 800px; }
+
+        .workspace { display: flex; flex-direction: row; gap: 20px; width: 100%; max-width: 1100px; }
+        @media (max-width: 800px) { .workspace { flex-direction: column; } }
+
+        .memory-panel {
+            flex: 1; display: flex; flex-direction: column; gap: 15px; background: var(--panel-bg);
+            padding: 25px; border-radius: 20px; border: 1px solid rgba(16, 185, 129, 0.2);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        
+        .memory-title { font-family: var(--code-font); font-size: 1.2rem; color: var(--secondary); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+        
+        .mem-var { display: flex; justify-content: space-between; font-family: var(--code-font); font-size: 1.5rem; background: rgba(0,0,0,0.4); padding: 10px 15px; border-radius: 10px; border-left: 4px solid var(--primary); }
+        .mem-var span:last-child { color: var(--primary); font-weight: 800; }
+
+        .controls { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
+        
+        .input-group { display: flex; align-items: center; justify-content: space-between; }
+        .input-group label { font-family: var(--code-font); font-weight: 700; color: var(--accent); }
+        .input-group input { 
+            width: 80px; background: rgba(0,0,0,0.5); border: 2px solid var(--accent); 
+            color: white; font-size: 1.2rem; font-family: var(--code-font); font-weight: 800; padding: 5px; border-radius: 8px; text-align: center;
+        }
+
+        .btn-action {
+            background: rgba(16, 185, 129, 0.1); border: 2px solid var(--primary);
+            color: var(--primary); padding: 12px; border-radius: 10px; font-weight: 800; font-family: var(--code-font);
+            cursor: pointer; transition: all 0.3s; text-transform: uppercase;
+        }
+        .btn-action:hover { background: var(--primary); color: var(--bg-color); box-shadow: 0 0 15px var(--primary-glow); }
+        .btn-action:disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+
+        .terminal-output {
+            margin-top: auto; background: black; padding: 15px; border-radius: 10px; font-family: var(--code-font);
+            color: var(--primary); min-height: 80px; border: 1px solid rgba(255,255,255,0.1);
+            display: flex; flex-direction: column; justify-content: flex-end;
+        }
+
+        .flowchart-container {
+            flex: 2; position: relative; background: #070A10;
+            border-radius: 20px; border: 2px solid rgba(16, 185, 129, 0.3);
+            overflow: hidden; box-shadow: 0 0 40px rgba(16, 185, 129, 0.1) inset;
+            display: flex; justify-content: center; align-items: center; padding: 20px;
+        }
+
+        /* SVG Flowchart */
+        svg { width: 100%; height: 600px; display: block; }
+        .flow-shape { fill: rgba(15, 23, 42, 0.9); stroke: var(--text-muted); stroke-width: 2; transition: all 0.3s; }
+        .flow-text { fill: var(--text-main); font-family: var(--code-font); font-size: 14px; font-weight: 700; text-anchor: middle; dominant-baseline: middle; }
+        
+        .flow-arrow { stroke: var(--text-muted); stroke-width: 2; fill: none; transition: stroke 0.3s; marker-end: url(#arrowhead); }
+        .flow-arrow-text { fill: var(--text-muted); font-family: var(--code-font); font-size: 12px; transition: fill 0.3s; }
+
+        /* Active states */
+        .node-active .flow-shape { stroke: var(--primary); fill: rgba(16, 185, 129, 0.15); filter: drop-shadow(0 0 10px var(--primary-glow)); stroke-width: 3; }
+        .node-active .flow-text { fill: var(--primary); }
+        
+        .arrow-active { stroke: var(--primary); stroke-width: 3; filter: drop-shadow(0 0 5px var(--primary)); marker-end: url(#arrowhead-active); }
+        .arrow-text-active { fill: var(--primary); font-weight: 800; filter: drop-shadow(0 0 5px var(--primary)); }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=10B981&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">>_ MAT.10.3.2. Algoritma ve Bilişim (Akış Şeması)</div>
+    </div>
+    
+    <h1>Faktöriyel Algoritma Simülatörü</h1>
+    <p class="subtitle">Bir bilgisayarın cebirsel bir işlemi (çarpım ve döngü) algoritmik mantıkla ve akış şeması kullanarak nasıl hesapladığını adım adım inceleyin.</p>
+    
+    <div class="workspace">
+        
+        <div class="memory-panel">
+            <div class="memory-title">// RAM (BELLEK) İZLEME</div>
+            
+            <div class="mem-var">
+                <span>N (Girdi)</span>
+                <span id="memN">?</span>
+            </div>
+            <div class="mem-var">
+                <span>i (Sayaç)</span>
+                <span id="memI">?</span>
+            </div>
+            <div class="mem-var">
+                <span>F (Sonuç)</span>
+                <span id="memF">?</span>
+            </div>
+            
+            <div class="controls">
+                <div class="input-group">
+                    <label>N Değerini Gir:</label>
+                    <input type="number" id="inpN" min="0" max="10" value="4">
+                </div>
+                <button class="btn-action" id="btnStep" onclick="stepSim()">Adım Adım İlerle (Space)</button>
+                <button class="btn-action" id="btnRun" onclick="runSim()">Hızlı Çalıştır</button>
+                <button class="btn-action" id="btnReset" onclick="resetSim()" style="display:none; border-color:var(--accent); color:var(--accent);">Sıfırla</button>
+            </div>
+            
+            <div class="terminal-output" id="terminal">
+                > Sistem hazır. N giriniz.<br>
+                <span class="cursor">_</span>
+            </div>
+        </div>
+        
+        <div class="flowchart-container">
+            <svg viewBox="0 0 500 650" id="flowSvg">
+                <defs>
+                    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#64748B" />
+                    </marker>
+                    <marker id="arrowhead-active" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#10B981" />
+                    </marker>
+                </defs>
+
+                <!-- Arrows -->
+                <path class="flow-arrow" id="edge_0_1" d="M 250 50 L 250 90" />
+                <path class="flow-arrow" id="edge_1_2" d="M 250 130 L 250 170" />
+                <path class="flow-arrow" id="edge_2_3" d="M 250 230 L 250 270" />
+                
+                <path class="flow-arrow" id="edge_3_4" d="M 250 350 L 250 390" />
+                <text x="260" y="370" class="flow-arrow-text" id="text_3_4">EVET</text>
+
+                <path class="flow-arrow" id="edge_4_5" d="M 250 430 L 250 470" />
+                
+                <!-- Loop back arrow -->
+                <path class="flow-arrow" id="edge_5_3" d="M 250 510 L 250 530 L 100 530 L 100 250 L 250 250" />
+                
+                <!-- No branch arrow -->
+                <path class="flow-arrow" id="edge_3_6" d="M 330 310 L 400 310 L 400 560 L 250 560 L 250 580" />
+                <text x="365" y="300" class="flow-arrow-text" id="text_3_6">HAYIR</text>
+
+                <path class="flow-arrow" id="edge_6_7" d="M 250 620 L 250 660" />
+
+                <!-- Nodes -->
+                <!-- 0: Başla -->
+                <g class="flow-node" id="node_0">
+                    <rect x="180" y="10" width="140" height="40" rx="20" class="flow-shape" />
+                    <text x="250" y="30" class="flow-text">BAŞLA</text>
+                </g>
+                
+                <!-- 1: Input N -->
+                <g class="flow-node" id="node_1">
+                    <polygon points="190,90 330,90 310,130 170,130" class="flow-shape" />
+                    <text x="250" y="110" class="flow-text">Oku: N</text>
+                </g>
+
+                <!-- 2: Process Init -->
+                <g class="flow-node" id="node_2">
+                    <rect x="170" y="170" width="160" height="60" class="flow-shape" />
+                    <text x="250" y="190" class="flow-text">F = 1</text>
+                    <text x="250" y="210" class="flow-text">i = 1</text>
+                </g>
+
+                <!-- 3: Decision i <= N -->
+                <g class="flow-node" id="node_3">
+                    <polygon points="250,270 330,310 250,350 170,310" class="flow-shape" />
+                    <text x="250" y="310" class="flow-text">Eğer i &lt;= N</text>
+                </g>
+
+                <!-- 4: Process F = F * i -->
+                <g class="flow-node" id="node_4">
+                    <rect x="170" y="390" width="160" height="40" class="flow-shape" />
+                    <text x="250" y="410" class="flow-text">F = F * i</text>
+                </g>
+
+                <!-- 5: Process i = i + 1 -->
+                <g class="flow-node" id="node_5">
+                    <rect x="170" y="470" width="160" height="40" class="flow-shape" />
+                    <text x="250" y="490" class="flow-text">i = i + 1</text>
+                </g>
+
+                <!-- 6: Output F -->
+                <g class="flow-node" id="node_6">
+                    <polygon points="190,580 330,580 310,620 170,620" class="flow-shape" />
+                    <text x="250" y="600" class="flow-text">Yazdır: F</text>
+                </g>
+
+                <!-- 7: Bitir -->
+                <g class="flow-node" id="node_7">
+                    <rect x="180" y="660" width="140" height="40" rx="20" class="flow-shape" />
+                    <text x="250" y="680" class="flow-text">BİTİR</text>
+                </g>
+                
+            </svg>
+        </div>
+    </div>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        
+        let mem = { N: null, i: null, F: null };
+        let state = -1; 
+        /* States:
+           0: Init
+           1: Read N
+           2: Vars init
+           3: Check condition
+           4: F = F * i
+           5: i = i + 1
+           6: Print F
+           7: End
+        */
+       let running = false;
+
+       function updateMemUI() {
+           document.getElementById('memN').innerText = mem.N !== null ? mem.N : '?';
+           document.getElementById('memI').innerText = mem.i !== null ? mem.i : '?';
+           document.getElementById('memF').innerText = mem.F !== null ? mem.F : '?';
+       }
+
+       function logTerm(msg) {
+           const term = document.getElementById('terminal');
+           let content = term.innerHTML;
+           content = content.replace('<span class="cursor">_</span>', '');
+           term.innerHTML = content + "> " + msg + "<br><span class=\"cursor\">_</span>";
+           term.scrollTop = term.scrollHeight;
+       }
+
+       function clearActive() {
+           document.querySelectorAll('.flow-node').forEach(el => el.classList.remove('node-active'));
+           document.querySelectorAll('.flow-arrow').forEach(el => el.classList.remove('arrow-active'));
+           document.querySelectorAll('.flow-arrow-text').forEach(el => el.classList.remove('arrow-text-active'));
+       }
+
+       function highlight(nodeId, edgeIn = null, textIn = null) {
+           clearActive();
+           document.getElementById(`node_${nodeId}`).classList.add('node-active');
+           if(edgeIn) document.getElementById(edgeIn).classList.add('arrow-active');
+           if(textIn) document.getElementById(textIn).classList.add('arrow-text-active');
+       }
+
+       function resetSim() {
+           mem = { N: null, i: null, F: null };
+           state = 0;
+           running = false;
+           updateMemUI();
+           clearActive();
+           document.getElementById('terminal').innerHTML = "> Sistem hazır. N giriniz.<br><span class=\"cursor\">_</span>";
+           
+           document.getElementById('inpN').disabled = false;
+           document.getElementById('btnStep').disabled = false;
+           document.getElementById('btnRun').disabled = false;
+           document.getElementById('btnReset').style.display = 'none';
+       }
+
+       async function executeState() {
+           switch(state) {
+               case 0:
+                   highlight(0);
+                   logTerm("Program başladı.");
+                   state = 1;
+                   break;
+               case 1:
+                   mem.N = parseInt(document.getElementById('inpN').value) || 0;
+                   if(mem.N > 12) mem.N = 12; // JS limit safety for display
+                   document.getElementById('inpN').value = mem.N;
+                   document.getElementById('inpN').disabled = true;
+                   updateMemUI();
+                   highlight(1, 'edge_0_1');
+                   logTerm(`Değer okundu: N = ${mem.N}`);
+                   state = 2;
+                   break;
+               case 2:
+                   mem.F = 1;
+                   mem.i = 1;
+                   updateMemUI();
+                   highlight(2, 'edge_1_2');
+                   logTerm("Değişkenler başlatıldı: F=1, i=1");
+                   state = 3;
+                   break;
+               case 3:
+                   highlight(3, state === 2 ? 'edge_2_3' : 'edge_5_3'); // edge from 2 or 5
+                   logTerm(`Koşul kontrolü: ${mem.i} <= ${mem.N} ?`);
+                   if(mem.i <= mem.N) {
+                       state = 4;
+                   } else {
+                       state = 6;
+                   }
+                   break;
+               case 4:
+                   let oldF = mem.F;
+                   mem.F = mem.F * mem.i;
+                   updateMemUI();
+                   highlight(4, 'edge_3_4', 'text_3_4');
+                   logTerm(`(EVET) F hesaplandı: ${oldF} * ${mem.i} = ${mem.F}`);
+                   state = 5;
+                   break;
+               case 5:
+                   let oldi = mem.i;
+                   mem.i = mem.i + 1;
+                   updateMemUI();
+                   highlight(5, 'edge_4_5');
+                   logTerm(`Sayaç arttırıldı: ${oldi} + 1 = ${mem.i}`);
+                   state = 3;
+                   break;
+               case 6:
+                   highlight(6, 'edge_3_6', 'text_3_6');
+                   logTerm(`(HAYIR) Döngü bitti. Çıktı: ${mem.F}`);
+                   state = 7;
+                   break;
+               case 7:
+                   highlight(7, 'edge_6_7');
+                   logTerm("Program başarıyla sonlandı.");
+                   document.getElementById('btnStep').disabled = true;
+                   document.getElementById('btnRun').disabled = true;
+                   document.getElementById('btnReset').style.display = 'block';
+                   state = -1;
+                   break;
+           }
+       }
+
+       async function stepSim() {
+           if(state === -1) state = 0;
+           await executeState();
+       }
+
+       async function runSim() {
+           if(state === -1) state = 0;
+           document.getElementById('btnStep').disabled = true;
+           document.getElementById('btnRun').disabled = true;
+           running = true;
+           
+           while(state !== -1 && running) {
+               await executeState();
+               await sleep(700);
+           }
+       }
+
+       // Space to step
+       window.addEventListener('keydown', (e) => {
+           if(e.code === 'Space' && !document.getElementById('btnStep').disabled) {
+               e.preventDefault();
+               stepSim();
+           }
+       });
+
+       window.onload = resetSim;
+    </script>
+</body>
+</html>

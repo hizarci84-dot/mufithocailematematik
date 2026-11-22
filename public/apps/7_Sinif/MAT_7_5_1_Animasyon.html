@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Çizgi Grafiği Animasyonu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F0E17; --surface: #1A1A24; --text: #F8FAFC;
+            --primary: #8B5CF6; --secondary: #10B981;
+            --tertiary: #06B6D4; --danger: #F43F5E;
+            --accent: #F59E0B;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, #161625 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(139, 92, 246, 0.2); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; margin-bottom: 20px;}
+        h1 { font-size: 2.2rem; color: var(--tertiary); font-weight: 900;}
+        .subtitle { color: #94A3B8; font-size: 1.1rem; margin-top: 5px;}
+
+        .canvas-area {
+            position: relative; width: 100%; max-width: 800px; height: 500px; 
+            background: #11111A; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.4); 
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+
+        .expl-text {
+            position: absolute; top: 20px; font-size: 1.5rem; color: white; font-weight: 800;
+            opacity: 1; transition: 0.5s; text-align: center; width: 80%; z-index: 10;
+        }
+
+        svg { width: 100%; height: 100%; overflow: visible; }
+        .grid-line { stroke: rgba(255,255,255,0.05); stroke-width: 1; stroke-dasharray: 4;}
+        .axis-line { stroke: rgba(255,255,255,0.5); stroke-width: 2; stroke-linecap: round; }
+        .axis-text { fill: #94A3B8; font-weight: 800; font-size: 16px; opacity: 0.8;}
+        
+        .line-path { stroke: var(--primary); stroke-width: 5; fill: none; stroke-dasharray: 1000; stroke-dashoffset: 1000; transition: stroke-dashoffset 2s linear; }
+        
+        .data-point { fill: #11111A; stroke: var(--accent); stroke-width: 4; r: 0; transition: r 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        
+        .data-label {
+            fill: white; font-weight: 900; font-size: 18px; text-anchor: middle; opacity: 0;
+            transition: opacity 0.5s, transform 0.5s; transform: translateY(10px);
+        }
+
+        .btn-play {
+            background: var(--primary); color: white; border: none; padding: 15px 40px; border-radius: 50px;
+            font-size: 1.2rem; font-weight: 900; cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(139, 92, 246, 0.4); margin-top: 30px; z-index: 10;
+        }
+        .btn-play:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 15px 25px rgba(139, 92, 246, 0.6); }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.7.5.1. Çizgi Grafiği (Animasyon)</div>
+    </div>
+
+    <div class="title-area">
+        <h1>Otomatik Grafik Oluşturucu</h1>
+        <p class="subtitle">Zaman içindeki değişimi en iyi "Çizgi Grafiği" gösterir.</p>
+    </div>
+
+    <div class="canvas-area">
+        
+        <div class="expl-text" id="explText">1. Eksenler ve veriler belirlenir.</div>
+
+        <svg viewBox="0 0 800 500" id="svgArea"></svg>
+
+    </div>
+
+    <button class="btn-play" id="btnPlay" onclick="runAnim()">Çizimi Başlat</button>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        const btnPlay = document.getElementById('btnPlay');
+        const explText = document.getElementById('explText');
+        const svgArea = document.getElementById('svgArea');
+        
+        const w = 800, h = 500, padding = 60;
+        const graphW = w - padding * 2;
+        const graphH = h - padding * 2;
+
+        const data = [
+            {day: "Pzt", val: 10},
+            {day: "Sal", val: 25},
+            {day: "Çar", val: 15},
+            {day: "Per", val: 35},
+            {day: "Cum", val: 30},
+            {day: "Cmt", val: 40}
+        ];
+        
+        const maxVal = 40;
+        let pointsHTML = "";
+        let labelsHTML = "";
+        
+        function initGrid() {
+            let html = "";
+            
+            // Y-axis grid
+            for(let i=0; i<=4; i++) {
+                let val = i * 10;
+                let y = h - padding - (val/maxVal) * graphH;
+                html += `<line x1="${padding}" y1="${y}" x2="${w-padding}" y2="${y}" class="grid-line" />`;
+                html += `<text x="${padding-15}" y="${y+5}" class="axis-text" text-anchor="end">${val}°C</text>`;
+            }
+
+            // X-axis text
+            let xStep = graphW / (data.length - 1);
+            for(let i=0; i<data.length; i++) {
+                let x = padding + i * xStep;
+                html += `<text x="${x}" y="${h-padding+30}" class="axis-text" text-anchor="middle">${data[i].day}</text>`;
+                
+                // prepare points
+                let y = h - padding - (data[i].val/maxVal) * graphH;
+                pointsHTML += `<circle cx="${x}" cy="${y}" id="pt${i}" class="data-point" />`;
+                labelsHTML += `<text x="${x}" y="${y-20}" id="lb${i}" class="data-label">${data[i].val}°C</text>`;
+            }
+
+            // Axes
+            html += `<line x1="${padding}" y1="${h-padding}" x2="${w-padding}" y2="${h-padding}" class="axis-line" />`;
+            html += `<line x1="${padding}" y1="${padding}" x2="${padding}" y2="${h-padding}" class="axis-line" />`;
+
+            // Path
+            let pathD = `M ${padding} ${h - padding - (data[0].val/maxVal)*graphH}`;
+            for(let i=1; i<data.length; i++) {
+                let x = padding + i * xStep;
+                let y = h - padding - (data[i].val/maxVal) * graphH;
+                pathD += ` L ${x} ${y}`;
+            }
+            html += `<path d="${pathD}" id="mainLine" class="line-path" />`;
+
+            // Append points and labels last to be on top
+            html += pointsHTML + labelsHTML;
+            svgArea.innerHTML = html;
+        }
+
+        initGrid();
+
+        async function runAnim() {
+            btnPlay.disabled = true;
+            btnPlay.style.opacity = 0.5;
+
+            const mainLine = document.getElementById("mainLine");
+            
+            // Reset
+            mainLine.style.transition = "none";
+            mainLine.style.strokeDashoffset = "1000";
+            for(let i=0; i<data.length; i++) {
+                document.getElementById("pt"+i).setAttribute("r", "0");
+                let lb = document.getElementById("lb"+i);
+                lb.style.opacity = "0";
+                lb.style.transform = "translateY(10px)";
+            }
+            
+            // Force reflow
+            mainLine.getBoundingClientRect();
+
+            explText.innerText = "2. Önce sıcaklık değerleri nokta olarak grafik üzerine yerleştirilir.";
+            await sleep(1000);
+
+            for(let i=0; i<data.length; i++) {
+                document.getElementById("pt"+i).setAttribute("r", "8");
+                let lb = document.getElementById("lb"+i);
+                lb.style.opacity = "1";
+                lb.style.transform = "translateY(0px)";
+                await sleep(500);
+            }
+
+            await sleep(1000);
+
+            explText.innerText = "3. Daha sonra bu noktalar zaman sırasına göre birleştirilerek çizgi grafiği tamamlanır.";
+            
+            mainLine.style.transition = "stroke-dashoffset 2s linear";
+            mainLine.style.strokeDashoffset = "0";
+
+            await sleep(2500);
+
+            explText.style.color = "var(--secondary)";
+            explText.innerText = "Çizgi grafiği özellikle ZAMAN içindeki artış ve azalışı (Trendleri) görmek için harikadır.";
+
+            btnPlay.disabled = false;
+            btnPlay.style.opacity = 1;
+            btnPlay.innerText = "Tekrar İzle";
+        }
+    </script>
+</body>
+</html>

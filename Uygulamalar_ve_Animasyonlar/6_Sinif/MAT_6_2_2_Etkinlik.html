@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Örüntü Dedektifi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A; --surface: #1E293B; --text: #F8FAFC;
+            --primary: #3B82F6; --secondary: #10B981;
+            --tertiary: #F59E0B; --danger: #F43F5E;
+            --purple: #8B5CF6; --cyan: #06B6D4;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, var(--surface) 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--secondary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .container {
+            width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 20px;
+        }
+
+        .detective-panel {
+            background: rgba(255,255,255,0.03); border-radius: 20px; padding: 40px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; position: relative; overflow: hidden;
+        }
+
+        .detective-panel h2 { font-size: 2rem; color: var(--secondary); margin-bottom: 20px; font-weight: 900;}
+
+        .pattern-display {
+            font-size: 3rem; font-weight: 900; color: white; letter-spacing: 5px;
+            background: rgba(0,0,0,0.4); padding: 20px; border-radius: 15px; border: 2px dashed var(--cyan);
+            margin-bottom: 30px; display: inline-block;
+        }
+
+        .step-container {
+            display: flex; flex-direction: column; gap: 20px; align-items: center;
+        }
+
+        .step-box {
+            background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 15px; padding: 20px;
+            width: 100%; max-width: 600px; opacity: 0.5; pointer-events: none; transition: all 0.3s;
+        }
+        .step-box.active { opacity: 1; pointer-events: auto; border-color: var(--secondary); background: rgba(16,185,129,0.05);}
+        .step-box.done { opacity: 0.8; border-color: rgba(255,255,255,0.2); }
+
+        .sb-title { font-size: 1.2rem; font-weight: 800; color: #94A3B8; margin-bottom: 15px;}
+        .sb-content { display: flex; align-items: center; justify-content: center; gap: 15px;}
+        
+        input[type="number"], input[type="text"] {
+            background: #0B1120; border: 2px solid var(--secondary); color: white;
+            font-size: 1.5rem; font-weight: 900; text-align: center; padding: 10px; border-radius: 10px;
+            outline: none; transition: all 0.3s; width: 80px;
+        }
+        input:focus { box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);}
+        
+        select {
+            background: #0B1120; border: 2px solid var(--secondary); color: white;
+            font-size: 1.5rem; font-weight: 900; text-align: center; padding: 10px; border-radius: 10px;
+            outline: none; cursor: pointer;
+        }
+
+        .btn-check {
+            background: var(--secondary); color: white; border: none; padding: 10px 25px; border-radius: 10px;
+            font-size: 1.1rem; font-weight: 800; cursor: pointer; transition: all 0.3s;
+        }
+        .btn-check:hover { transform: scale(1.05); }
+
+        .success-msg { color: var(--secondary); font-weight: 800; font-size: 1.2rem; display: none;}
+        .error-msg { color: var(--danger); font-weight: 800; font-size: 1rem; margin-top: 10px; opacity: 0;}
+
+        .big-next-btn {
+            background: var(--cyan); color: white; border: none; padding: 15px 40px; border-radius: 50px;
+            font-size: 1.2rem; font-weight: 800; cursor: pointer; transition: all 0.3s; display: none; margin: 30px auto 0 auto;
+        }
+        .big-next-btn:hover { transform: scale(1.05); box-shadow: 0 10px 20px rgba(6, 182, 212, 0.4); }
+
+        @media (max-width: 768px) {
+            .header { flex-direction: column; gap: 10px; }
+            .pattern-display { font-size: 2rem; letter-spacing: 2px;}
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=3B82F6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.6.2.2. Örüntü Dedektifi</div>
+    </div>
+
+    <div class="container">
+        
+        <div class="detective-panel">
+            <h2>🕵️‍♂️ Örüntü Dedektifi</h2>
+            <p style="color:#94A3B8; margin-bottom:20px;">Sayı dizisinin genel kuralını (cebirsel ifadesini) adım adım bul!</p>
+            
+            <div class="pattern-display" id="pText">
+                5, 8, 11, 14...
+            </div>
+
+            <div class="step-container">
+                
+                <!-- STEP 1: Artış Miktarı -->
+                <div class="step-box active" id="sb1">
+                    <div class="sb-title">Adım 1: Sabit Artış Miktarı Ne Kadar?</div>
+                    <div class="sb-content">
+                        + <input type="number" id="inpS1">
+                        <button class="btn-check" onclick="checkS1()" id="btnS1">Kontrol Et</button>
+                        <div class="success-msg" id="sucS1">Harika! ➔</div>
+                    </div>
+                    <div class="error-msg" id="errS1">Yanlış miktar, diziyi tekrar incele.</div>
+                </div>
+
+                <!-- STEP 2: Genel Kural -->
+                <div class="step-box" id="sb2">
+                    <div class="sb-title">Adım 2: Genel Kuralı (n) Oluştur</div>
+                    <p style="color:#94A3B8; font-size:0.9rem; margin-bottom:10px;">Artış miktarı 'n' in katsayısıdır. 1. adımı sağlaması için ekleme/çıkarma yap.</p>
+                    <div class="sb-content">
+                        <span id="txtCoef" style="font-size:2rem; font-weight:900; color:var(--tertiary);">3</span>
+                        <span style="font-size:2rem; font-weight:900;">n</span>
+                        <select id="selOp">
+                            <option value="+">+</option>
+                            <option value="-">-</option>
+                        </select>
+                        <input type="number" id="inpS2" value="0">
+                        <button class="btn-check" onclick="checkS2()" id="btnS2">Kuralı Onayla</button>
+                        <div class="success-msg" id="sucS2">Doğru! ➔</div>
+                    </div>
+                    <div class="error-msg" id="errS2">Kuralda hata var. n=1 verdiğinde ilk terimi vermelidir.</div>
+                </div>
+
+                <!-- STEP 3: N'inci Terim -->
+                <div class="step-box" id="sb3">
+                    <div class="sb-title">Adım 3: Kuralı Kullanarak Geleceği Gör!</div>
+                    <p style="color:#94A3B8; font-size:0.9rem; margin-bottom:10px;">Bulduğun kurala göre, bu örüntünün <b style="color:white;" id="txtTargetN">20.</b> terimi kaçtır?</p>
+                    <div class="sb-content">
+                        <input type="number" id="inpS3" style="width: 120px;">
+                        <button class="btn-check" onclick="checkS3()" id="btnS3">Hesapla</button>
+                        <div class="success-msg" id="sucS3">Mükemmel Dedektiflik! 🏆</div>
+                    </div>
+                    <div class="error-msg" id="errS3">Tekrar hesapla. n yerine istenilen adımı yazmalısın.</div>
+                </div>
+
+            </div>
+
+            <button class="big-next-btn" id="nextPatBtn" onclick="nextPattern()">Sıradaki Örüntü ➔</button>
+
+        </div>
+
+    </div>
+
+    <script>
+        const patterns = [
+            { arr: [5, 8, 11, 14], diff: 3, op: '+', adj: 2, targetN: 20, ans: 62 }, // 3n + 2
+            { arr: [2, 6, 10, 14], diff: 4, op: '-', adj: 2, targetN: 15, ans: 58 }, // 4n - 2
+            { arr: [7, 12, 17, 22], diff: 5, op: '+', adj: 2, targetN: 10, ans: 52 },// 5n + 2
+            { arr: [1, 8, 15, 22], diff: 7, op: '-', adj: 6, targetN: 30, ans: 204 } // 7n - 6
+        ];
+
+        let currIdx = 0;
+
+        function loadPattern() {
+            let p = patterns[currIdx];
+            document.getElementById('pText').innerText = p.arr.join(', ') + '...';
+            document.getElementById('txtTargetN').innerText = p.targetN + ".";
+            document.getElementById('txtCoef').innerText = "?";
+            
+            // Resets
+            [1,2,3].forEach(i => {
+                document.getElementById(`inpS${i}`).value = i==2 ? 0 : "";
+                document.getElementById(`inpS${i}`).disabled = false;
+                document.getElementById(`btnS${i}`).style.display = "block";
+                document.getElementById(`sucS${i}`).style.display = "none";
+                document.getElementById(`errS${i}`).style.opacity = 0;
+            });
+            document.getElementById('selOp').value = "+";
+            document.getElementById('selOp').disabled = false;
+
+            document.getElementById('sb1').className = "step-box active";
+            document.getElementById('sb2').className = "step-box";
+            document.getElementById('sb3').className = "step-box";
+            document.getElementById('nextPatBtn').style.display = "none";
+        }
+
+        function checkS1() {
+            let p = patterns[currIdx];
+            let val = parseInt(document.getElementById('inpS1').value);
+            if(val === p.diff) {
+                document.getElementById('errS1').style.opacity = 0;
+                document.getElementById('btnS1').style.display = "none";
+                document.getElementById('sucS1').style.display = "block";
+                document.getElementById('inpS1').disabled = true;
+                
+                document.getElementById('txtCoef').innerText = p.diff;
+                document.getElementById('sb1').classList.add('done');
+                document.getElementById('sb2').classList.add('active');
+            } else {
+                document.getElementById('errS1').style.opacity = 1;
+            }
+        }
+
+        function checkS2() {
+            let p = patterns[currIdx];
+            let op = document.getElementById('selOp').value;
+            let val = parseInt(document.getElementById('inpS2').value);
+            
+            if(op === p.op && val === p.adj) {
+                document.getElementById('errS2').style.opacity = 0;
+                document.getElementById('btnS2').style.display = "none";
+                document.getElementById('sucS2').style.display = "block";
+                document.getElementById('selOp').disabled = true;
+                document.getElementById('inpS2').disabled = true;
+
+                document.getElementById('sb2').classList.add('done');
+                document.getElementById('sb3').classList.add('active');
+            } else {
+                document.getElementById('errS2').style.opacity = 1;
+            }
+        }
+
+        function checkS3() {
+            let p = patterns[currIdx];
+            let val = parseInt(document.getElementById('inpS3').value);
+            
+            if(val === p.ans) {
+                document.getElementById('errS3').style.opacity = 0;
+                document.getElementById('btnS3').style.display = "none";
+                document.getElementById('sucS3').style.display = "block";
+                document.getElementById('inpS3').disabled = true;
+
+                document.getElementById('sb3').classList.add('done');
+                
+                if(currIdx < patterns.length - 1) {
+                    document.getElementById('nextPatBtn').style.display = "block";
+                } else {
+                    document.getElementById('nextPatBtn').style.display = "block";
+                    document.getElementById('nextPatBtn').innerText = "Tebrikler, Tüm Görevler Bitti!";
+                    document.getElementById('nextPatBtn').disabled = true;
+                }
+            } else {
+                document.getElementById('errS3').style.opacity = 1;
+            }
+        }
+
+        function nextPattern() {
+            if(currIdx < patterns.length - 1) {
+                currIdx++;
+                loadPattern();
+            }
+        }
+
+        // Key bindings
+        document.getElementById('inpS1').addEventListener('keypress', e => { if(e.key==='Enter') checkS1(); });
+        document.getElementById('inpS2').addEventListener('keypress', e => { if(e.key==='Enter') checkS2(); });
+        document.getElementById('inpS3').addEventListener('keypress', e => { if(e.key==='Enter') checkS3(); });
+
+        loadPattern();
+    </script>
+</body>
+</html>

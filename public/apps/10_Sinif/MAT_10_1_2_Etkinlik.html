@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10.1.2 - EBOB Fayans Simülasyonu</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0F172A; /* Slate 900 */
+            --panel-bg: #1E293B; /* Slate 800 */
+            --primary: #38BDF8; /* Sky 400 */
+            --secondary: #A78BFA; /* Violet 400 */
+            --accent: #F472B6; /* Pink 400 */
+            --danger: #F43F5E; /* Rose 500 */
+            --success: #10B981; /* Emerald 500 */
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background-color: var(--bg-color); color: var(--text-main);
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 900px; display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 25px; background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px); border-radius: 20px; border: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 800; color: var(--primary); }
+        .header-left img { width: 40px; height: 40px; border-radius: 10px; }
+        .kazanim { background: rgba(56, 189, 248, 0.1); padding: 8px 15px; border-radius: 12px; color: var(--primary); font-weight: 600; font-size: 0.9rem; }
+
+        h1 { font-size: 2.5rem; font-weight: 900; margin-bottom: 10px; text-align: center; 
+             background: linear-gradient(135deg, var(--primary), var(--secondary)); 
+             -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+             
+        .subtitle { color: var(--text-muted); font-size: 1.1rem; margin-bottom: 30px; text-align: center; max-width: 700px; }
+
+        .workspace { display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 900px; align-items: center; }
+
+        .controls {
+            display: flex; gap: 20px; align-items: center; justify-content: center; background: var(--panel-bg);
+            padding: 15px 25px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2); flex-wrap: wrap; width: 100%;
+        }
+
+        .input-group { display: flex; align-items: center; gap: 10px; }
+        .input-group label { font-weight: 600; color: var(--text-muted); }
+        .input-group input { 
+            width: 80px; background: rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.1); 
+            color: white; font-size: 1.2rem; font-weight: 800; padding: 8px; border-radius: 10px; text-align: center;
+            transition: all 0.3s;
+        }
+        .input-group input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 10px rgba(56, 189, 248, 0.3); }
+
+        .btn-action {
+            background: linear-gradient(135deg, var(--primary), var(--secondary)); border: none;
+            color: white; padding: 10px 20px; border-radius: 10px; font-weight: 800; font-size: 1.1rem;
+            cursor: pointer; transition: all 0.3s;
+        }
+        .btn-action:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(167, 139, 250, 0.4); }
+
+        .svg-board {
+            width: 100%; height: 500px; background: rgba(255,255,255,0.02);
+            border-radius: 20px; border: 2px dashed rgba(255,255,255,0.1);
+            position: relative; overflow: hidden; display: flex; justify-content: center; align-items: center;
+        }
+
+        .math-rule-box {
+            background: rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.1);
+            padding: 20px; border-radius: 15px; font-size: 1.4rem; font-weight: 600; color: white;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+            width: 100%; transition: all 0.5s; min-height: 80px; box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        }
+
+        /* Tiling SVG Styles */
+        .floor-rect { fill: rgba(15, 23, 42, 0.8); stroke: var(--text-muted); stroke-width: 2; }
+        .tile { fill: rgba(56, 189, 248, 0.2); stroke: var(--primary); stroke-width: 1.5; opacity: 0; transition: opacity 0.3s, transform 0.3s; }
+        .tile.active { opacity: 1; }
+        
+        .measure-line { stroke: var(--text-muted); stroke-width: 2; stroke-dasharray: 4,4; }
+        .measure-text { fill: var(--text-muted); font-size: 16px; font-weight: 800; text-anchor: middle; dominant-baseline: middle; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=38BDF8&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.10.1.2. EBOB ve EKOK Mantığı (Etkinlik)</div>
+    </div>
+    
+    <h1>EBOB: En Büyük Ortak Bölen</h1>
+    <p class="subtitle">Bir tarlayı veya zemini hiç boşluk kalmayacak şekilde en büyük eş kare fayanslarla kaplamak istiyoruz. Fayansın boyutu ne olmalı?</p>
+    
+    <div class="workspace">
+        <div class="controls">
+            <div class="input-group">
+                <label for="inpW">Genişlik (m):</label>
+                <input type="number" id="inpW" min="1" max="50" value="24">
+            </div>
+            <div class="input-group">
+                <label for="inpH">Yükseklik (m):</label>
+                <input type="number" id="inpH" min="1" max="50" value="18">
+            </div>
+            <button class="btn-action" onclick="runSimulation()">Fayansları Döşe</button>
+        </div>
+        
+        <div class="svg-board">
+            <svg width="100%" height="100%" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid meet" id="floorSvg">
+                <g id="sceneGroup" transform="translate(400, 250)">
+                    <!-- Everything centered around 0,0 -->
+                    <rect id="floorRect" class="floor-rect" x="-100" y="-100" width="200" height="200" />
+                    <g id="tilesGroup"></g>
+                    
+                    <!-- Measurements -->
+                    <line id="mW_line" class="measure-line" x1="-100" y1="-115" x2="100" y2="-115" />
+                    <text id="mW_txt" class="measure-text" x="0" y="-125">W</text>
+                    
+                    <line id="mH_line" class="measure-line" x1="-115" y1="-100" x2="-115" y2="100" />
+                    <text id="mH_txt" class="measure-text" x="-130" y="0">H</text>
+                </g>
+            </svg>
+        </div>
+        
+        <div class="math-rule-box" id="ruleBox">
+            <div id="instructionText">Değerleri girip "Fayansları Döşe" butonuna basın.</div>
+            <span id="mathOutput"></span>
+        </div>
+    </div>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        
+        let debounceTimer;
+        function updateMath(texString) {
+            document.getElementById('mathOutput').innerHTML = texString;
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                MathJax.typesetPromise([document.getElementById('mathOutput')]);
+            }, 50);
+        }
+
+        // GCD algorithm
+        function gcd(a, b) {
+            return b === 0 ? a : gcd(b, a % b);
+        }
+
+        async function runSimulation() {
+            let w = parseInt(document.getElementById('inpW').value) || 24;
+            let h = parseInt(document.getElementById('inpH').value) || 18;
+            
+            // Limit bounds to avoid browser freezing
+            if(w > 100) { w = 100; document.getElementById('inpW').value = 100; }
+            if(h > 100) { h = 100; document.getElementById('inpH').value = 100; }
+            
+            document.getElementById('instructionText').style.display = 'none';
+            document.getElementById('ruleBox').style.borderColor = 'rgba(255,255,255,0.1)';
+            document.getElementById('ruleBox').style.boxShadow = 'none';
+            
+            let ebob = gcd(w, h);
+            
+            // Layout calculations
+            // Max visual size for the floor is 600x350
+            let scale = Math.min(600 / w, 350 / h);
+            let visualW = w * scale;
+            let visualH = h * scale;
+            
+            let floorRect = document.getElementById('floorRect');
+            floorRect.setAttribute('x', -visualW / 2);
+            floorRect.setAttribute('y', -visualH / 2);
+            floorRect.setAttribute('width', visualW);
+            floorRect.setAttribute('height', visualH);
+            
+            // Update measurements
+            document.getElementById('mW_line').setAttribute('x1', -visualW/2);
+            document.getElementById('mW_line').setAttribute('x2', visualW/2);
+            document.getElementById('mW_line').setAttribute('y1', -visualH/2 - 15);
+            document.getElementById('mW_line').setAttribute('y2', -visualH/2 - 15);
+            document.getElementById('mW_txt').setAttribute('y', -visualH/2 - 25);
+            document.getElementById('mW_txt').textContent = w + " m";
+            
+            document.getElementById('mH_line').setAttribute('y1', -visualH/2);
+            document.getElementById('mH_line').setAttribute('y2', visualH/2);
+            document.getElementById('mH_line').setAttribute('x1', -visualW/2 - 15);
+            document.getElementById('mH_line').setAttribute('x2', -visualW/2 - 15);
+            document.getElementById('mH_txt').setAttribute('x', -visualW/2 - 30);
+            document.getElementById('mH_txt').textContent = h + " m";
+            
+            updateMath(`\\( \\text{EBOB}(${w}, ${h}) = ${ebob} \\)`);
+            
+            let tilesGroup = document.getElementById('tilesGroup');
+            tilesGroup.innerHTML = '';
+            
+            await sleep(1000);
+            
+            let cols = w / ebob;
+            let rows = h / ebob;
+            let tileSize = ebob * scale;
+            let totalTiles = cols * rows;
+            
+            updateMath(`\\( \\text{EBOB}(${w}, ${h}) = ${ebob} \\) m (Bir fayansın kenarı)<br>
+                        Fayans Sayısı = \\( \\frac{${w}}{${ebob}} \\times \\frac{${h}}{${ebob}} = ${cols} \\times ${rows} = ${totalTiles} \\) adet`);
+            
+            document.getElementById('ruleBox').style.borderColor = 'var(--primary)';
+            document.getElementById('ruleBox').style.boxShadow = '0 0 20px rgba(56, 189, 248, 0.4)';
+            
+            let startX = -visualW / 2;
+            let startY = -visualH / 2;
+            
+            // Faster animation if too many tiles
+            let animDelay = totalTiles > 100 ? 10 : (totalTiles > 50 ? 30 : 100);
+            
+            for(let r = 0; r < rows; r++) {
+                for(let c = 0; c < cols; c++) {
+                    let tile = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                    tile.setAttribute('class', 'tile');
+                    tile.setAttribute('x', startX + c * tileSize);
+                    tile.setAttribute('y', startY + r * tileSize);
+                    tile.setAttribute('width', tileSize);
+                    tile.setAttribute('height', tileSize);
+                    tilesGroup.appendChild(tile);
+                    
+                    // Trigger reflow to apply transition
+                    void tile.offsetWidth;
+                    tile.classList.add('active');
+                    
+                    await sleep(animDelay);
+                }
+            }
+        }
+        
+        // Initial setup
+        window.onload = () => {
+            let floorRect = document.getElementById('floorRect');
+            floorRect.setAttribute('x', -200);
+            floorRect.setAttribute('y', -150);
+            floorRect.setAttribute('width', 400);
+            floorRect.setAttribute('height', 300);
+        };
+    </script>
+</body>
+</html>

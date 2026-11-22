@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aritmetik Ortalama Animasyonu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F0E17; --surface: #1A1A24; --text: #F8FAFC;
+            --primary: #8B5CF6; --secondary: #10B981;
+            --tertiary: #06B6D4; --danger: #F43F5E;
+            --accent: #F59E0B;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, #161625 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(139, 92, 246, 0.2); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; margin-bottom: 20px;}
+        h1 { font-size: 2.2rem; color: var(--tertiary); font-weight: 900;}
+        .subtitle { color: #94A3B8; font-size: 1.1rem; margin-top: 5px;}
+
+        .canvas-area {
+            position: relative; width: 100%; max-width: 800px; height: 500px; 
+            background: #11111A; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.4); 
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-end; overflow: hidden; padding-bottom: 50px;
+        }
+
+        .expl-text {
+            position: absolute; top: 30px; font-size: 1.5rem; color: white; font-weight: 800;
+            opacity: 1; transition: 0.5s; text-align: center; width: 80%; text-shadow: 0 5px 10px black; z-index: 10;
+        }
+
+        .blocks-container {
+            display: flex; gap: 10px; align-items: flex-end; height: 300px; width: 60%; justify-content: space-around;
+            position: relative;
+        }
+
+        .block {
+            width: 80px; background: var(--primary); border-radius: 5px 5px 0 0;
+            transition: height 2s cubic-bezier(0.4, 0, 0.2, 1); position: relative;
+            display: flex; justify-content: center; align-items: flex-start;
+        }
+
+        .block::after {
+            content: attr(data-val); position: absolute; top: -30px;
+            color: white; font-weight: 900; font-size: 1.2rem;
+        }
+
+        .mean-line {
+            position: absolute; width: 100%; height: 2px; border-top: 2px dashed var(--danger);
+            left: 0; bottom: 0; /* will be moved by JS */
+            opacity: 0; transition: all 1s; display: flex; align-items: center;
+        }
+        .mean-line span {
+            position: absolute; right: -50px; color: var(--danger); font-weight: 900; font-size: 1.2rem;
+        }
+
+        .formula-box {
+            position: absolute; top: 100px; background: rgba(0,0,0,0.5); border: 2px solid var(--accent);
+            padding: 15px 30px; border-radius: 20px; font-size: 2rem; font-weight: 900; color: white;
+            opacity: 0; transform: translateY(20px); transition: all 1s; z-index: 10;
+        }
+
+        .btn-play {
+            background: var(--primary); color: white; border: none; padding: 15px 40px; border-radius: 50px;
+            font-size: 1.2rem; font-weight: 900; cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(139, 92, 246, 0.4); margin-top: 30px; z-index: 10;
+        }
+        .btn-play:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 15px 25px rgba(139, 92, 246, 0.6); }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.7.5.3. Aritmetik Ortalama (Animasyon)</div>
+    </div>
+
+    <div class="title-area">
+        <h1>Blokların Eşitlenmesi</h1>
+        <p class="subtitle">Fazlalıkların eksiklere paylaştırıldığında oluşan dümdüz çizgi "Ortalama"dır.</p>
+    </div>
+
+    <div class="canvas-area">
+        
+        <div class="expl-text" id="explText">1. Farklı yükseklikteki veri bloklarını ele alalım.</div>
+
+        <div class="blocks-container">
+            <div class="mean-line" id="meanLine"><span></span></div>
+            <div class="block" id="b1" data-val="10" style="height: 10%;"></div>
+            <div class="block" id="b2" data-val="90" style="height: 90%;"></div>
+            <div class="block" id="b3" data-val="30" style="height: 30%;"></div>
+            <div class="block" id="b4" data-val="50" style="height: 50%;"></div>
+            <div class="block" id="b5" data-val="70" style="height: 70%;"></div>
+        </div>
+
+        <div class="formula-box" id="formulaBox">
+            Ortalama = <span style="color:var(--accent)">250 / 5 = 50</span>
+        </div>
+
+    </div>
+
+    <button class="btn-play" id="btnPlay" onclick="runAnim()">Süreci Başlat</button>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        const btnPlay = document.getElementById('btnPlay');
+        const explText = document.getElementById('explText');
+        
+        const b1 = document.getElementById('b1');
+        const b2 = document.getElementById('b2');
+        const b3 = document.getElementById('b3');
+        const b4 = document.getElementById('b4');
+        const b5 = document.getElementById('b5');
+
+        const meanLine = document.getElementById('meanLine');
+        const formulaBox = document.getElementById('formulaBox');
+
+        async function runAnim() {
+            btnPlay.disabled = true;
+            btnPlay.style.opacity = 0.5;
+
+            // Reset
+            b1.style.height = "10%"; b1.setAttribute("data-val", "10"); b1.style.background = "var(--primary)";
+            b2.style.height = "90%"; b2.setAttribute("data-val", "90"); b2.style.background = "var(--primary)";
+            b3.style.height = "30%"; b3.setAttribute("data-val", "30"); b3.style.background = "var(--primary)";
+            b4.style.height = "50%"; b4.setAttribute("data-val", "50"); b4.style.background = "var(--primary)";
+            b5.style.height = "70%"; b5.setAttribute("data-val", "70"); b5.style.background = "var(--primary)";
+            
+            meanLine.style.opacity = 0;
+            formulaBox.style.opacity = 0; formulaBox.style.transform = "translateY(20px)";
+
+            explText.innerText = "1. Farklı yükseklikteki veri bloklarını ele alalım.";
+
+            await sleep(2000);
+
+            explText.innerText = "2. Fazlalıkları eksik olan yerlere paylaştırmaya (eritmeye) başlarız.";
+            
+            // Set all heights to 50%
+            b1.style.height = "50%"; 
+            b2.style.height = "50%"; 
+            b3.style.height = "50%"; 
+            b4.style.height = "50%"; 
+            b5.style.height = "50%"; 
+
+            b1.style.background = "var(--secondary)";
+            b2.style.background = "var(--secondary)";
+            b3.style.background = "var(--secondary)";
+            b4.style.background = "var(--secondary)";
+            b5.style.background = "var(--secondary)";
+
+            await sleep(2000);
+
+            // Update texts
+            b1.setAttribute("data-val", "50");
+            b2.setAttribute("data-val", "50");
+            b3.setAttribute("data-val", "50");
+            b4.setAttribute("data-val", "50");
+            b5.setAttribute("data-val", "50");
+
+            explText.innerText = "3. Bloklar dümdüz bir hizaya gelir. Bu hizaya 'Aritmetik Ortalama' denir.";
+
+            meanLine.style.bottom = "50%";
+            meanLine.style.opacity = 1;
+            meanLine.querySelector("span").innerText = "50";
+
+            await sleep(1500);
+
+            formulaBox.style.opacity = 1;
+            formulaBox.style.transform = "translateY(0)";
+
+            await sleep(3000);
+
+            explText.style.color = "var(--secondary)";
+            
+            btnPlay.disabled = false;
+            btnPlay.style.opacity = 1;
+            btnPlay.innerText = "Tekrar İzle";
+        }
+    </script>
+</body>
+</html>

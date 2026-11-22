@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>11.1.1 - Trigonometrik Fonksiyon Dönüşüm Laboratuvarı</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0A0A12;
+            --panel-bg: #151522;
+            --primary: #00F0FF; /* Neon Cyan */
+            --secondary: #FF00E4; /* Neon Pink */
+            --accent: #FFE600; /* Neon Yellow */
+            --text-main: #FFFFFF;
+            --text-muted: #8A8A9E;
+            --grid-line: rgba(0, 240, 255, 0.12);
+            --axis-line: rgba(0, 240, 255, 0.5);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background-color: var(--bg-color); color: var(--text-main);
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; padding: 20px; overflow-x: hidden;
+            background-image: 
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        .header {
+            width: 100%; max-width: 1200px; display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 25px; background: rgba(21, 21, 34, 0.85); backdrop-filter: blur(10px);
+            border-radius: 16px; border: 1px solid rgba(0, 240, 255, 0.3);
+            margin-bottom: 20px; box-shadow: 0 0 20px rgba(0, 240, 255, 0.15);
+        }
+        
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 800; color: var(--primary); font-size: 1.1rem; }
+        .header-left img { width: 45px; height: 45px; border-radius: 10px; border: 1px solid var(--primary); }
+        .kazanim { background: rgba(0, 240, 255, 0.1); padding: 8px 15px; border-radius: 8px; color: var(--primary); font-weight: 600; font-size: 0.85rem; border: 1px solid rgba(0, 240, 255, 0.3); }
+
+        h1 { font-size: 2rem; font-weight: 900; margin-bottom: 8px; text-align: center; text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 0 10px rgba(0, 240, 255, 0.5); }
+        .subtitle { color: var(--text-muted); font-size: 1rem; margin-bottom: 25px; text-align: center; max-width: 900px; }
+
+        .workspace { display: flex; flex-direction: row; gap: 20px; width: 100%; max-width: 1200px; }
+        @media (max-width: 900px) { .workspace { flex-direction: column; } }
+
+        .controls {
+            flex: 1; display: flex; flex-direction: column; gap: 16px; background: var(--panel-bg);
+            padding: 22px; border-radius: 16px; border: 1px solid rgba(255, 0, 228, 0.3);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5); min-width: 340px;
+        }
+
+        .function-selector {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 5px;
+        }
+        .btn-func {
+            padding: 10px 5px; background: rgba(255,255,255,0.05); border: 1px solid var(--text-muted);
+            color: var(--text-muted); font-weight: 800; border-radius: 8px; cursor: pointer; transition: 0.3s;
+            font-size: 0.95rem; text-align: center;
+        }
+        .btn-func:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-func.active { background: rgba(0, 240, 255, 0.2); border-color: var(--primary); color: var(--primary); box-shadow: 0 0 10px rgba(0, 240, 255, 0.3); }
+
+        .slider-group { background: rgba(0,0,0,0.4); padding: 12px 16px; border-radius: 8px; border-left: 3px solid var(--primary); }
+        .slider-header { display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: 600; color: var(--text-main); font-size: 0.9rem; }
+        .slider-val { color: var(--primary); font-family: monospace; font-size: 1.05rem; font-weight: bold; }
+        
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; }
+        input[type=range]::-webkit-slider-thumb { height: 16px; width: 16px; border-radius: 50%; background: var(--primary); cursor: pointer; -webkit-appearance: none; margin-top: -5px; box-shadow: 0 0 10px var(--primary); }
+        
+        .slider-group.secondary { border-left-color: var(--secondary); }
+        .slider-group.secondary .slider-val { color: var(--secondary); }
+        .slider-group.secondary input[type=range]::-webkit-slider-thumb { background: var(--secondary); box-shadow: 0 0 10px var(--secondary); }
+
+        .math-box {
+            background: rgba(0,0,0,0.6); border: 1px dashed var(--accent); padding: 16px;
+            border-radius: 12px; font-size: 1.15rem; text-align: center; margin-top: auto; color: var(--accent);
+            line-height: 1.6; min-height: 90px; display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+
+        .graph-container {
+            flex: 2; position: relative; background: #0A0A12; border-radius: 16px;
+            border: 2px solid var(--primary); overflow: hidden; min-height: 520px;
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.15) inset;
+        }
+
+        svg { width: 100%; height: 100%; display: block; }
+        
+        .svg-grid { stroke: rgba(255,255,255,0.06); stroke-width: 0.03; }
+        .svg-axis { stroke: var(--axis-line); stroke-width: 0.06; }
+        .svg-func { fill: none; stroke: var(--primary); stroke-width: 0.08; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 5px var(--primary)); }
+        .svg-ref { fill: none; stroke: rgba(255, 255, 255, 0.25); stroke-width: 0.04; stroke-dasharray: 0.2, 0.2; }
+        .svg-asymptote { stroke: rgba(255, 0, 228, 0.5); stroke-width: 0.04; stroke-dasharray: 0.3, 0.3; }
+        .svg-label { fill: var(--text-muted); font-size: 0.48px; font-weight: 600; font-family: 'Outfit', sans-serif; }
+        .svg-axis-title { fill: var(--primary); font-size: 0.55px; font-weight: 800; font-family: 'Outfit', sans-serif; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=00F0FF&color=000'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.11.1.1. Trigonometrik Referans Fonksiyonlar ve Dönüşümleri</div>
+    </div>
+    
+    <h1>Trigonometrik Dönüşüm Laboratuvarı</h1>
+    <p class="subtitle"><strong>g(x) = k · f(m·x + r) + s</strong> dönüşümlerinin grafiği, periyodu, genliği ve tanım/görüntü kümelerini nasıl etkilediğini keşfedin.</p>
+    
+    <div class="workspace">
+        <div class="controls">
+            <div class="function-selector">
+                <button class="btn-func active" onclick="setFunc('sin')" id="btnSin">sin(x)</button>
+                <button class="btn-func" onclick="setFunc('cos')" id="btnCos">cos(x)</button>
+                <button class="btn-func" onclick="setFunc('tan')" id="btnTan">tan(x)</button>
+                <button class="btn-func" onclick="setFunc('cot')" id="btnCot">cot(x)</button>
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span>Genlik Çarpanı (k)</span>
+                    <span class="slider-val" id="valK">1</span>
+                </div>
+                <input type="range" id="slideK" min="-3" max="3" step="0.5" value="1">
+            </div>
+
+            <div class="slider-group secondary">
+                <div class="slider-header">
+                    <span>Periyot Çarpanı (m)</span>
+                    <span class="slider-val" id="valM">1</span>
+                </div>
+                <input type="range" id="slideM" min="-3" max="3" step="0.5" value="1">
+            </div>
+
+            <div class="slider-group secondary">
+                <div class="slider-header">
+                    <span>Yatay Öteleme (r) [Radyan]</span>
+                    <span class="slider-val" id="valR">0</span>
+                </div>
+                <input type="range" id="slideR" min="-3.14" max="3.14" step="0.314" value="0">
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span>Düşey Öteleme (s)</span>
+                    <span class="slider-val" id="valS">0</span>
+                </div>
+                <input type="range" id="slideS" min="-3" max="3" step="0.5" value="0">
+            </div>
+
+            <div class="math-box" id="mathOutput">
+                <!-- Rendered MathJax goes here cleanly without flickering raw TeX -->
+            </div>
+        </div>
+        
+        <div class="graph-container">
+            <svg id="graphSvg" viewBox="-7.5 -6.5 15 13" preserveAspectRatio="xMidYMid meet">
+                <g transform="scale(1, -1)">
+                    <g id="gridGroup"></g>
+                    
+                    <!-- Axes -->
+                    <line x1="-7.5" y1="0" x2="7.5" y2="0" class="svg-axis" />
+                    <line x1="0" y1="-6.5" x2="0" y2="6.5" class="svg-axis" />
+                    
+                    <!-- Asymptotes container -->
+                    <g id="asymptotesGroup"></g>
+
+                    <!-- Paths -->
+                    <path id="pathRef" class="svg-ref" d="" />
+                    <g id="funcPathsGroup"></g>
+                </g>
+                <g id="labelsGroup"></g>
+            </svg>
+        </div>
+    </div>
+
+    <script>
+        const slideK = document.getElementById('slideK'); const valK = document.getElementById('valK');
+        const slideM = document.getElementById('slideM'); const valM = document.getElementById('valM');
+        const slideR = document.getElementById('slideR'); const valR = document.getElementById('valR');
+        const slideS = document.getElementById('slideS'); const valS = document.getElementById('valS');
+        
+        const mathOutput = document.getElementById('mathOutput');
+        const pathRef = document.getElementById('pathRef');
+        const funcPathsGroup = document.getElementById('funcPathsGroup');
+        const asymptotesGroup = document.getElementById('asymptotesGroup');
+        
+        let activeFunc = 'sin';
+        let isTypesetting = false;
+        let pendingTex = null;
+
+        function drawGrid() {
+            let gridHtml = '';
+            let labelHtml = '';
+            
+            for(let y = -6; y <= 6; y += 2) {
+                if(y !== 0) {
+                    gridHtml += `<line x1="-7.5" y1="${y}" x2="7.5" y2="${y}" class="svg-grid" />`;
+                    labelHtml += `<text x="0.2" y="${-y + 0.15}" class="svg-label">${y}</text>`;
+                }
+            }
+            
+            let piSteps = [
+                {val: -2*Math.PI, str: "-2π"}, {val: -1.5*Math.PI, str: "-3π/2"},
+                {val: -Math.PI, str: "-π"}, {val: -0.5*Math.PI, str: "-π/2"},
+                {val: 0.5*Math.PI, str: "π/2"}, {val: Math.PI, str: "π"},
+                {val: 1.5*Math.PI, str: "3π/2"}, {val: 2*Math.PI, str: "2π"}
+            ];
+            
+            piSteps.forEach(step => {
+                gridHtml += `<line x1="${step.val}" y1="-6.5" x2="${step.val}" y2="6.5" class="svg-grid" />`;
+                labelHtml += `<text x="${step.val}" y="0.65" class="svg-label" text-anchor="middle">${step.str}</text>`;
+            });
+            
+            labelHtml += `<text x="7.1" y="-0.2" class="svg-axis-title">x</text>`;
+            labelHtml += `<text x="0.2" y="-6.0" class="svg-axis-title">y</text>`;
+
+            document.getElementById('gridGroup').innerHTML = gridHtml;
+            document.getElementById('labelsGroup').innerHTML = labelHtml;
+        }
+
+        function setFunc(func) {
+            activeFunc = func;
+            ['sin', 'cos', 'tan', 'cot'].forEach(f => {
+                document.getElementById('btn' + f.charAt(0).toUpperCase() + f.slice(1)).classList.toggle('active', f === func);
+            });
+            updateVisuals();
+        }
+
+        function evalBase(func, x) {
+            switch(func) {
+                case 'sin': return Math.sin(x);
+                case 'cos': return Math.cos(x);
+                case 'tan': return Math.tan(x);
+                case 'cot': return Math.sin(x) === 0 ? NaN : Math.cos(x)/Math.sin(x);
+            }
+        }
+
+        function buildTexString(k, m, r, s) {
+            let funcTex = `\\${activeFunc}`;
+            
+            let mStr = m === 1 ? "x" : (m === -1 ? "-x" : `${m}x`);
+            let rStr = r === 0 ? "" : (r > 0 ? ` + ${r.toFixed(2)}` : ` - ${Math.abs(r).toFixed(2)}`);
+            let argStr = (m === 1 && r === 0) ? "x" : `(${mStr}${rStr})`;
+            
+            let kStr = k === 1 ? "" : (k === -1 ? "-" : `${k}\\cdot `);
+            let sStr = s === 0 ? "" : (s > 0 ? ` + ${s}` : ` - ${Math.abs(s)}`);
+            
+            let finalTex = `g(x) = ${kStr}${funcTex}${argStr}${sStr}`;
+            
+            let isTanCot = (activeFunc === 'tan' || activeFunc === 'cot');
+            let period = (isTanCot ? Math.PI : 2 * Math.PI) / Math.abs(m);
+            let periodStr = isTanCot ? `\\frac{\\pi}{|${m}|}` : `\\frac{2\\pi}{|${m}|}`;
+            let periodTex = `T = ${periodStr} = ${(period/Math.PI).toFixed(2)}\\pi`;
+            
+            let rangeTex = "";
+            if(isTanCot) {
+                rangeTex = `G\\ddot{o}r\\ddot{u}nt\\ddot{u}: \\mathbb{R}`;
+            } else {
+                let maxVal = Math.abs(k) + s;
+                let minVal = -Math.abs(k) + s;
+                rangeTex = `G\\ddot{o}r\\ddot{u}nt\\ddot{u}: [${minVal.toFixed(1)}, ${maxVal.toFixed(1)}]`;
+            }
+            
+            return `\\( ${finalTex} \\)<br><div style="font-size: 0.95rem; margin-top:10px; color:var(--text-muted);">\\( ${periodTex} \\) &nbsp;|&nbsp; \\( ${rangeTex} \\)</div>`;
+        }
+
+        // DOUBLE-BUFFERED MathJax Rendering (No Raw TeX Code Flashing)
+        function renderMathClean(texString) {
+            if (isTypesetting) {
+                pendingTex = texString;
+                return;
+            }
+            
+            isTypesetting = true;
+            
+            let temp = document.createElement('div');
+            temp.style.position = 'absolute';
+            temp.style.top = '-9999px';
+            temp.style.left = '-9999px';
+            temp.style.visibility = 'hidden';
+            temp.innerHTML = texString;
+            document.body.appendChild(temp);
+            
+            MathJax.typesetPromise([temp]).then(() => {
+                mathOutput.innerHTML = temp.innerHTML;
+                if (temp.parentNode) document.body.removeChild(temp);
+                isTypesetting = false;
+                
+                if (pendingTex) {
+                    let next = pendingTex;
+                    pendingTex = null;
+                    renderMathClean(next);
+                }
+            }).catch(err => {
+                if (temp.parentNode) document.body.removeChild(temp);
+                isTypesetting = false;
+            });
+        }
+
+        function updateVisuals() {
+            let k = parseFloat(slideK.value);
+            let m = parseFloat(slideM.value);
+            if (m === 0) m = 0.1;
+            let r = parseFloat(slideR.value);
+            let s = parseFloat(slideS.value);
+            
+            valK.innerText = k;
+            valM.innerText = m;
+            valR.innerText = r.toFixed(2);
+            valS.innerText = s;
+            
+            let step = 0.04;
+            let isRefTanCot = (activeFunc === 'tan' || activeFunc === 'cot');
+            
+            // Reference Path
+            let dRef = "";
+            let lastYRef = null;
+            for(let x = -7.5; x <= 7.5; x += step) {
+                let yRef = evalBase(activeFunc, x);
+                if(isNaN(yRef) || Math.abs(yRef) > 10 || (lastYRef !== null && Math.abs(yRef - lastYRef) > 5 && isRefTanCot)) {
+                    dRef += " M";
+                } else {
+                    dRef += (dRef === "" || dRef.endsWith("M") ? " M " : " L ") + `${x.toFixed(3)} ${yRef.toFixed(3)}`;
+                }
+                lastYRef = yRef;
+            }
+            pathRef.setAttribute("d", dRef);
+            
+            // Transformed Paths
+            let pathsHtml = "";
+            let currentPath = "";
+            let lastY = null;
+            
+            for(let x = -7.5; x <= 7.5; x += step) {
+                let base = evalBase(activeFunc, m * x + r);
+                let yFunc = k * base + s;
+                
+                if(isNaN(yFunc) || Math.abs(yFunc) > 12 || (lastY !== null && Math.abs(yFunc - lastY) > 8 && isRefTanCot)) {
+                    if(currentPath.length > 0) {
+                        pathsHtml += `<path class="svg-func" d="${currentPath}" />`;
+                        currentPath = "";
+                    }
+                } else {
+                    let clampedY = Math.max(-6.5, Math.min(6.5, yFunc));
+                    currentPath += (currentPath === "" ? `M ${x.toFixed(3)} ${clampedY.toFixed(3)}` : ` L ${x.toFixed(3)} ${clampedY.toFixed(3)}`);
+                }
+                lastY = yFunc;
+            }
+            if(currentPath.length > 0) {
+                pathsHtml += `<path class="svg-func" d="${currentPath}" />`;
+            }
+            funcPathsGroup.innerHTML = pathsHtml;
+            
+            // Asymptotes
+            let asymptHtml = "";
+            if(isRefTanCot) {
+                let periodX = Math.PI / Math.abs(m);
+                let firstAsympt = activeFunc === 'tan' ? (Math.PI/2 - r)/m : (-r)/m;
+                
+                for(let kStep = -10; kStep <= 10; kStep++) {
+                    let ax = firstAsympt + kStep * periodX;
+                    if(ax >= -7.5 && ax <= 7.5) {
+                        asymptHtml += `<line x1="${ax}" y1="-6.5" x2="${ax}" y2="6.5" class="svg-asymptote" />`;
+                    }
+                }
+            }
+            asymptotesGroup.innerHTML = asymptHtml;
+            
+            // Update Math Display with Double-Buffering
+            renderMathClean(buildTexString(k, m, r, s));
+        }
+
+        [slideK, slideM, slideR, slideS].forEach(el => el.addEventListener('input', updateVisuals));
+
+        window.onload = () => {
+            drawGrid();
+            updateVisuals();
+        };
+    </script>
+</body>
+</html>

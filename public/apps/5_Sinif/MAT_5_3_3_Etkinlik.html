@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Etkileşimli Açıölçer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A;
+            --text: #F8FAFC;
+            --primary: #F43F5E; /* Rose */
+            --accent: #38BDF8; /* Blue */
+            --success: #10B981; /* Green */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, #1E293B 0%, var(--bg) 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 900px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .container {
+            width: 100%; max-width: 900px; background: rgba(255,255,255,0.02); border-radius: 24px; padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05);
+            display: flex; flex-direction: column; align-items: center; gap: 20px;
+        }
+
+        .mission-panel {
+            background: rgba(244, 63, 94, 0.1); border: 2px solid var(--primary); padding: 15px 30px; border-radius: 16px;
+            font-size: 1.5rem; font-weight: 800; color: #FDA4AF; text-align: center; width: 100%;
+        }
+
+        .protractor-container {
+            position: relative; width: 400px; height: 250px; margin-top: 30px;
+            display: flex; justify-content: center; align-items: flex-end;
+        }
+
+        /* SVG Protractor Background */
+        .protractor-bg {
+            position: absolute; bottom: 0; left: 0; width: 400px; height: 200px;
+            border-top-left-radius: 200px; border-top-right-radius: 200px;
+            background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); border-bottom: 4px solid var(--text);
+            backdrop-filter: blur(10px);
+        }
+        /* Tick marks via SVG */
+        .ticks-svg { position: absolute; bottom: 0; left: 0; width: 400px; height: 200px; overflow: visible;}
+        
+        .center-dot {
+            position: absolute; bottom: -6px; left: 194px; width: 12px; height: 12px; background: white; border-radius: 50%; z-index: 10;
+        }
+
+        .ray-fixed {
+            position: absolute; bottom: 0; left: 200px; width: 250px; height: 4px; background: var(--text); transform-origin: 0% 50%;
+            border-top-right-radius: 4px; border-bottom-right-radius: 4px;
+        }
+        
+        .ray-movable {
+            position: absolute; bottom: 0; left: 200px; width: 250px; height: 6px; background: var(--accent); transform-origin: 0% 50%;
+            cursor: pointer; border-radius: 4px; box-shadow: 0 0 15px var(--accent); transition: transform 0.1s;
+        }
+
+        .ray-movable::after {
+            content: '↔ Sürükle'; position: absolute; right: -80px; top: -10px; color: var(--accent); font-weight: 800; font-size: 0.9rem;
+        }
+
+        .angle-display {
+            font-size: 4rem; font-weight: 800; color: var(--accent); margin-top: 20px; text-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
+            font-variant-numeric: tabular-nums;
+        }
+        
+        .success-msg {
+            color: var(--success); font-weight: 800; font-size: 1.5rem; opacity: 0; transition: opacity 0.3s;
+        }
+        .success-msg.show { opacity: 1; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes popIn { 0% { transform: scale(0.5); } 100% { transform: scale(1); } }
+
+        .btn-next {
+            background: var(--success); color: #0F172A; border: none; padding: 12px 30px; border-radius: 12px;
+            font-size: 1.2rem; font-weight: 800; cursor: pointer; display: none; margin-top: 10px; transition: transform 0.2s;
+        }
+        .btn-next:hover { transform: translateY(-3px); }
+
+        @media (max-width: 768px) {
+            .header { flex-direction: column; gap: 10px; }
+            .protractor-container { transform: scale(0.8); margin-top: 0;}
+            .mission-panel { font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.5.3.3. Açı Ölçümü</div>
+    </div>
+
+    <div class="container">
+        <div class="mission-panel" id="missionText">
+            Görev 1: Işını sürükleyerek DİK AÇI (90°) oluştur.
+        </div>
+
+        <div class="protractor-container" id="protContainer">
+            <div class="protractor-bg"></div>
+            
+            <svg class="ticks-svg" viewBox="0 0 400 200">
+                <!-- Generate ticks via JS for precision -->
+                <g id="tickGroup"></g>
+            </svg>
+            
+            <div class="center-dot"></div>
+            <!-- The fixed ray points LEFT (180 degrees mathematically) -->
+            <!-- Wait, to make 0 on the right and 180 on the left, the fixed ray must point RIGHT. -->
+            <div class="ray-fixed"></div>
+            <div class="ray-movable" id="ray"></div>
+        </div>
+
+        <div class="angle-display" id="angleDisplay">0°</div>
+        <div class="success-msg" id="successMsg">Harika! Doğru açıyı buldun. 🎉</div>
+        <button class="btn-next" id="nextBtn" onclick="nextMission()">Sıradaki Görev ➔</button>
+
+    </div>
+
+    <script>
+        const tickGroup = document.getElementById('tickGroup');
+        const cx = 200, cy = 200, r = 190;
+        
+        // Draw Protractor Ticks correctly: 0 on RIGHT, 180 on LEFT
+        for (let i = 0; i <= 180; i += 5) {
+            const rad = i * Math.PI / 180; // i=0 gives 0 rad (right), i=180 gives PI rad (left)
+            const innerR = i % 10 === 0 ? r - 20 : r - 10;
+            const x1 = cx + innerR * Math.cos(rad);
+            const y1 = cy - innerR * Math.sin(rad);
+            const x2 = cx + r * Math.cos(rad);
+            const y2 = cy - r * Math.sin(rad);
+            
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', x1); line.setAttribute('y1', y1);
+            line.setAttribute('x2', x2); line.setAttribute('y2', y2);
+            line.setAttribute('stroke', 'rgba(255,255,255,0.5)');
+            line.setAttribute('stroke-width', i % 10 === 0 ? '2' : '1');
+            tickGroup.appendChild(line);
+
+            if (i % 10 === 0 && i !== 0 && i !== 180) {
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                const tx = cx + (r - 35) * Math.cos(rad);
+                const ty = cy - (r - 35) * Math.sin(rad);
+                text.setAttribute('x', tx); text.setAttribute('y', ty);
+                text.setAttribute('fill', 'rgba(255,255,255,0.8)');
+                text.setAttribute('font-size', '12'); text.setAttribute('font-weight', '600');
+                text.setAttribute('text-anchor', 'middle'); text.setAttribute('alignment-baseline', 'middle');
+                // Adjust text rotation to make it readable like a real protractor
+                text.setAttribute('transform', `rotate(${90 - i}, ${tx}, ${ty})`);
+                text.textContent = i;
+                tickGroup.appendChild(text);
+            }
+        }
+
+        const ray = document.getElementById('ray');
+        const angleDisplay = document.getElementById('angleDisplay');
+        const protContainer = document.getElementById('protContainer');
+        const successMsg = document.getElementById('successMsg');
+        const nextBtn = document.getElementById('nextBtn');
+        const missionText = document.getElementById('missionText');
+
+        let isDragging = false;
+        let currentAngle = 0;
+        let missionIndex = 0;
+
+        const missions = [
+            { text: "Görev 1: Işını sürükleyerek DİK AÇI (90°) oluştur.", target: 90 },
+            { text: "Görev 2: Şimdi DOĞRU AÇI (180°) oluştur.", target: 180 },
+            { text: "Görev 3: Verilen açıya EŞ AÇI oluştur: (45°)", target: 45 },
+            { text: "Görev 4: Geniş bir açı olan 130°'yi bul.", target: 130 }
+        ];
+
+        ray.addEventListener('mousedown', () => isDragging = true);
+        window.addEventListener('mouseup', () => {
+            if(isDragging) checkMission();
+            isDragging = false;
+        });
+
+        // Touch support
+        ray.addEventListener('touchstart', (e) => { isDragging = true; e.preventDefault(); }, {passive: false});
+        window.addEventListener('touchend', () => {
+            if(isDragging) checkMission();
+            isDragging = false;
+        });
+
+        function calculateAngle(clientX, clientY) {
+            const rect = protContainer.getBoundingClientRect();
+            // Center of the ray is at left: 200px, bottom: 0 of protContainer
+            const originX = rect.left + 200;
+            const originY = rect.bottom;
+            
+            const dx = clientX - originX;
+            const dy = originY - clientY; // y is inverted in screen space
+            
+            let rad = Math.atan2(dy, dx);
+            let deg = Math.round(rad * 180 / Math.PI);
+            
+            if (deg < 0) deg = 0; // Constrain to 0-180
+            if (deg > 180) deg = 180;
+
+            return deg;
+        }
+
+        function updateRotation(e) {
+            if (!isDragging) return;
+            
+            let clientX = e.clientX;
+            let clientY = e.clientY;
+            
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            }
+
+            currentAngle = calculateAngle(clientX, clientY);
+            
+            // Apply rotation. CSS rotation is clockwise, math angle is counter-clockwise.
+            ray.style.transform = `rotate(-${currentAngle}deg)`;
+            angleDisplay.innerText = `${currentAngle}°`;
+        }
+
+        window.addEventListener('mousemove', updateRotation);
+        window.addEventListener('touchmove', updateRotation, {passive: false});
+
+        function checkMission() {
+            if (missionIndex >= missions.length) return;
+            const target = missions[missionIndex].target;
+            
+            if (Math.abs(currentAngle - target) <= 1) { // 1 degree tolerance
+                successMsg.classList.add('show');
+                ray.style.boxShadow = '0 0 20px var(--success)';
+                ray.style.background = 'var(--success)';
+                angleDisplay.style.color = 'var(--success)';
+                nextBtn.style.display = 'block';
+            } else {
+                successMsg.classList.remove('show');
+                ray.style.boxShadow = '0 0 15px var(--accent)';
+                ray.style.background = 'var(--accent)';
+                angleDisplay.style.color = 'var(--accent)';
+                nextBtn.style.display = 'none';
+            }
+        }
+
+        window.nextMission = function() {
+            missionIndex++;
+            successMsg.classList.remove('show');
+            nextBtn.style.display = 'none';
+            ray.style.boxShadow = '0 0 15px var(--accent)';
+            ray.style.background = 'var(--accent)';
+            angleDisplay.style.color = 'var(--accent)';
+
+            if (missionIndex < missions.length) {
+                missionText.innerText = missions[missionIndex].text;
+            } else {
+                missionText.innerText = "Tebrikler! Açıölçer (İletki) kullanımını tamamen öğrendin! 🎓";
+                ray.style.pointerEvents = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

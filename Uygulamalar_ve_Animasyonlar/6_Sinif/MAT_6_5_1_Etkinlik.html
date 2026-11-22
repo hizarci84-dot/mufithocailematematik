@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kök-Yaprak Laboratuvarı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A; --surface: #1E293B; --text: #F8FAFC;
+            --primary: #3B82F6; --secondary: #10B981;
+            --tertiary: #F59E0B; --danger: #F43F5E;
+            --purple: #8B5CF6; --cyan: #06B6D4;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, var(--surface) 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--secondary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .container {
+            width: 100%; max-width: 900px; display: flex; gap: 20px;
+        }
+
+        .data-panel {
+            flex: 1; background: rgba(255,255,255,0.03); border-radius: 20px; padding: 25px;
+            border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        .data-panel h2 { color: var(--cyan); margin-bottom: 15px; font-size: 1.8rem;}
+
+        .raw-data {
+            display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 20px;
+        }
+        .data-badge {
+            background: rgba(59, 130, 246, 0.2); border: 2px solid var(--primary);
+            padding: 10px 15px; border-radius: 10px; font-size: 1.5rem; font-weight: 900; color: white;
+        }
+
+        .plot-panel {
+            flex: 1.2; background: #0B1120; border-radius: 20px; padding: 30px;
+            border: 2px solid var(--secondary); box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .plot-panel h2 { color: var(--secondary); margin-bottom: 5px; font-size: 1.8rem;}
+        
+        .stem-leaf-table {
+            display: flex; flex-direction: column; width: 100%; max-width: 300px; margin-top: 20px;
+            border: 2px solid rgba(255,255,255,0.2); border-radius: 10px; overflow: hidden;
+        }
+        .sl-header {
+            display: flex; background: rgba(255,255,255,0.1); border-bottom: 2px solid white;
+        }
+        .sl-header div { flex: 1; padding: 10px; font-weight: 900; font-size: 1.2rem; text-align: center; color: var(--secondary);}
+        .sl-header div:first-child { border-right: 2px solid white; color: var(--cyan);}
+        
+        .sl-row { display: flex; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sl-row:last-child { border-bottom: none; }
+        .stem-cell {
+            flex: 1; padding: 15px; font-weight: 900; font-size: 1.5rem; text-align: center;
+            border-right: 2px solid white; color: var(--cyan); background: rgba(6, 182, 212, 0.1);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .leaf-cell {
+            flex: 1; padding: 10px; display: flex; align-items: center; justify-content: center;
+        }
+        
+        .leaf-input {
+            width: 100%; background: rgba(0,0,0,0.5); border: 2px dashed #334155; color: white;
+            font-size: 1.2rem; font-weight: 800; padding: 10px; border-radius: 5px; outline: none; text-align: center;
+            overflow-x: auto; text-overflow: ellipsis;
+            transition: all 0.3s; letter-spacing: 5px;
+        }
+        .leaf-input:focus { border-color: var(--secondary); background: rgba(16, 185, 129, 0.1); }
+        .leaf-input.correct { border-color: var(--secondary); border-style: solid; background: rgba(16, 185, 129, 0.2); color: var(--secondary); pointer-events: none;}
+
+        .btn-check {
+            background: var(--secondary); color: white; border: none; padding: 15px 40px; border-radius: 50px;
+            font-size: 1.2rem; font-weight: 900; cursor: pointer; transition: all 0.3s; margin-top: 30px;
+        }
+        .btn-check:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);}
+
+        .feedback { font-size: 1.1rem; font-weight: 800; padding: 15px; border-radius: 8px; display: none; text-align: center; margin-top: 15px;}
+        .feedback.error { background: rgba(244, 63, 94, 0.1); color: var(--danger); border: 1px solid var(--danger); display: block;}
+
+        .overlay-msg {
+            position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(15, 23, 42, 0.95);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20;
+            opacity: 0; pointer-events: none; transition: all 0.5s; backdrop-filter: blur(5px); text-align: center; padding: 20px;
+        }
+        .overlay-msg.show { opacity: 1; pointer-events: auto; }
+        .om-title { font-size: 2.5rem; font-weight: 900; margin-bottom: 10px; color: var(--secondary);}
+
+        @media (max-width: 768px) {
+            .container { flex-direction: column; gap: 20px; }
+            .sl-row { flex-wrap: wrap; }
+            .leaf-cell { max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=3B82F6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.6.5.1. Kök-Yaprak Gösterimi Laboratuvarı</div>
+    </div>
+
+    <div class="container">
+        
+        <div class="data-panel">
+            <h2>Ham Veri Seti</h2>
+            <p style="color:#94A3B8; font-size: 1.1rem;">Bir sınıftaki öğrencilerin matematik deneme sınavı netleri aşağıda karışık olarak verilmiştir. Lütfen yandaki tabloyu doldurunuz.</p>
+            
+            <div class="raw-data">
+                <div class="data-badge">61</div>
+                <div class="data-badge">42</div>
+                <div class="data-badge">50</div>
+                <div class="data-badge">70</div>
+                <div class="data-badge">53</div>
+                <div class="data-badge">45</div>
+                <div class="data-badge">53</div>
+                <div class="data-badge">73</div>
+                <div class="data-badge">58</div>
+            </div>
+            
+            <p style="color:var(--tertiary); font-weight: 800; margin-top: 30px; text-align: left; background: rgba(245, 158, 11, 0.1); padding: 15px; border-radius: 10px;">
+                💡 <b>İpucu:</b> <br>
+                - Sayıların onlar basamağı <b>Kök</b>, birler basamağı <b>Yaprak</b>'tır.<br>
+                - Yaprakları <b>küçükten büyüğe</b> doğru aralarına virgül koymadan bitişik yazınız. (Örn: 25)<br>
+                - Tekrar eden verileri yaprağa tekrar yazmalısınız.
+            </p>
+        </div>
+
+        <div class="plot-panel" style="position: relative;">
+            <h2>Kök-Yaprak Grafiği</h2>
+            
+            <div class="stem-leaf-table">
+                <div class="sl-header">
+                    <div>Kök</div>
+                    <div>Yaprak</div>
+                </div>
+                
+                <div class="sl-row">
+                    <div class="stem-cell">4</div>
+                    <div class="leaf-cell"><input type="text" id="l4" class="leaf-input" placeholder="..."></div>
+                </div>
+                <div class="sl-row">
+                    <div class="stem-cell">5</div>
+                    <div class="leaf-cell"><input type="text" id="l5" class="leaf-input" placeholder="..."></div>
+                </div>
+                <div class="sl-row">
+                    <div class="stem-cell">6</div>
+                    <div class="leaf-cell"><input type="text" id="l6" class="leaf-input" placeholder="..."></div>
+                </div>
+                <div class="sl-row">
+                    <div class="stem-cell">7</div>
+                    <div class="leaf-cell"><input type="text" id="l7" class="leaf-input" placeholder="..."></div>
+                </div>
+            </div>
+
+            <button class="btn-check" onclick="checkPlot()">Grafiği Kontrol Et</button>
+            <div class="feedback" id="fb"></div>
+
+            <div class="overlay-msg" id="overlay">
+                <div class="om-title">Harika İş Çıkardın! 📈</div>
+                <p style="color:#94A3B8; font-size:1.2rem; font-weight:600;">
+                    Kök-Yaprak gösterimi, verilerin yığılmasını ve yayılımını aynı anda görmemizi sağlayan harika bir araçtır. <br><br>
+                    Bu sınıfta öğrencilerin en çok <b>50'li netlerde</b> yığıldığını bir bakışta görebiliyoruz!
+                </p>
+                <button class="btn-check" style="background:var(--purple);" onclick="location.reload()">Tekrar Dene</button>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // Data: 42, 45, 50, 53, 53, 58, 61, 70, 73
+        const answers = {
+            "l4": "25",
+            "l5": "0338",
+            "l6": "1",
+            "l7": "03"
+        };
+
+        function cleanStr(str) {
+            return str.replace(/[^0-9]/g, ''); // Sadece rakamları al, boşluk ve virgülleri sil
+        }
+
+        function checkPlot() {
+            let fb = document.getElementById('fb');
+            let allCorrect = true;
+
+            for(let id in answers) {
+                let inp = document.getElementById(id);
+                let userVal = cleanStr(inp.value);
+                
+                if(userVal === answers[id]) {
+                    inp.classList.add('correct');
+                } else {
+                    allCorrect = false;
+                    inp.classList.remove('correct');
+                    inp.value = ""; // Clear incorrect
+                }
+            }
+
+            if(allCorrect) {
+                fb.style.display = "none";
+                document.getElementById('overlay').classList.add('show');
+            } else {
+                fb.className = "feedback error";
+                fb.innerHTML = "Hatalı veya eksik yapraklar var.<br>- Verileri atlamadığına emin ol.<br>- Yaprakları küçükten büyüğe sırayla diz.<br>- Aynı veriden birden fazla varsa hepsini yazmalısın.";
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mantık Devresi Laboratuvarı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    
+    <!-- MATHJAX -->
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root { --bg:#0F0E17; --primary:#8B5CF6; --secondary:#10B981; --tertiary:#06B6D4; --danger:#F43F5E; --accent:#F59E0B; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Outfit',sans-serif; }
+        body { background:linear-gradient(135deg,var(--bg),#161625); color:#F8FAFC; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:20px; overflow-x:hidden; }
+        
+        .header { width:100%; max-width:1100px; display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); padding:15px 25px; border-radius:20px; border:1px solid rgba(139,92,246,0.2); margin-bottom:20px; backdrop-filter:blur(10px); }
+        .header-left { display:flex; align-items:center; gap:15px; font-weight:600; font-size:1.2rem; }
+        .header-left img { width:50px; height:50px; border-radius:50%; background:white; padding:2px; }
+        .kazanim { background:var(--primary); color:white; padding:8px 20px; border-radius:20px; font-weight:800; font-size:1rem; box-shadow: 0 0 20px rgba(139,92,246,0.4); }
+        
+        h1 { font-size:2.5rem; color:var(--tertiary); font-weight:900; text-align:center; margin-bottom:5px; }
+        .subtitle { color:#94A3B8; font-size:1.15rem; text-align:center; margin-bottom:25px; font-weight:600; max-width:800px; }
+        
+        .workspace { width:100%; max-width:1100px; background:#11111A; border:1px solid rgba(255,255,255,0.1); border-radius:24px; padding:30px; box-shadow:inset 0 0 50px rgba(0,0,0,0.5); display:flex; flex-direction:column; align-items:center; min-height:500px; }
+        
+        .expl-text { background:rgba(139,92,246,0.15); border:1px solid rgba(139,92,246,0.4); padding:15px 25px; border-radius:15px; font-size:1.3rem; color:white; font-weight:800; text-align:center; width:100%; margin-bottom:20px; }
+        
+        .math-rule-box { background:rgba(15,14,23,0.95); border:2px solid #334155; padding:15px 30px; border-radius:15px; font-size:1.8rem; font-weight:900; color:white; display:flex; align-items:center; justify-content:center; transition:0.5s; min-width:300px; box-shadow:0 10px 20px rgba(0,0,0,0.5); margin-bottom:30px; }
+        
+        /* Circuit */
+        .circuit-container { position:relative; width:800px; height:400px; background:rgba(255,255,255,0.02); border-radius:10px; border:1px solid rgba(255,255,255,0.1); display:flex; justify-content:center; overflow:hidden; }
+        
+        .wire { fill:none; stroke:#475569; stroke-width:6; stroke-linejoin:round; transition:stroke 0.2s; }
+        .wire-active { stroke:var(--accent); filter:drop-shadow(0 0 10px var(--accent)); }
+        
+        .gate-body { fill:#1E293B; stroke:#94A3B8; stroke-width:4; transition:all 0.2s; }
+        .gate-active { fill:var(--primary); stroke:white; filter:drop-shadow(0 0 15px var(--primary)); }
+        .gate-text { fill:white; font-family:Outfit; font-weight:900; font-size:24px; text-anchor:middle; }
+        
+        .toggle-btn { cursor:pointer; }
+        .toggle-bg { fill:#334155; transition:0.2s; }
+        .toggle-knob { fill:white; transition:0.2s; }
+        
+        .toggle-on .toggle-bg { fill:var(--secondary); }
+        .toggle-on .toggle-knob { transform:translateX(30px); }
+        
+        .label-text { fill:#94A3B8; font-family:Outfit; font-size:20px; font-weight:900; }
+        
+        /* Bulb */
+        .bulb-base { fill:#475569; }
+        .bulb-glass { fill:#1E293B; stroke:#475569; stroke-width:4; transition:0.3s; }
+        .bulb-active { fill:var(--accent); stroke:white; filter:drop-shadow(0 0 30px var(--accent)); }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.9.3.2. Mantık Devresi (Etkinlik)</div>
+    </div>
+    
+    <h1>Bilişim Devresi Tasarlayıcı</h1>
+    <p class="subtitle">Lambayı yakmak için devre girişlerindeki anahtarlara (1 veya 0) tıklayın.</p>
+    
+    <div class="workspace">
+        <div class="expl-text">Görev: <b>(p \(\lor\) q) \(\land\) r</b> bileşik önermesinin sonucunu 1 (Doğru) yaparak lambayı yakın.</div>
+        
+        <div class="math-rule-box" id="ruleBox">
+            <span id="mathOutput">\( (0 \lor 0) \land 0 \equiv 0 \)</span>
+        </div>
+        
+        <div class="circuit-container">
+            <svg width="100%" height="100%" viewBox="0 0 800 400" preserveAspectRatio="xMidYMid meet" id="circuitSvg">
+                
+                <!-- Wires -->
+                <path class="wire" id="w_p" d="M 160 100 L 250 100" />
+                <path class="wire" id="w_q" d="M 160 200 L 250 200" />
+                <path class="wire" id="w_or_out" d="M 370 150 L 500 150" />
+                
+                <path class="wire" id="w_r" d="M 160 300 L 450 300 L 450 250 L 500 250" />
+                
+                <path class="wire" id="w_and_out" d="M 600 200 L 700 200" />
+                
+                <!-- OR Gate (p V q) -->
+                <g id="gateOr">
+                    <path class="gate-body" id="orBody" d="M 250 60 Q 280 150 250 240 Q 320 240 370 150 Q 320 60 250 60 Z" />
+                    <text x="290" y="158" class="gate-text">\(\lor\)</text>
+                </g>
+                
+                <!-- AND Gate (...) ^ r -->
+                <g id="gateAnd">
+                    <path class="gate-body" id="andBody" d="M 500 110 L 540 110 A 50 90 0 0 1 540 290 L 500 290 Z" />
+                    <text x="540" y="208" class="gate-text">\(\land\)</text>
+                </g>
+                
+                <!-- Toggles -->
+                <!-- Toggle p -->
+                <g class="toggle-btn" id="t_p" transform="translate(80, 85)" onclick="toggle('p')">
+                    <rect class="toggle-bg" x="0" y="0" width="60" height="30" rx="15" />
+                    <circle class="toggle-knob" cx="15" cy="15" r="12" />
+                    <text x="-30" y="22" class="label-text">p</text>
+                </g>
+                <!-- Toggle q -->
+                <g class="toggle-btn" id="t_q" transform="translate(80, 185)" onclick="toggle('q')">
+                    <rect class="toggle-bg" x="0" y="0" width="60" height="30" rx="15" />
+                    <circle class="toggle-knob" cx="15" cy="15" r="12" />
+                    <text x="-30" y="22" class="label-text">q</text>
+                </g>
+                <!-- Toggle r -->
+                <g class="toggle-btn" id="t_r" transform="translate(80, 285)" onclick="toggle('r')">
+                    <rect class="toggle-bg" x="0" y="0" width="60" height="30" rx="15" />
+                    <circle class="toggle-knob" cx="15" cy="15" r="12" />
+                    <text x="-30" y="22" class="label-text">r</text>
+                </g>
+                
+                <!-- Bulb -->
+                <g id="bulb" transform="translate(700, 160)">
+                    <rect class="bulb-base" x="20" y="60" width="40" height="20" rx="5" />
+                    <circle class="bulb-glass" id="bulbGlass" cx="40" cy="40" r="30" />
+                </g>
+            </svg>
+        </div>
+        
+    </div>
+
+    <script>
+        const state = { p: 0, q: 0, r: 0 };
+        
+        let debounceTimer;
+        function updateMath(texString) {
+            document.getElementById('mathOutput').innerHTML = texString;
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                MathJax.typesetPromise([document.getElementById('mathOutput')]);
+            }, 50);
+        }
+
+        function toggle(varName) {
+            state[varName] = state[varName] === 0 ? 1 : 0;
+            
+            let btn = document.getElementById('t_' + varName);
+            if(state[varName] === 1) {
+                btn.classList.add('toggle-on');
+                document.getElementById('w_' + varName).classList.add('wire-active');
+            } else {
+                btn.classList.remove('toggle-on');
+                document.getElementById('w_' + varName).classList.remove('wire-active');
+            }
+            
+            evaluateCircuit();
+        }
+
+        function evaluateCircuit() {
+            let orResult = (state.p === 1 || state.q === 1) ? 1 : 0;
+            
+            if(orResult === 1) {
+                document.getElementById('orBody').classList.add('gate-active');
+                document.getElementById('w_or_out').classList.add('wire-active');
+            } else {
+                document.getElementById('orBody').classList.remove('gate-active');
+                document.getElementById('w_or_out').classList.remove('wire-active');
+            }
+            
+            let andResult = (orResult === 1 && state.r === 1) ? 1 : 0;
+            
+            if(andResult === 1) {
+                document.getElementById('andBody').classList.add('gate-active');
+                document.getElementById('w_and_out').classList.add('wire-active');
+                document.getElementById('bulbGlass').classList.add('bulb-active');
+                document.getElementById('ruleBox').style.borderColor = "var(--secondary)";
+                document.getElementById('ruleBox').style.boxShadow = "0 0 30px rgba(16,185,129,0.5)";
+            } else {
+                document.getElementById('andBody').classList.remove('gate-active');
+                document.getElementById('w_and_out').classList.remove('wire-active');
+                document.getElementById('bulbGlass').classList.remove('bulb-active');
+                document.getElementById('ruleBox').style.borderColor = "#334155";
+                document.getElementById('ruleBox').style.boxShadow = "0 10px 20px rgba(0,0,0,0.5)";
+            }
+            
+            let eq = `\\( (${state.p} \\lor ${state.q}) \\land ${state.r} \\equiv ${andResult} \\)`;
+            updateMath(eq);
+        }
+        
+        // Initial setup for MathJax rendering
+        setTimeout(() => {
+            MathJax.typesetPromise();
+        }, 500);
+    </script>
+</body>
+</html>

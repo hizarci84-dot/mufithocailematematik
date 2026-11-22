@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hacim Bağıntısı Simülatörü</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F0E17; --surface: #1A1A24; --text: #F8FAFC;
+            --primary: #8B5CF6; --secondary: #10B981;
+            --tertiary: #06B6D4; --danger: #F43F5E;
+            --accent: #F59E0B;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, #161625 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(139, 92, 246, 0.2); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; margin-bottom: 20px;}
+        h1 { font-size: 2.2rem; color: var(--tertiary); font-weight: 900;}
+        .subtitle { color: #94A3B8; font-size: 1.1rem; margin-top: 5px;}
+
+        .main-container {
+            display: flex; gap: 30px; width: 100%; max-width: 1000px; flex-wrap: wrap; justify-content: center;
+        }
+
+        .panel {
+            background: #11111A; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.4); 
+            padding: 30px; display: flex; flex-direction: column; align-items: center; width: 100%; position: relative;
+        }
+
+        /* 3D Stack */
+        .stack-area {
+            width: 300px; height: 350px; position: relative; perspective: 1200px; margin-bottom: 30px;
+            display: flex; justify-content: center; align-items: flex-end; padding-bottom: 50px;
+        }
+
+        .layer {
+            width: 200px; height: 100px; background: rgba(139, 92, 246, 0.5); border: 2px solid var(--primary);
+            transform: rotateX(60deg) rotateZ(-45deg); position: absolute; bottom: 50px;
+            display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(2, 1fr);
+            transition: all 0.5s ease;
+        }
+
+        .mini-cube { border: 1px solid rgba(255,255,255,0.2); }
+
+        .controls {
+            width: 100%; max-width: 500px; background: rgba(0,0,0,0.3); padding: 20px; border-radius: 15px;
+            display: flex; flex-direction: column; gap: 15px;
+        }
+
+        .control-row {
+            display: flex; align-items: center; justify-content: space-between; font-size: 1.2rem; font-weight: 800;
+        }
+
+        input[type=range] {
+            width: 60%; cursor: pointer; accent-color: var(--secondary);
+        }
+
+        .formula-box {
+            background: rgba(16, 185, 129, 0.2); border: 2px solid var(--secondary); padding: 15px; border-radius: 10px;
+            text-align: center; font-size: 1.5rem; font-weight: 900; color: white; margin-top: 10px;
+        }
+        
+        .val { color: var(--accent); }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.7.4.4. Hacim Bağıntısı (Etkinlik)</div>
+    </div>
+
+    <div class="title-area">
+        <h1>Kat Kat Hacim</h1>
+        <p class="subtitle">Taban alanını (katman) yüksekliğe doğru kaydırıcı ile artırarak hacmin nasıl katlandığını keşfedin.</p>
+    </div>
+
+    <div class="main-container">
+        
+        <div class="panel">
+            
+            <div class="stack-area" id="stackArea">
+                <!-- Layers will be injected here -->
+            </div>
+
+            <div class="controls">
+                <div class="control-row">
+                    <span>Taban Alanı:</span>
+                    <span style="color:var(--primary);">8 Birimkare</span>
+                </div>
+                <div class="control-row">
+                    <span>Yükseklik (h): <span id="hVal" class="val">1</span> birim</span>
+                    <input type="range" id="sliderH" min="1" max="5" value="1" oninput="updateStack()">
+                </div>
+                
+                <div class="formula-box">
+                    Hacim = Taban Alanı × Yükseklik<br>
+                    <span style="color:var(--primary)">8</span> × <span class="val" id="fH">1</span> = <span style="color:var(--secondary)" id="fTotal">8</span> Birimküp
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        const stackArea = document.getElementById('stackArea');
+        const sliderH = document.getElementById('sliderH');
+        const hVal = document.getElementById('hVal');
+        const fH = document.getElementById('fH');
+        const fTotal = document.getElementById('fTotal');
+
+        function createLayer(index) {
+            let layer = document.createElement('div');
+            layer.className = 'layer';
+            // 8 mini cubes per layer (4x2)
+            for(let i=0; i<8; i++){
+                let mini = document.createElement('div');
+                mini.className = 'mini-cube';
+                layer.appendChild(mini);
+            }
+            
+            // Stack them visually using bottom offset (isometric-like)
+            // bottom 50px base + 30px per index
+            layer.style.bottom = (50 + (index * 30)) + 'px';
+            return layer;
+        }
+
+        function updateStack() {
+            let h = parseInt(sliderH.value);
+            hVal.innerText = h;
+            fH.innerText = h;
+            fTotal.innerText = 8 * h;
+
+            stackArea.innerHTML = "";
+            for(let i=0; i<h; i++) {
+                stackArea.appendChild(createLayer(i));
+            }
+        }
+
+        // Init
+        updateStack();
+    </script>
+
+    <script>
+        // Global spam click prevention for Etkinlik files
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'BUTTON' && !e.target.hasAttribute('data-spam-locked')) {
+                e.target.setAttribute('data-spam-locked', 'true');
+                let originalOpacity = e.target.style.opacity || '1';
+                e.target.style.opacity = '0.7';
+                e.target.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    e.target.removeAttribute('data-spam-locked');
+                    e.target.style.opacity = originalOpacity;
+                    e.target.style.pointerEvents = 'auto';
+                }, 400);
+            }
+        });
+    </script>
+</body>
+</html>

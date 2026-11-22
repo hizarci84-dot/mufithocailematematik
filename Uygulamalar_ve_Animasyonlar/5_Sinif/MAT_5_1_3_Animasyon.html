@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kesir Gösterimleri Animasyonu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #1E293B;
+            --text-color: #F8FAFC;
+            --accent: #FDE047; /* Yellow for battery */
+            --fraction: #38BDF8;
+            --decimal: #10B981;
+            --percent: #F43F5E;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+            color: var(--text-color);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Branding */
+        .brand-header {
+            position: absolute;
+            top: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px 25px;
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+
+        .brand-header img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: contain;
+            background: white;
+            padding: 2px;
+        }
+
+        .brand-header span {
+            color: #E2E8F0;
+            font-weight: 600;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Kazanım Box */
+        .kazanim-box {
+            position: absolute;
+            bottom: 30px;
+            padding: 15px 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            text-align: center;
+            z-index: 100;
+        }
+
+        .kazanim-box p {
+            font-size: 1rem;
+            color: #CBD5E1;
+        }
+
+        /* Layout */
+        .scene {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 900px;
+            text-align: center;
+        }
+
+        .main-title {
+            font-size: 3.5rem;
+            margin-bottom: 2rem;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 1s ease;
+        }
+        
+        .show-title .main-title {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Battery Graphic */
+        .battery-container {
+            position: relative;
+            width: 300px;
+            height: 120px;
+            border: 8px solid #94A3B8;
+            border-radius: 20px;
+            padding: 6px;
+            margin-bottom: 3rem;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 1s ease 0.5s;
+        }
+
+        .battery-container::after {
+            content: '';
+            position: absolute;
+            right: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 12px;
+            height: 40px;
+            background: #94A3B8;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .battery-level {
+            width: 0%;
+            height: 100%;
+            background: var(--accent);
+            border-radius: 10px;
+            transition: width 2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .show-battery .battery-container {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .drain-battery .battery-level {
+            width: 25%; /* Drop to 25% */
+            background: #EF4444; /* Turn red when low */
+        }
+
+        /* Representations */
+        .reps-container {
+            display: flex;
+            gap: 4rem;
+            margin-top: 2rem;
+        }
+
+        .rep-box {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 1s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .rep-title {
+            font-size: 1.5rem;
+            color: #94A3B8;
+            margin-bottom: 1rem;
+        }
+
+        .rep-value {
+            font-size: 4rem;
+            font-weight: 800;
+        }
+
+        .frac-val { color: var(--fraction); }
+        .dec-val { color: var(--decimal); }
+        .perc-val { color: var(--percent); }
+
+        .fraction-display {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            vertical-align: middle;
+            font-size: 3rem;
+        }
+        
+        .fraction-display .numerator {
+            border-bottom: 5px solid var(--fraction);
+            padding: 0 10px;
+        }
+        .fraction-display .denominator {
+            padding: 0 10px;
+        }
+
+        .show-frac #repFrac { opacity: 1; transform: translateY(0); }
+        .show-dec #repDec { opacity: 1; transform: translateY(0); }
+        .show-perc #repPerc { opacity: 1; transform: translateY(0); }
+
+        .equal-signs {
+            position: absolute;
+            top: 60%;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 150px;
+            font-size: 3rem;
+            color: white;
+            opacity: 0;
+            transition: opacity 1s ease;
+            pointer-events: none;
+        }
+
+        .show-equals .equal-signs {
+            opacity: 1;
+        }
+
+        /* Replay Button */
+        #replayBtn {
+            position: absolute;
+            right: 30px;
+            bottom: 30px;
+            background: var(--text-color);
+            color: var(--bg);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            cursor: pointer;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+            z-index: 100;
+        }
+        
+        #replayBtn.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="brand-header">
+        <img src="../../logom.png" alt="Müfit Hoca Logo">
+        <span>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+            @mufithocailematematik
+        </span>
+    </div>
+
+    <div class="scene" id="mainScene">
+        <div class="main-title" id="title">Telefonumuzun şarjı ne kadar kaldı?</div>
+        
+        <div class="battery-container">
+            <div class="battery-level" id="batteryLevel" style="width: 100%;"></div>
+        </div>
+
+        <div class="equal-signs" id="eqSigns">
+            <span>=</span>
+            <span>=</span>
+        </div>
+
+        <div class="reps-container">
+            <div class="rep-box" id="repFrac">
+                <div class="rep-title">Kesir</div>
+                <div class="rep-value frac-val">
+                    <div class="fraction-display">
+                        <span class="numerator">25</span>
+                        <span class="denominator">100</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rep-box" id="repDec">
+                <div class="rep-title">Ondalık</div>
+                <div class="rep-value dec-val">0,25</div>
+            </div>
+
+            <div class="rep-box" id="repPerc">
+                <div class="rep-title">Yüzde</div>
+                <div class="rep-value perc-val">%25</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="kazanim-box">
+        <p><strong>MAT.5.1.3.</strong> Gerçek yaşam durumlarına karşılık gelen kesirleri farklı biçimlerde temsil edebilme.</p>
+    </div>
+
+    <button id="replayBtn" onclick="startSequence()">Tekrar Oynat</button>
+
+    <script>
+        const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+        async function startSequence() {
+            // Reset
+            const scene = document.getElementById('mainScene');
+            scene.classList.remove('show-title', 'show-battery', 'drain-battery', 'show-frac', 'show-dec', 'show-perc', 'show-equals');
+            document.getElementById('batteryLevel').style.width = '100%';
+            document.getElementById('batteryLevel').style.background = '#FDE047';
+            document.getElementById('replayBtn').classList.remove('visible');
+
+            await sleep(500);
+
+            // Title and Full Battery
+            scene.classList.add('show-title');
+            scene.classList.add('show-battery');
+            await sleep(2500);
+
+            // Battery drains
+            scene.classList.add('drain-battery');
+            await sleep(2500);
+            
+            document.getElementById('title').innerText = "Bu durumu nasıl ifade ederiz?";
+            await sleep(1500);
+
+            // Show Fraction
+            scene.classList.add('show-frac');
+            await sleep(1500);
+
+            // Show Decimal
+            scene.classList.add('show-dec');
+            await sleep(1500);
+
+            // Show Percentage
+            scene.classList.add('show-perc');
+            await sleep(1500);
+
+            // Show Equals (they are all the same amount)
+            document.getElementById('title').innerText = "Üçü de aynı miktarı temsil eder!";
+            scene.classList.add('show-equals');
+            await sleep(2000);
+
+            document.getElementById('replayBtn').classList.add('visible');
+        }
+
+        window.onload = startSequence;
+    </script>
+</body>
+</html>

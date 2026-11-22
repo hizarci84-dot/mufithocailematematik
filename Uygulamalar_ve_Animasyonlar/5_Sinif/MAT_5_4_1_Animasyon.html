@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Çitlerin Sırrı (Aynı Çevre - Animasyon)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A;
+            --text: #F8FAFC;
+            --primary: #10B981; /* Green */
+            --secondary: #3B82F6; /* Blue */
+            --tertiary: #F59E0B; /* Amber */
+            --danger: #F43F5E; /* Rose */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 900px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: #0F172A; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; width: 100%; max-width: 800px; margin-bottom: 20px; height: 120px;}
+        h1 { font-size: 2.2rem; color: var(--primary); text-shadow: 0 5px 15px rgba(0,0,0,0.5); line-height: 1.3;}
+        .subtitle { font-size: 1.2rem; color: #94A3B8; margin-top: 10px; line-height: 1.5;}
+        .subtitle span { color: white; font-weight: 800; background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 5px;}
+
+        .canvas-area {
+            position: relative; width: 100%; max-width: 800px; height: 450px; 
+            background: #0B1120; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.3); 
+            overflow: hidden; display: flex; align-items: center; justify-content: center;
+        }
+
+        svg { width: 100%; height: 100%; overflow: visible; }
+        
+        .rect-shape { fill: rgba(16, 185, 129, 0.2); stroke: var(--primary); stroke-width: 5; stroke-linejoin: round; transition: all 1.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        
+        .r-label { font-size: 22px; font-weight: 900; fill: white; transition: all 1.5s cubic-bezier(0.4, 0, 0.2, 1); text-anchor: middle;}
+        .r-label.v { dominant-baseline: central; }
+        
+        .fence-icon { font-size: 20px; opacity: 0; transition: opacity 1s; }
+
+        .btn-start {
+            margin-top: 30px; background: var(--secondary); color: white; border: none; padding: 15px 40px; border-radius: 50px;
+            font-size: 1.2rem; font-weight: 800; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4);
+        }
+        .btn-start:hover { transform: scale(1.05); }
+
+        .eq-display {
+            font-size: 32px; font-weight: 900; fill: var(--tertiary); text-anchor: middle; opacity: 0; transition: opacity 0.5s;
+        }
+
+        @media (max-width: 768px) {
+            .header { flex-direction: column; gap: 10px; }
+            h1 { font-size: 1.5rem; }
+            .canvas-area { height: 300px; }
+            .title-area { height: 140px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.5.4.1. Aynı Çevre Uzunluğu</div>
+    </div>
+
+    <div class="title-area">
+        <h1 id="mTitle">24 Metrelik Çitlerin Sırrı</h1>
+        <p class="subtitle" id="mSub">Bahçemizin etrafını çevirmek için elimizde <span>tam 24 metre</span> çit var.</p>
+    </div>
+
+    <div class="canvas-area">
+        <svg viewBox="0 0 800 450" id="svgView">
+            <!-- Background Grid (Faint) -->
+            <g id="gridGroup"></g>
+            
+            <!-- Shape -->
+            <rect id="mRect" class="rect-shape" x="0" y="0" width="0" height="0" style="opacity: 0;"></rect>
+            
+            <!-- Labels -->
+            <text id="lblT" class="r-label" x="0" y="0" style="opacity:0;"></text>
+            <text id="lblB" class="r-label" x="0" y="0" style="opacity:0;"></text>
+            <text id="lblL" class="r-label v" x="0" y="0" style="opacity:0;"></text>
+            <text id="lblR" class="r-label v" x="0" y="0" style="opacity:0;"></text>
+
+            <text id="eqText" class="eq-display" x="400" y="400">11 + 1 + 11 + 1 = 24m</text>
+        </svg>
+    </div>
+
+    <button class="btn-start" id="startBtn" onclick="runTimeline()">Animasyonu Başlat</button>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        
+        const mTitle = document.getElementById('mTitle');
+        const mSub = document.getElementById('mSub');
+        const startBtn = document.getElementById('startBtn');
+        
+        const mRect = document.getElementById('mRect');
+        const lblT = document.getElementById('lblT');
+        const lblB = document.getElementById('lblB');
+        const lblL = document.getElementById('lblL');
+        const lblR = document.getElementById('lblR');
+        const eqText = document.getElementById('eqText');
+        const gridGroup = document.getElementById('gridGroup');
+
+        let UNIT = 25; // Base unit px
+        
+        // Draw grid
+        for(let i=1; i<800/UNIT; i++) {
+            let l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            l.setAttribute('x1', i*UNIT); l.setAttribute('y1', 0); l.setAttribute('x2', i*UNIT); l.setAttribute('y2', 450);
+            l.style.stroke = 'rgba(255,255,255,0.03)';
+            gridGroup.appendChild(l);
+        }
+        for(let i=1; i<450/UNIT; i++) {
+            let l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            l.setAttribute('x1', 0); l.setAttribute('y1', i*UNIT); l.setAttribute('x2', 800); l.setAttribute('y2', i*UNIT);
+            l.style.stroke = 'rgba(255,255,255,0.03)';
+            gridGroup.appendChild(l);
+        }
+
+        function setRect(w, h) {
+            let pxW = w * UNIT;
+            let pxH = h * UNIT;
+            let sx = 400 - (pxW / 2);
+            let sy = 200 - (pxH / 2); // Slightly above center to leave room for text
+
+            mRect.setAttribute('x', sx);
+            mRect.setAttribute('y', sy);
+            mRect.setAttribute('width', pxW);
+            mRect.setAttribute('height', pxH);
+
+            lblT.setAttribute('x', sx + pxW/2); lblT.setAttribute('y', sy - 15);
+            lblB.setAttribute('x', sx + pxW/2); lblB.setAttribute('y', sy + pxH + 25);
+            
+            lblL.setAttribute('x', sx - 25); lblL.setAttribute('y', sy + pxH/2);
+            lblR.setAttribute('x', sx + pxW + 25); lblR.setAttribute('y', sy + pxH/2);
+
+            lblT.textContent = w + 'm'; lblB.textContent = w + 'm';
+            lblL.textContent = h + 'm'; lblR.textContent = h + 'm';
+            
+            eqText.textContent = `${w} + ${h} + ${w} + ${h} = 24m (ÇEVRE)`;
+        }
+
+        async function runTimeline() {
+            startBtn.style.display = 'none';
+
+            // Reset
+            mRect.style.opacity = 0;
+            lblT.style.opacity = 0; lblB.style.opacity = 0; lblL.style.opacity = 0; lblR.style.opacity = 0;
+            eqText.style.opacity = 0;
+            
+            await sleep(500);
+
+            // Scene 1: 11 x 1
+            mTitle.innerText = "İnce Uzun Bir Bahçe";
+            mSub.innerHTML = "24 metrelik çitle <span>11m x 1m</span> boyutlarında bir bahçe yapabiliriz.";
+            
+            setRect(11, 1);
+            mRect.style.opacity = 1;
+            await sleep(500);
+            lblT.style.opacity = 1; lblB.style.opacity = 1; lblL.style.opacity = 1; lblR.style.opacity = 1;
+            await sleep(1000);
+            eqText.style.opacity = 1;
+            
+            await sleep(3500);
+
+            // Scene 2: 9 x 3
+            mTitle.innerText = "Şekli Değiştiriyoruz!";
+            mSub.innerHTML = "Çitleri söküp <span>9m x 3m</span> boyutlarında yeni bir bahçe kuralım.";
+            setRect(9, 3);
+            await sleep(3500);
+
+            // Scene 3: 7 x 5
+            mTitle.innerText = "Farklı Şekil, Aynı Çevre!";
+            mSub.innerHTML = "Şimdi de <span>7m x 5m</span>. Fark ettiyseniz bahçenin şekli değişiyor ama çit uzunluğu (Çevre) hep 24m kalıyor!";
+            setRect(7, 5);
+            await sleep(4000);
+
+            // Scene 4: Kare (6x6)
+            mTitle.innerText = "Ve Büyük Sürpriz: KARE!";
+            mSub.innerHTML = "Tüm kenarları <span>6m x 6m</span> yaparsak, çit tam yetiyor. Kare de aslında <span>özel bir dikdörtgendir!</span>";
+            setRect(6, 6);
+            mRect.style.fill = "rgba(245, 158, 11, 0.2)"; // Amber for special
+            mRect.style.stroke = "var(--tertiary)";
+            await sleep(5000);
+
+            // End
+            mTitle.innerText = "Özetle...";
+            mSub.innerHTML = "Çevre uzunlukları <span>eşit olan</span> çok sayıda farklı dikdörtgen (veya kare) oluşturulabilir! 🎓";
+            mRect.style.opacity = 0;
+            lblT.style.opacity = 0; lblB.style.opacity = 0; lblL.style.opacity = 0; lblR.style.opacity = 0;
+            eqText.style.opacity = 0;
+
+            setTimeout(() => {
+                startBtn.style.display = 'block';
+                startBtn.innerText = "Tekrar İzle";
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

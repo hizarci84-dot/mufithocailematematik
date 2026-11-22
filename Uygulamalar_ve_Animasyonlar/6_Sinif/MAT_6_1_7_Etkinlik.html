@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uzunluk Dönüştürücü</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A; --surface: #1E293B; --text: #F8FAFC;
+            --primary: #3B82F6; --secondary: #10B981;
+            --tertiary: #F59E0B; --danger: #F43F5E;
+            --purple: #8B5CF6; --cyan: #06B6D4;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, var(--surface) 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--purple); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .container {
+            width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 20px;
+        }
+
+        .input-panel {
+            background: rgba(255,255,255,0.03); border-radius: 20px; padding: 30px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center;
+        }
+
+        .input-panel h2 { font-size: 1.8rem; color: var(--purple); margin-bottom: 20px; font-weight: 900;}
+
+        .converter-row {
+            display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;
+        }
+        
+        input[type="number"], select {
+            background: #0B1120; border: 2px solid var(--purple); color: white;
+            font-size: 1.5rem; font-weight: 800; text-align: center; padding: 10px; border-radius: 15px;
+            outline: none; transition: all 0.3s;
+        }
+        input[type="number"] { width: 120px; }
+        select { width: 100px; cursor: pointer; appearance: none; }
+        input:focus, select:focus { box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);}
+        
+        .arrow-icon { font-size: 2rem; color: #94A3B8; font-weight: 900;}
+
+        .btn-calc {
+            background: var(--purple); color: white; border: none; padding: 15px 40px; border-radius: 15px;
+            font-size: 1.2rem; font-weight: 900; cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(139, 92, 246, 0.4); width: 100%; max-width: 300px;
+        }
+        .btn-calc:hover { transform: translateY(-2px); box-shadow: 0 15px 25px rgba(139, 92, 246, 0.6); }
+
+        /* Resolution Area */
+        .result-area {
+            background: rgba(255,255,255,0.02); border-radius: 20px; padding: 30px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2); display: flex; flex-direction: column; align-items: center; text-align: center;
+            opacity: 0; transform: translateY(20px); transition: all 0.5s; pointer-events: none;
+        }
+        .result-area.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+        .r-steps {
+            background: rgba(0,0,0,0.3); padding: 15px; border-radius: 15px; margin-bottom: 20px;
+            font-size: 1.2rem; color: #94A3B8; font-weight: 600; width: 100%; border: 1px dashed rgba(255,255,255,0.1);
+        }
+        .r-steps span { color: var(--tertiary); font-weight: 800;}
+
+        .r-equation {
+            font-size: 3rem; font-weight: 900; color: white; display: flex; flex-direction: column; align-items: center;
+        }
+        .final-val { color: var(--secondary); background: rgba(16, 185, 129, 0.1); padding: 10px 20px; border-radius: 15px; border: 2px solid var(--secondary); margin-top:10px;}
+
+        @media (max-width: 768px) {
+            .header { flex-direction: column; gap: 10px; }
+            .r-equation { font-size: 2rem;}
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=3B82F6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.6.1.7. Uzunluk Dönüştürücü Makine</div>
+    </div>
+
+    <div class="container">
+        
+        <div class="input-panel">
+            <h2>📏 Akıllı Dönüşüm Makinesi</h2>
+            
+            <div class="converter-row">
+                <input type="number" id="numInput" value="5" step="0.01">
+                <select id="uFrom">
+                    <option value="0">km</option>
+                    <option value="3" selected>m</option>
+                    <option value="4">dm</option>
+                    <option value="5">cm</option>
+                    <option value="6">mm</option>
+                </select>
+                
+                <div class="arrow-icon">➔</div>
+                
+                <select id="uTo">
+                    <option value="0">km</option>
+                    <option value="3">m</option>
+                    <option value="4">dm</option>
+                    <option value="5" selected>cm</option>
+                    <option value="6">mm</option>
+                </select>
+            </div>
+            
+            <button class="btn-calc" onclick="calculate()">Dönüştür</button>
+            <p style="color:#94A3B8; margin-top:15px; font-size:0.9rem;">(İstediğiniz birimi seçip sonucu inceleyin)</p>
+        </div>
+
+        <div class="result-area" id="rArea">
+            <div class="r-steps" id="rSteps">
+                <!-- Merdivenden 2 basamak AŞAĞI iniliyor. Sayı 100 ile çarpılacak. -->
+            </div>
+            
+            <div class="r-equation" id="rEq">
+                <!-- 5 x 100 = 500 cm -->
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Steps index mapping. km=0, hm=1, dam=2, m=3, dm=4, cm=5, mm=6
+        // This represents their position on the traditional 7-step metric ladder.
+        
+        const units = {
+            "0": "Kilometre (km)",
+            "3": "Metre (m)",
+            "4": "Desimetre (dm)",
+            "5": "Santimetre (cm)",
+            "6": "Milimetre (mm)"
+        };
+
+        const uNames = { "0": "km", "3": "m", "4": "dm", "5": "cm", "6": "mm" };
+
+        function calculate() {
+            let val = parseFloat(document.getElementById('numInput').value.replace(',', '.'));
+            let fromIdx = parseInt(document.getElementById('uFrom').value);
+            let toIdx = parseInt(document.getElementById('uTo').value);
+            
+            if(isNaN(val)) {
+                alert("Lütfen geçerli bir sayı girin.");
+                return;
+            }
+
+            let rArea = document.getElementById('rArea');
+            rArea.classList.remove('show');
+            
+            setTimeout(() => {
+                let steps = Math.abs(toIdx - fromIdx);
+                let multiplier = Math.pow(10, steps);
+                
+                let stepsHtml = "";
+                let eqHtml = "";
+
+                if(fromIdx === toIdx) {
+                    stepsHtml = `Aynı birimi seçtiniz. Dönüşüm gerekmez.`;
+                    eqHtml = `<div class="final-val">${val} ${uNames[toIdx]}</div>`;
+                } 
+                else if (fromIdx < toIdx) {
+                    // Going DOWN -> Multiply
+                    stepsHtml = `Merdivenden <span>${steps} basamak AŞAĞI</span> iniliyor.<br>Bu yüzden sayıyı <span>${multiplier} ile çarparız</span>.`;
+                    let res = (val * multiplier).toLocaleString('tr-TR');
+                    eqHtml = `
+                        <div>${val} ${uNames[fromIdx]} x ${multiplier}</div>
+                        <div class="final-val">= ${res} ${uNames[toIdx]}</div>
+                    `;
+                } 
+                else {
+                    // Going UP -> Divide
+                    stepsHtml = `Merdivenden <span>${steps} basamak YUKARI</span> çıkılıyor.<br>Bu yüzden sayıyı <span>${multiplier}'e böleriz</span>.`;
+                    let res = (val / multiplier).toLocaleString('tr-TR');
+                    eqHtml = `
+                        <div>${val} ${uNames[fromIdx]} ÷ ${multiplier}</div>
+                        <div class="final-val">= ${res} ${uNames[toIdx]}</div>
+                    `;
+                }
+
+                document.getElementById('rSteps').innerHTML = stepsHtml;
+                document.getElementById('rEq').innerHTML = eqHtml;
+                
+                rArea.classList.add('show');
+
+            }, 300);
+        }
+
+        // Enter key handling
+        document.getElementById('numInput').addEventListener('keypress', e => { if(e.key==='Enter') calculate(); });
+    </script>
+</body>
+</html>

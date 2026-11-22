@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Öklid Şelalesi (Etkinlik)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    
+    <!-- MATHJAX -->
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root { --bg:#0F0E17; --primary:#8B5CF6; --secondary:#10B981; --tertiary:#06B6D4; --danger:#F43F5E; --accent:#F59E0B; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Outfit',sans-serif; }
+        body { background:linear-gradient(135deg,var(--bg),#161625); color:#F8FAFC; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:20px; overflow-x:hidden; }
+        
+        .header { width:100%; max-width:1100px; display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); padding:15px 25px; border-radius:20px; border:1px solid rgba(139,92,246,0.2); margin-bottom:20px; backdrop-filter:blur(10px); }
+        .header-left { display:flex; align-items:center; gap:15px; font-weight:600; font-size:1.2rem; }
+        .header-left img { width:50px; height:50px; border-radius:50%; background:white; padding:2px; }
+        .kazanim { background:var(--primary); color:white; padding:8px 20px; border-radius:20px; font-weight:800; font-size:1rem; box-shadow: 0 0 20px rgba(139,92,246,0.4); }
+        
+        h1 { font-size:2.5rem; color:var(--tertiary); font-weight:900; text-align:center; margin-bottom:5px; }
+        .subtitle { color:#94A3B8; font-size:1.15rem; text-align:center; margin-bottom:25px; font-weight:600; max-width:800px; }
+        
+        .workspace { width:100%; max-width:1100px; background:#11111A; border:1px solid rgba(255,255,255,0.1); border-radius:24px; padding:30px; box-shadow:inset 0 0 50px rgba(0,0,0,0.5); display:flex; flex-direction:column; align-items:center; min-height:600px; }
+        
+        .expl-text { background:rgba(139,92,246,0.15); border:1px solid rgba(139,92,246,0.4); padding:15px 25px; border-radius:15px; font-size:1.3rem; color:white; font-weight:800; text-align:center; width:100%; margin-bottom:20px; }
+        
+        .math-rule-box { background:rgba(0,0,0,0.5); border:2px solid #334155; padding:15px 30px; border-radius:15px; font-size:1.8rem; font-weight:900; color:white; display:flex; align-items:center; justify-content:center; box-shadow:0 10px 20px rgba(0,0,0,0.5); transition:all 0.5s; width:100%; max-width:800px; margin-bottom:20px; min-height:80px; }
+
+        /* Sliders */
+        .controls { display:flex; gap:30px; width:100%; max-width:800px; margin-bottom:20px; }
+        .slider-group { flex:1; background:rgba(255,255,255,0.02); border-radius:15px; padding:20px; border:1px solid rgba(255,255,255,0.05); }
+        .slider-header { display:flex; justify-content:space-between; margin-bottom:15px; font-weight:800; color:#CBD5E1; }
+        
+        input[type=range] { -webkit-appearance:none; width:100%; background:transparent; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; height:24px; width:24px; border-radius:50%; background:var(--accent); cursor:pointer; margin-top:-10px; box-shadow:0 0 10px var(--accent); }
+        input[type=range]::-webkit-slider-runnable-track { width:100%; height:4px; cursor:pointer; background:rgba(255,255,255,0.2); border-radius:2px; }
+
+        /* SVG */
+        .svg-board { width:100%; max-width:800px; height:450px; background:rgba(255,255,255,0.02); border-radius:15px; border:2px dashed #475569; position:relative; overflow:hidden; }
+        
+        .semi-circle { fill:rgba(255,255,255,0.02); stroke:#334155; stroke-width:2; stroke-dasharray:5,5; }
+        
+        .tri-path { fill:rgba(139,92,246,0.1); stroke:var(--primary); stroke-width:4; stroke-linejoin:round; }
+        .alt-path { fill:none; stroke:var(--accent); stroke-width:3; stroke-dasharray:8,4; }
+        
+        .pt { fill:white; stroke:var(--primary); stroke-width:2; }
+        .lbl { fill:#94A3B8; font-family:Outfit; font-weight:800; font-size:20px; text-anchor: middle; dominant-baseline: middle; }
+        .val-lbl { fill:white; font-family:Outfit; font-weight:900; font-size:18px; text-anchor:middle; dominant-baseline:middle; }
+        
+        .right-angle-box { fill:none; stroke:var(--danger); stroke-width:2; }
+        .right-angle-dot { fill:var(--danger); }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.9.4.2. Öklid Bağıntısı (Etkinlik)</div>
+    </div>
+    
+    <h1>Öklid Şelalesi (h² = p · k)</h1>
+    <p class="subtitle">Dik üçgende hipotenüse indirilen dikmenin karesi, böldüğü parçaların çarpımına eşittir. Kaydırıcıyı hareket ettirin.</p>
+    
+    <div class="workspace">
+        <div class="expl-text">Görev: H (dikme ayağı) noktasını kaydırarak A köşesinin yarım çember üzerinde nasıl hareket ettiğini (Thales) ve Öklid teoreminin nasıl korunduğunu izleyin.</div>
+        
+        <div class="controls">
+            <div class="slider-group">
+                <div class="slider-header"><span>H Noktasını Kaydır (p ve k değişir)</span></div>
+                <input type="range" id="slH" min="1" max="599" value="300" oninput="draw()">
+            </div>
+        </div>
+        
+        <div class="math-rule-box" id="ruleBox">
+            <span id="mathOutput"></span>
+        </div>
+        
+        <div class="svg-board">
+            <svg width="100%" height="100%" viewBox="0 0 800 450" preserveAspectRatio="xMidYMid meet" id="boardSvg">
+                
+                <!-- B=(100, 350), C=(700, 350) => Center=(400,350), r=300 -->
+                <path class="semi-circle" d="M 100 350 A 300 300 0 0 1 700 350 Z" />
+                
+                <path class="tri-path" id="triangle" d="" />
+                <path class="alt-path" id="altitude" d="" />
+                
+                <!-- Right angle at A -->
+                <polygon class="right-angle-box" id="rtBoxA" points="" />
+                <circle class="right-angle-dot" id="rtDotA" cx="0" cy="0" r="2" />
+                
+                <!-- Right angle at H -->
+                <polygon class="right-angle-box" id="rtBoxH" points="" />
+                <circle class="right-angle-dot" id="rtDotH" cx="0" cy="0" r="2" />
+                
+                <circle class="pt" id="ptA" cx="0" cy="0" r="5" />
+                <circle class="pt" id="ptB" cx="100" cy="350" r="5" />
+                <circle class="pt" id="ptC" cx="700" cy="350" r="5" />
+                <circle class="pt" id="ptH" cx="0" cy="350" r="5" />
+                
+                <text x="80" y="370" class="lbl">B</text>
+                <text x="710" y="370" class="lbl">C</text>
+                <text x="0" y="0" class="lbl" id="lblA">A</text>
+                <text x="0" y="375" class="lbl" id="lblH">H</text>
+                
+                <!-- Values -->
+                <text x="0" y="340" class="val-lbl" id="valP" fill="#F43F5E">p</text>
+                <text x="0" y="340" class="val-lbl" id="valK" fill="#10B981">k</text>
+                <text x="0" y="0" class="val-lbl" id="valH" fill="#F59E0B">h</text>
+                
+            </svg>
+        </div>
+    </div>
+
+    <script>
+        let debounceTimer;
+        function updateMath(texString) {
+            document.getElementById('mathOutput').innerHTML = texString;
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                MathJax.typesetPromise([document.getElementById('mathOutput')]);
+            }, 50);
+        }
+
+        function draw() {
+            let p_raw = parseInt(document.getElementById('slH').value);
+            let k_raw = 600 - p_raw;
+            
+            // For Math logic, let's scale it so max is 60 (p+k=60)
+            let scaleFactor = 10;
+            let p = p_raw / scaleFactor;
+            let k = k_raw / scaleFactor;
+            
+            let h_squared = p * k;
+            let h = Math.sqrt(h_squared);
+            
+            // SVG coordinates
+            let Bx = 100, By = 350;
+            let Cx = 700, Cy = 350;
+            
+            let Hx = 100 + p_raw;
+            let Hy = 350;
+            
+            let Ax = Hx;
+            let Ay = 350 - (h * scaleFactor);
+            
+            // Paths
+            document.getElementById('triangle').setAttribute('d', `M ${Bx} ${By} L ${Cx} ${Cy} L ${Ax} ${Ay} Z`);
+            document.getElementById('altitude').setAttribute('d', `M ${Ax} ${Ay} L ${Hx} ${Hy}`);
+            
+            // Points
+            document.getElementById('ptA').setAttribute('cx', Ax);
+            document.getElementById('ptA').setAttribute('cy', Ay);
+            document.getElementById('ptH').setAttribute('cx', Hx);
+            
+            // Labels
+            document.getElementById('lblA').setAttribute('x', Ax - 10);
+            document.getElementById('lblA').setAttribute('y', Ay - 15);
+            document.getElementById('lblH').setAttribute('x', Hx - 8);
+            
+            document.getElementById('valP').setAttribute('x', 100 + p_raw/2);
+            document.getElementById('valP').textContent = "p=" + p.toFixed(1);
+            
+            document.getElementById('valK').setAttribute('x', Hx + k_raw/2);
+            document.getElementById('valK').textContent = "k=" + k.toFixed(1);
+            
+            document.getElementById('valH').setAttribute('x', Hx + 25);
+            document.getElementById('valH').setAttribute('y', Ay + (Hy - Ay)/2);
+            document.getElementById('valH').textContent = "h=" + h.toFixed(1);
+            
+            // Right angle at H (Base)
+            document.getElementById('rtBoxH').setAttribute('points', `${Hx},${Hy} ${Hx+15},${Hy} ${Hx+15},${Hy-15} ${Hx},${Hy-15}`);
+            document.getElementById('rtDotH').setAttribute('cx', Hx + 7.5);
+            document.getElementById('rtDotH').setAttribute('cy', Hy - 7.5);
+            
+            // Right angle at A (Need vectors to draw square)
+            let vABx = Bx - Ax; let vABy = By - Ay;
+            let lenAB = Math.sqrt(vABx*vABx + vABy*vABy);
+            let uABx = vABx/lenAB; let uABy = vABy/lenAB;
+            
+            let vACx = Cx - Ax; let vACy = Cy - Ay;
+            let lenAC = Math.sqrt(vACx*vACx + vACy*vACy);
+            let uACx = vACx/lenAC; let uACy = vACy/lenAC;
+            
+            let size = 15;
+            let p1x = Ax + uABx*size; let p1y = Ay + uABy*size;
+            let p3x = Ax + uACx*size; let p3y = Ay + uACy*size;
+            let p2x = p1x + uACx*size; let p2y = p1y + uACy*size;
+            
+            document.getElementById('rtBoxA').setAttribute('points', `${Ax},${Ay} ${p1x},${p1y} ${p2x},${p2y} ${p3x},${p3y}`);
+            document.getElementById('rtDotA').setAttribute('cx', Ax + (uABx+uACx)*size/2);
+            document.getElementById('rtDotA').setAttribute('cy', Ay + (uABy+uACy)*size/2);
+            
+            // Math Update
+            let mathStr = `\\( h^2 = p \\cdot k \\implies (${h.toFixed(1)})^2 = ${p.toFixed(1)} \\cdot ${k.toFixed(1)} \\implies \\)`
+                + ` <span style="color:#F59E0B;font-weight:900">${h_squared.toFixed(2)}</span>`
+                + ` = <span style="color:#F43F5E;font-weight:900">${p.toFixed(1)}</span>`
+                + ` &times; <span style="color:#10B981;font-weight:900">${k.toFixed(1)}</span>`;
+            document.getElementById('mathOutput').innerHTML = mathStr;
+            MathJax.typesetPromise([document.getElementById('mathOutput')]);
+        }
+        
+        // Init
+        draw();
+    </script>
+</body>
+</html>

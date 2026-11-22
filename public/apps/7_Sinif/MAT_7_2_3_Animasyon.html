@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tek + Tek = Çift İspatı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F0E17; --surface: #1A1A24; --text: #F8FAFC;
+            --primary: #8B5CF6; --secondary: #10B981;
+            --tertiary: #06B6D4; --danger: #F43F5E;
+            --accent: #F59E0B;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, #161625 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(139, 92, 246, 0.2); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; margin-bottom: 20px;}
+        h1 { font-size: 2.2rem; color: var(--tertiary); font-weight: 900;}
+        .subtitle { color: #94A3B8; font-size: 1.1rem; margin-top: 5px; max-width: 800px;}
+
+        .canvas-area {
+            position: relative; width: 100%; max-width: 900px; min-height: 500px; 
+            background: #11111A; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.4); 
+            display: flex; flex-direction: column; align-items: center; padding: 40px 20px;
+        }
+
+        .anim-container {
+            display: flex; align-items: center; justify-content: center; gap: 40px; margin-top: 20px;
+            width: 100%; position: relative;
+        }
+
+        .number-box {
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+            transition: all 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .dot-grid {
+            display: grid; grid-template-columns: repeat(2, 30px); gap: 10px;
+        }
+
+        .dot {
+            width: 30px; height: 30px; border-radius: 50%; background: var(--primary);
+            box-shadow: 0 0 10px var(--primary); transition: all 1s;
+        }
+        
+        /* The lone dot that makes a number odd */
+        .lone-dot {
+            background: var(--danger); box-shadow: 0 0 15px var(--danger);
+            animation: pulse 1s infinite alternate; grid-column: span 2; justify-self: center;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); filter: brightness(1);}
+            100% { transform: scale(1.2); filter: brightness(1.5);}
+        }
+
+        .operator { font-size: 4rem; font-weight: 900; color: #475569; transition: all 0.5s; }
+
+        .algebra-text {
+            font-size: 1.5rem; font-family: monospace; color: var(--tertiary); font-weight: 800;
+            margin-top: 15px; opacity: 0; transition: 0.5s; text-align: center;
+        }
+
+        .btn-play {
+            background: var(--primary); color: white; border: none; padding: 15px 40px; border-radius: 50px;
+            font-size: 1.2rem; font-weight: 900; cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(139, 92, 246, 0.4); margin-top: 50px; z-index: 10;
+        }
+        .btn-play:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 15px 25px rgba(139, 92, 246, 0.6); }
+
+        .final-box {
+            display: none; flex-direction: column; align-items: center; gap: 10px;
+            opacity: 0; transform: scale(0.5); transition: all 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .proof-statement {
+            background: rgba(16, 185, 129, 0.1); border: 2px solid var(--secondary); color: var(--secondary);
+            padding: 15px 30px; border-radius: 15px; font-weight: 900; font-size: 1.5rem; margin-top: 30px;
+            text-align: center; opacity: 0; transform: translateY(20px); transition: 1s;
+        }
+
+        @media (max-width: 768px) {
+            .anim-container { gap: 15px; }
+            .dot { width: 20px; height: 20px;}
+            .dot-grid { grid-template-columns: repeat(2, 20px); gap: 5px;}
+            .operator { font-size: 2.5rem;}
+            .algebra-text { font-size: 1.2rem;}
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.7.2.3. Matematiksel İspat Muhakemesi</div>
+    </div>
+
+    <div class="title-area">
+        <h1>Görsel ve Cebirsel İspat</h1>
+        <p class="subtitle">"İki tek sayının toplamı her zaman çift sayıdır." varsayımını önce görsel noktalarla, ardından cebirsel ifadelerle ispatlayalım.</p>
+    </div>
+
+    <div class="canvas-area">
+        
+        <div class="anim-container" id="stageMain">
+            <!-- First Odd Number (5) -->
+            <div class="number-box" id="num1">
+                <div class="dot-grid">
+                    <div class="dot"></div><div class="dot"></div>
+                    <div class="dot"></div><div class="dot"></div>
+                    <div class="dot lone-dot"></div>
+                </div>
+                <div class="algebra-text alg1">2k + 1</div>
+            </div>
+
+            <div class="operator" id="opPlus">+</div>
+
+            <!-- Second Odd Number (7) -->
+            <div class="number-box" id="num2">
+                <div class="dot-grid">
+                    <div class="dot" style="background:var(--tertiary); box-shadow: 0 0 10px var(--tertiary);"></div>
+                    <div class="dot" style="background:var(--tertiary); box-shadow: 0 0 10px var(--tertiary);"></div>
+                    
+                    <div class="dot" style="background:var(--tertiary); box-shadow: 0 0 10px var(--tertiary);"></div>
+                    <div class="dot" style="background:var(--tertiary); box-shadow: 0 0 10px var(--tertiary);"></div>
+                    
+                    <div class="dot" style="background:var(--tertiary); box-shadow: 0 0 10px var(--tertiary);"></div>
+                    <div class="dot" style="background:var(--tertiary); box-shadow: 0 0 10px var(--tertiary);"></div>
+                    
+                    <div class="dot lone-dot" style="background:var(--accent); box-shadow: 0 0 15px var(--accent);"></div>
+                </div>
+                <div class="algebra-text alg1">2m + 1</div>
+            </div>
+
+            <div class="operator" id="opEq" style="display:none;">=</div>
+
+            <!-- Combined Even Number (12) -->
+            <div class="final-box" id="numFinal">
+                <div class="dot-grid" style="grid-template-columns: repeat(2, 30px);">
+                    <!-- 2k -->
+                    <div class="dot"></div><div class="dot"></div>
+                    <div class="dot"></div><div class="dot"></div>
+                    <!-- 2m -->
+                    <div class="dot" style="background:var(--tertiary); box-shadow: 0 0 10px var(--tertiary);"></div>
+                    <div class="dot" style="background:var(--tertiary); box-shadow: 0 0 10px var(--tertiary);"></div>
+                    
+                    <div class="dot" style="background:var(--tertiary); box-shadow: 0 0 10px var(--tertiary);"></div>
+                    <div class="dot" style="background:var(--tertiary); box-shadow: 0 0 10px var(--tertiary);"></div>
+                    
+                    <div class="dot" style="background:var(--tertiary); box-shadow: 0 0 10px var(--tertiary);"></div>
+                    <div class="dot" style="background:var(--tertiary); box-shadow: 0 0 10px var(--tertiary);"></div>
+                    
+                    <!-- The combined lone dots! -->
+                    <div class="dot" style="background:var(--secondary); box-shadow: 0 0 15px var(--secondary);"></div>
+                    <div class="dot" style="background:var(--secondary); box-shadow: 0 0 15px var(--secondary);"></div>
+                </div>
+                <div class="algebra-text" id="algFinal">2(k + m + 1)</div>
+            </div>
+        </div>
+
+        <button class="btn-play" id="btnPlay" onclick="runProof()">İspatı Başlat</button>
+
+        <div class="proof-statement" id="proofMsg">
+            Hiçbir "yalnız nokta" kalmadı! Sayı 2'nin katı (Çift) oldu.
+            <br><br>
+            Cebirsel: (2k+1) + (2m+1) = 2k + 2m + 2 = 2(k+m+1)
+        </div>
+
+    </div>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        
+        const btnPlay = document.getElementById('btnPlay');
+        const algTexts = document.querySelectorAll('.alg1');
+        const num1 = document.getElementById('num1');
+        const num2 = document.getElementById('num2');
+        const opPlus = document.getElementById('opPlus');
+        const opEq = document.getElementById('opEq');
+        const numFinal = document.getElementById('numFinal');
+        const algFinal = document.getElementById('algFinal');
+        const proofMsg = document.getElementById('proofMsg');
+
+        async function runProof() {
+            btnPlay.style.display = "none";
+
+            // Step 1: Show algebraic representation
+            algTexts.forEach(el => el.style.opacity = 1);
+            await sleep(2000);
+
+            // Step 2: Merge animation
+            // conceptually move num1 and num2 towards center
+            num1.style.transform = "translateX(50px) scale(0.8)";
+            num2.style.transform = "translateX(-50px) scale(0.8)";
+            opPlus.style.opacity = 0;
+            await sleep(1000);
+
+            // fade out originals, show combined
+            num1.style.display = "none";
+            num2.style.display = "none";
+            opEq.style.display = "block";
+            
+            numFinal.style.display = "flex";
+            await sleep(50);
+            numFinal.style.opacity = 1;
+            numFinal.style.transform = "scale(1)";
+
+            await sleep(1500);
+
+            // Show final algebra
+            algFinal.style.opacity = 1;
+            await sleep(1000);
+
+            // Show Proof Message
+            proofMsg.style.opacity = 1;
+            proofMsg.style.transform = "translateY(0)";
+        }
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Veri Yorumlama ve Karşılaştırma</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg:#0F0E17; --surface:#1A1A24; --primary:#8B5CF6; --secondary:#10B981; --tertiary:#06B6D4; --danger:#F43F5E; --accent:#F59E0B; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Outfit',sans-serif; }
+        body { background:linear-gradient(135deg,var(--bg),#161625); color:#F8FAFC; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:20px; }
+        .header { width:100%; max-width:1100px; display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); padding:15px 25px; border-radius:20px; border:1px solid rgba(139,92,246,0.2); margin-bottom:20px; }
+        .header-left { display:flex; align-items:center; gap:15px; font-weight:600; font-size:1.2rem; }
+        .header-left img { width:50px; height:50px; border-radius:50%; background:white; padding:2px; }
+        .kazanim { background:var(--primary); color:white; padding:5px 15px; border-radius:20px; font-weight:800; font-size:0.9rem; }
+        h1 { font-size:2rem; color:var(--tertiary); font-weight:900; text-align:center; }
+        .subtitle { color:#94A3B8; font-size:1.05rem; margin-top:5px; text-align:center; margin-bottom:20px; }
+        .panel { background:#11111A; border-radius:24px; border:1px solid rgba(255,255,255,0.05); padding:25px; width:100%; max-width:1100px; display:flex; flex-direction:column; gap:20px; }
+        canvas { display:block; width:100%; border-radius:15px; background:#161625; }
+        .scenario-row { display:flex; gap:12px; flex-wrap:wrap; }
+        .scen-btn { flex:1; min-width:200px; padding:12px 15px; border-radius:12px; font-size:0.95rem; font-weight:800; cursor:pointer; border:2px solid #334155; background:transparent; color:white; transition:all 0.3s; text-align:left; }
+        .scen-btn.active { border-color:var(--tertiary); background:rgba(6,182,212,0.15); }
+        .stats-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px; }
+        .sg-card { background:var(--surface); padding:12px 15px; border-radius:12px; border-left:4px solid; }
+        .sg-lbl { font-size:0.85rem; color:#94A3B8; font-weight:700; }
+        .sg-val { font-size:1.4rem; font-weight:900; margin-top:3px; }
+        .interpretation { background:rgba(6,182,212,0.1); border:1px solid var(--tertiary); padding:15px 20px; border-radius:15px; font-size:1rem; font-weight:600; line-height:1.6; color:white; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.8.6.4. Veri Yorumlama (Etkinlik)</div>
+    </div>
+    <h1>İki Grubun Karşılaştırması</h1>
+    <p class="subtitle">Gerçek hayat senaryolarında iki farklı grubun verilerini karşılaştırın ve yorumlayın.</p>
+    <div class="panel">
+        <div class="scenario-row" id="scenRow"></div>
+        <canvas id="cvs" height="280"></canvas>
+        <div class="stats-grid" id="statsGrid"></div>
+        <div class="interpretation" id="interp"></div>
+    </div>
+    <script>
+        const scenarios=[
+            {title:'📝 İki Sınıfın Sınav Notları',groupA:{name:'7-A Sınıfı',vals:[55,60,65,70,70,75,75,80,85,90],color:'#8B5CF6'},groupB:{name:'7-B Sınıfı',vals:[40,50,70,75,75,80,85,85,90,95],color:'#10B981'},
+            interp:'7-A\'nın ortalaması daha yüksek, ancak 7-B\'nin verileri daha geniş yayılmış (IQR büyük). 7-A daha homojen bir sınıf, 7-B\'de hem çok başarılı hem çok başarısız öğrenciler var.'},
+            {title:'🌡️ İki Şehrin Günlük Sıcaklıkları',groupA:{name:'İstanbul',vals:[8,10,12,14,16,16,18,20,22,24],color:'#06B6D4'},groupB:{name:'Ankara',vals:[2,4,6,12,18,22,26,28,28,30],color:'#F43F5E'},
+            interp:'İstanbul\'un sıcaklıkları daha dar aralıkta değişiyor (deniz etkisi). Ankara ise çok daha geniş bir aralıkta değişiyor (karasal iklim). İki şehrin medyanları birbirine yakın ama Ankara\'nın aralığı çok daha büyük.'},
+            {title:'🏃 İki Takımın Koşu Süreleri (sn)',groupA:{name:'Takım Kırmızı',vals:[12,13,13,14,14,15,15,16,17,20],color:'#F43F5E'},groupB:{name:'Takım Mavi',vals:[11,12,14,14,15,15,16,16,17,18],color:'#8B5CF6'},
+            interp:'Takım Mavi daha tutarlı bir performans sergiliyor (daha küçük standart sapma). Takım Kırmızı\'nın 20 saniyelik değeri bir aykırı değerdir ve ortalamayı yukarı çekiyor. Medyan karşılaştırması daha adil bir değerlendirme sağlar.'}
+        ];
+
+        let currentScene=0;
+        const COLORS=['#8B5CF6','#10B981','#06B6D4','#F43F5E','#F59E0B'];
+
+        function buildScenBtns(){
+            const sr=document.getElementById('scenRow');
+            scenarios.forEach((s,i)=>{
+                let b=document.createElement('button');
+                b.className='scen-btn'+(i===0?' active':'');
+                b.textContent=s.title;
+                b.onclick=()=>loadScene(i);
+                sr.appendChild(b);
+            });
+        }
+
+        function quantile(arr,q){let s=[...arr].sort((a,b)=>a-b),pos=(s.length-1)*q,lo=Math.floor(pos),hi=Math.ceil(pos);return s[lo]+(s[hi]-s[lo])*(pos-lo);}
+        function mean(arr){return arr.reduce((a,b)=>a+b,0)/arr.length;}
+
+        function loadScene(i){
+            currentScene=i;
+            document.querySelectorAll('.scen-btn').forEach((b,j)=>b.classList.toggle('active',j===i));
+            let s=scenarios[i];
+            drawDoubleBoxPlot(s.groupA,s.groupB);
+            drawStats(s.groupA,s.groupB);
+            document.getElementById('interp').innerHTML='<b>📖 Yorum:</b> '+s.interp;
+        }
+
+        function drawDoubleBoxPlot(gA,gB){
+            const cvs=document.getElementById('cvs');cvs.width=cvs.offsetWidth;
+            const ctx=cvs.getContext('2d');
+            let W=cvs.width,H=280;
+            let all=[...gA.vals,...gB.vals];
+            let minV=Math.min(...all)-3,maxV=Math.max(...all)+3;
+            let padL=120,padR=30,padT=30,padB=30;
+            function px(v){return padL+(v-minV)/(maxV-minV)*(W-padL-padR);}
+            ctx.clearRect(0,0,W,H);ctx.fillStyle='#161625';ctx.fillRect(0,0,W,H);
+            // Axis
+            ctx.strokeStyle='rgba(255,255,255,0.2)';ctx.lineWidth=1;
+            ctx.beginPath();ctx.moveTo(padL,H-padB);ctx.lineTo(W-padR,H-padB);ctx.stroke();
+            for(let v=Math.ceil(minV);v<=Math.floor(maxV);v+=5){
+                let x=px(v);
+                ctx.beginPath();ctx.moveTo(x,H-padB);ctx.lineTo(x,H-padB+5);ctx.stroke();
+                ctx.fillStyle='#94A3B8';ctx.font='600 11px Outfit';ctx.textAlign='center';
+                ctx.fillText(v,x,H-padB+16);
+            }
+            [[gA,80],[gB,185]].forEach(([g,midY])=>{
+                let srt=[...g.vals].sort((a,b)=>a-b);
+                let q1=quantile(srt,0.25),q2=quantile(srt,0.5),q3=quantile(srt,0.75),iqr=q3-q1;
+                let wL=Math.max(srt[0],q1-1.5*iqr),wU=Math.min(srt[srt.length-1],q3+1.5*iqr);
+                let outliers=srt.filter(v=>v<wL||v>wU);
+                // Whiskers
+                ctx.strokeStyle=g.color;ctx.lineWidth=2;ctx.setLineDash([]);
+                ctx.beginPath();ctx.moveTo(px(wL),midY);ctx.lineTo(px(q1),midY);ctx.stroke();
+                ctx.beginPath();ctx.moveTo(px(q3),midY);ctx.lineTo(px(wU),midY);ctx.stroke();
+                // Box
+                ctx.fillStyle=g.color+'33';ctx.fillRect(px(q1),midY-25,px(q3)-px(q1),50);
+                ctx.strokeStyle=g.color;ctx.lineWidth=3;ctx.strokeRect(px(q1),midY-25,px(q3)-px(q1),50);
+                // Median
+                ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(px(q2),midY-25);ctx.lineTo(px(q2),midY+25);ctx.stroke();
+                // Outliers
+                outliers.forEach(v=>{ctx.beginPath();ctx.arc(px(v),midY,7,0,Math.PI*2);ctx.fillStyle=g.color;ctx.fill();});
+                // Group label
+                ctx.fillStyle=g.color;ctx.font='800 14px Outfit';ctx.textAlign='right';
+                ctx.fillText(g.name,padL-8,midY+5);
+                // Mean dot
+                let m=mean(g.vals);
+                ctx.beginPath();ctx.arc(px(m),midY,5,0,Math.PI*2);ctx.fillStyle='white';ctx.fill();
+            });
+        }
+
+        function drawStats(gA,gB){
+            let sg=document.getElementById('statsGrid');sg.innerHTML='';
+            [[gA,'#8B5CF6'],[gB,'#10B981']].forEach(([g,c])=>{
+                let srt=[...g.vals].sort((a,b)=>a-b);
+                let m=mean(g.vals).toFixed(1);
+                let me=quantile(srt,0.5).toFixed(1);
+                let q1=quantile(srt,0.25).toFixed(1);
+                let q3=quantile(srt,0.75).toFixed(1);
+                let iqr=(parseFloat(q3)-parseFloat(q1)).toFixed(1);
+                [[`${g.name} — Ortalama`,m],[`${g.name} — Medyan`,me],[`${g.name} — IQR`,iqr]].forEach(([lbl,val])=>{
+                    sg.innerHTML+=`<div class="sg-card" style="border-color:${c}"><div class="sg-lbl">${lbl}</div><div class="sg-val" style="color:${c}">${val}</div></div>`;
+                });
+            });
+        }
+
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'BUTTON' && !e.target.hasAttribute('data-spam-locked')) {
+                e.target.setAttribute('data-spam-locked','true'); e.target.style.opacity='0.7'; e.target.style.pointerEvents='none';
+                setTimeout(() => { e.target.removeAttribute('data-spam-locked'); e.target.style.opacity='1'; e.target.style.pointerEvents='auto'; }, 400);
+            }
+        });
+
+        window.addEventListener('resize',()=>loadScene(currentScene));
+        buildScenBtns();
+        loadScene(0);
+    </script>
+</body>
+</html>

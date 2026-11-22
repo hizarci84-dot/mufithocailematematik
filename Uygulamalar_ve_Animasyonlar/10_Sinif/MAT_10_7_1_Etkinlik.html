@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10.7.1 - Dinamik Olasılık Ağacı</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #1a1a24;
+            --panel-bg: #262633;
+            --primary: #8C52FF; /* Purple */
+            --red-ball: #FF5757;
+            --blue-ball: #5CE1E6;
+            --text-main: #FFFFFF;
+            --text-muted: #A0A0B0;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background-color: var(--bg-color); color: var(--text-main);
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 1200px; display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 25px; background: var(--panel-bg);
+            border-radius: 12px; border: 1px solid rgba(140, 82, 255, 0.3);
+            margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+        
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 800; color: var(--primary); font-size: 1.2rem; }
+        .header-left img { width: 40px; height: 40px; border-radius: 8px; }
+        .kazanim { background: rgba(140, 82, 255, 0.2); padding: 5px 15px; border-radius: 6px; color: #FFF; font-size: 0.9rem; border: 1px solid var(--primary); }
+
+        h1 { font-size: 2.2rem; margin-bottom: 10px; text-align: center; }
+        .subtitle { color: var(--text-muted); font-size: 1.05rem; margin-bottom: 30px; text-align: center; max-width: 800px; }
+
+        .workspace { display: flex; flex-direction: row; gap: 20px; width: 100%; max-width: 1200px; }
+        @media (max-width: 900px) { .workspace { flex-direction: column; } }
+
+        .controls {
+            flex: 1; display: flex; flex-direction: column; gap: 20px; background: var(--panel-bg);
+            padding: 25px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        .input-group { display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; }
+        .ball-label { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 1.1rem; }
+        .dot { width: 20px; height: 20px; border-radius: 50%; box-shadow: inset -2px -2px 5px rgba(0,0,0,0.5); }
+        .dot.red { background-color: var(--red-ball); }
+        .dot.blue { background-color: var(--blue-ball); }
+        
+        input[type=number] {
+            width: 70px; padding: 8px; border-radius: 6px; border: 1px solid var(--text-muted);
+            background: rgba(255,255,255,0.1); color: white; font-weight: bold; font-size: 1.1rem; text-align: center;
+        }
+
+        .toggle-group { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+        .toggle-btn {
+            padding: 12px; border-radius: 8px; border: 2px solid var(--text-muted); background: transparent;
+            color: var(--text-muted); font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 1.05rem;
+        }
+        .toggle-btn.active { border-color: var(--primary); background: rgba(140, 82, 255, 0.2); color: white; }
+
+        .btn-generate {
+            background: var(--primary); color: white; border: none; padding: 15px; border-radius: 8px;
+            font-size: 1.2rem; font-weight: 800; cursor: pointer; transition: 0.2s; box-shadow: 0 0 15px rgba(140, 82, 255, 0.4);
+            margin-top: auto;
+        }
+        .btn-generate:hover { transform: translateY(-2px); box-shadow: 0 0 25px rgba(140, 82, 255, 0.6); }
+
+        .graph-container {
+            flex: 2; position: relative; background: #15151e;
+            border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);
+            min-height: 550px; display: flex; justify-content: center; align-items: center;
+            overflow: hidden; box-shadow: inset 0 0 40px rgba(0,0,0,0.8);
+        }
+
+        /* SVG Tree Styling */
+        svg { width: 100%; height: 100%; display: block; }
+        
+        .edge { stroke: rgba(255,255,255,0.2); stroke-width: 3; fill: none; stroke-linecap: round; }
+        
+        .node-circle { r: 25; stroke-width: 3; stroke: rgba(255,255,255,0.8); box-shadow: 0 0 10px black; }
+        .node-red { fill: var(--red-ball); }
+        .node-blue { fill: var(--blue-ball); }
+        .node-root { fill: #333; stroke: white; }
+        
+        .frac-text { fill: white; font-size: 16px; font-weight: bold; text-anchor: middle; }
+        .frac-bg { fill: rgba(0,0,0,0.7); rx: 5; ry: 5; }
+        
+        .result-box { fill: rgba(255,255,255,0.1); stroke: var(--primary); stroke-width: 2; rx: 8; ry: 8; }
+        .result-text { fill: white; font-size: 16px; font-weight: bold; text-anchor: middle; dominant-baseline: middle; }
+        
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8C52FF&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.10.7.1. Koşullu Olasılık (Ağaç Şeması)</div>
+    </div>
+    
+    <h1>Dinamik Olasılık Ağacı</h1>
+    <p class="subtitle">Torbadaki kırmızı ve mavi topların sayısını belirleyin. Art arda iki top çekildiğinde, topların geri atılıp atılmama durumuna göre (Bağımlı/Bağımsız Olay) tüm olasılık dallarının nasıl değiştiğini izleyin.</p>
+    
+    <div class="workspace">
+        <div class="controls">
+            
+            <div class="input-group">
+                <div class="ball-label"><div class="dot red"></div> Kırmızı Top</div>
+                <input type="number" id="inpRed" value="4" min="1" max="20">
+            </div>
+            
+            <div class="input-group">
+                <div class="ball-label"><div class="dot blue"></div> Mavi Top</div>
+                <input type="number" id="inpBlue" value="6" min="1" max="20">
+            </div>
+            
+            <div style="color:var(--text-muted); font-size:0.95rem; text-align:center;">Toplam <span id="totBall" style="color:white;font-weight:bold;">10</span> Top</div>
+            
+            <div class="toggle-group">
+                <button class="toggle-btn" id="btnReplace" onclick="setMode('replace')">Çekilen Topu GERİ AT (Bağımsız Olay)</button>
+                <button class="toggle-btn active" id="btnNoReplace" onclick="setMode('noreplace')">Çekilen Topu GERİ ATMA (Bağımlı Olay)</button>
+            </div>
+            
+            <button class="btn-generate" onclick="drawTree()">Ağaç Şemasını Çiz</button>
+            
+            <div id="infoBox" style="background: rgba(140,82,255,0.1); border-left: 4px solid var(--primary); padding: 15px; border-radius: 5px; font-size: 0.95rem; line-height: 1.5; margin-top:10px; display: none;">
+                <strong>Koşullu Olasılık P(A|B):</strong> Çekilen top geri atılmadığı için 2. çekilişte torbadaki top sayısı ve renklerin oranı ilk çekilişin sonucuna <em>bağlıdır</em>.
+            </div>
+        </div>
+        
+        <div class="graph-container">
+            <svg id="svgTree" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid meet">
+                <!-- Tree drawn via JS -->
+            </svg>
+        </div>
+    </div>
+
+    <script>
+        const inpR = document.getElementById('inpRed');
+        const inpB = document.getElementById('inpBlue');
+        const totBall = document.getElementById('totBall');
+        const svg = document.getElementById('svgTree');
+        const infoBox = document.getElementById('infoBox');
+        
+        let isReplace = false;
+
+        function setMode(mode) {
+            isReplace = (mode === 'replace');
+            document.getElementById('btnReplace').classList.toggle('active', isReplace);
+            document.getElementById('btnNoReplace').classList.toggle('active', !isReplace);
+            
+            if(isReplace) {
+                infoBox.innerHTML = `<strong>Bağımsız Olaylar P(A ∩ B) = P(A) · P(B):</strong> Çekilen top geri atıldığı için her çekilişte torbadaki top sayısı aynı kalır. 2. çekiliş ilk çekilişten <em>bağımsızdır</em>.`;
+            } else {
+                infoBox.innerHTML = `<strong>Koşullu Olasılık P(A|B):</strong> Çekilen top geri atılmadığı için 2. çekilişte torbadaki top sayısı ve renklerin oranı ilk çekilişin sonucuna <em>bağlıdır</em>.`;
+            }
+        }
+
+        [inpR, inpB].forEach(el => el.addEventListener('input', () => {
+            let r = parseInt(inpR.value)||0; let b = parseInt(inpB.value)||0;
+            totBall.innerText = r + b;
+        }));
+
+        function createNode(cx, cy, type) {
+            let c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            c.setAttribute("cx", cx); c.setAttribute("cy", cy);
+            c.setAttribute("class", "node-circle " + type);
+            return c;
+        }
+
+        function createEdge(x1, y1, x2, y2) {
+            let path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            // simple curve
+            let d = `M ${x1} ${y1} C ${(x1+x2)/2} ${y1}, ${(x1+x2)/2} ${y2}, ${x2} ${y2}`;
+            path.setAttribute("d", d);
+            path.setAttribute("class", "edge");
+            return path;
+        }
+
+        function createFrac(cx, cy, num, den) {
+            let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            
+            let bg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            bg.setAttribute("x", cx - 20); bg.setAttribute("y", cy - 25);
+            bg.setAttribute("width", 40); bg.setAttribute("height", 50);
+            bg.setAttribute("class", "frac-bg");
+            
+            let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line.setAttribute("x1", cx - 15); line.setAttribute("y1", cy);
+            line.setAttribute("x2", cx + 15); line.setAttribute("y2", cy);
+            line.setAttribute("stroke", "white"); line.setAttribute("stroke-width", "2");
+            
+            let txtNum = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            txtNum.setAttribute("x", cx); txtNum.setAttribute("y", cy - 5);
+            txtNum.setAttribute("class", "frac-text"); txtNum.textContent = num;
+            
+            let txtDen = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            txtDen.setAttribute("x", cx); txtDen.setAttribute("y", cy + 18);
+            txtDen.setAttribute("class", "frac-text"); txtDen.textContent = den;
+            
+            g.appendChild(bg); g.appendChild(line); g.appendChild(txtNum); g.appendChild(txtDen);
+            return g;
+        }
+
+        function createResultBox(x, y, text1, text2) {
+            let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            
+            let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            rect.setAttribute("x", x); rect.setAttribute("y", y - 25);
+            rect.setAttribute("width", 100); rect.setAttribute("height", 50);
+            rect.setAttribute("class", "result-box");
+            
+            let t1 = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            t1.setAttribute("x", x + 50); t1.setAttribute("y", y - 5);
+            t1.setAttribute("class", "result-text"); t1.textContent = text1;
+            
+            let t2 = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            t2.setAttribute("x", x + 50); t2.setAttribute("y", y + 15);
+            t2.setAttribute("class", "result-text"); t2.textContent = text2;
+            t2.setAttribute("fill", "#A0A0B0"); t2.setAttribute("font-size", "12px");
+            
+            g.appendChild(rect); g.appendChild(t1); g.appendChild(t2);
+            return g;
+        }
+
+        function simplify(n, d) {
+            let gcd = function(a, b) { return b ? gcd(b, a % b) : a; };
+            let g = gcd(n, d);
+            return [n/g, d/g];
+        }
+
+        function drawTree() {
+            svg.innerHTML = '';
+            infoBox.style.display = 'block';
+            
+            let R = parseInt(inpR.value) || 0;
+            let B = parseInt(inpB.value) || 0;
+            let T = R + B;
+            if(T === 0) return;
+
+            // Coordinates
+            let x0 = 100, y0 = 300; // Root
+            let x1 = 350, y1_top = 150, y1_bot = 450; // First Draw
+            let x2 = 600; // Second Draw
+            
+            // Draw Edges First
+            svg.appendChild(createEdge(x0, y0, x1, y1_top));
+            svg.appendChild(createEdge(x0, y0, x1, y1_bot));
+            
+            svg.appendChild(createEdge(x1, y1_top, x2, 75));
+            svg.appendChild(createEdge(x1, y1_top, x2, 225));
+            
+            svg.appendChild(createEdge(x1, y1_bot, x2, 375));
+            svg.appendChild(createEdge(x1, y1_bot, x2, 525));
+
+            // First Draw Probabilities
+            svg.appendChild(createFrac((x0+x1)/2 - 20, (y0+y1_top)/2 - 30, R, T)); // to Red
+            svg.appendChild(createFrac((x0+x1)/2 - 20, (y0+y1_bot)/2 + 30, B, T)); // to Blue
+            
+            // Second Draw Logic
+            let dR = isReplace ? 0 : 1;
+            
+            // If path 1 (Red drawn)
+            let T2_R = T - dR;
+            let R2_RR = R - dR; let B2_RR = B;
+            
+            svg.appendChild(createFrac((x1+x2)/2, (y1_top+75)/2 - 20, R2_RR, T2_R)); // RR
+            svg.appendChild(createFrac((x1+x2)/2, (y1_top+225)/2 + 20, B2_RR, T2_R)); // RB
+            
+            // If path 2 (Blue drawn)
+            let T2_B = T - dR;
+            let R2_BR = R; let B2_BB = B - dR;
+            
+            svg.appendChild(createFrac((x1+x2)/2, (y1_bot+375)/2 - 20, R2_BR, T2_B)); // BR
+            svg.appendChild(createFrac((x1+x2)/2, (y1_bot+525)/2 + 20, B2_BB, T2_B)); // BB
+
+            // Draw Nodes
+            svg.appendChild(createNode(x0, y0, "node-root"));
+            
+            svg.appendChild(createNode(x1, y1_top, "node-red"));
+            svg.appendChild(createNode(x1, y1_bot, "node-blue"));
+            
+            svg.appendChild(createNode(x2, 75, "node-red"));
+            svg.appendChild(createNode(x2, 225, "node-blue"));
+            
+            svg.appendChild(createNode(x2, 375, "node-red"));
+            svg.appendChild(createNode(x2, 525, "node-blue"));
+            
+            // Results Box
+            let r_RR = simplify(R * R2_RR, T * T2_R);
+            let r_RB = simplify(R * B2_RR, T * T2_R);
+            let r_BR = simplify(B * R2_BR, T * T2_B);
+            let r_BB = simplify(B * B2_BB, T * T2_B);
+            
+            svg.appendChild(createResultBox(x2 + 40, 75, `${r_RR[0]}/${r_RR[1]}`, "Kırmızı-Kırmızı"));
+            svg.appendChild(createResultBox(x2 + 40, 225, `${r_RB[0]}/${r_RB[1]}`, "Kırmızı-Mavi"));
+            svg.appendChild(createResultBox(x2 + 40, 375, `${r_BR[0]}/${r_BR[1]}`, "Mavi-Kırmızı"));
+            svg.appendChild(createResultBox(x2 + 40, 525, `${r_BB[0]}/${r_BB[1]}`, "Mavi-Mavi"));
+
+        }
+
+        window.onload = () => { setMode('noreplace'); drawTree(); };
+    </script>
+</body>
+</html>

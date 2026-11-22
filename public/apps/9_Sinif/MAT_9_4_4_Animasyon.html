@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trigonometri Birim Çember (Animasyon)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    
+    <!-- MATHJAX -->
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root { --bg:#0F0E17; --primary:#8B5CF6; --secondary:#10B981; --tertiary:#06B6D4; --danger:#F43F5E; --accent:#F59E0B; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Outfit',sans-serif; }
+        body { background:linear-gradient(135deg,var(--bg),#161625); color:#F8FAFC; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:20px; overflow-x:hidden; }
+        
+        .header { width:100%; max-width:1100px; display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); padding:15px 25px; border-radius:20px; border:1px solid rgba(139,92,246,0.2); margin-bottom:20px; backdrop-filter:blur(10px); }
+        .header-left { display:flex; align-items:center; gap:15px; font-weight:600; font-size:1.2rem; }
+        .header-left img { width:50px; height:50px; border-radius:50%; background:white; padding:2px; }
+        .kazanim { background:var(--primary); color:white; padding:8px 20px; border-radius:20px; font-weight:800; font-size:1rem; box-shadow: 0 0 20px rgba(139,92,246,0.4); }
+        
+        h1 { font-size:2.5rem; color:var(--tertiary); font-weight:900; text-align:center; margin-bottom:5px; }
+        .subtitle { color:#94A3B8; font-size:1.15rem; text-align:center; margin-bottom:25px; font-weight:600; max-width:800px; }
+        
+        .workspace { width:100%; max-width:1100px; background:#11111A; border:1px solid rgba(255,255,255,0.1); border-radius:24px; padding:30px; box-shadow:inset 0 0 50px rgba(0,0,0,0.5); display:flex; flex-direction:column; align-items:center; min-height:600px; position:relative; overflow:hidden; }
+        
+        .expl-text { background:rgba(139,92,246,0.15); border:1px solid rgba(139,92,246,0.4); padding:15px 25px; border-radius:15px; font-size:1.3rem; color:white; font-weight:800; text-align:center; width:100%; margin-bottom:20px; transition:all 0.5s; box-shadow:0 8px 32px rgba(0,0,0,0.3); min-height:65px; display:flex; align-items:center; justify-content:center; }
+        
+        .math-rule-box { background:rgba(15,14,23,0.95); border:2px solid #334155; padding:15px 30px; border-radius:15px; font-size:1.6rem; font-weight:900; color:white; display:flex; align-items:center; justify-content:center; transition:0.5s; min-width:400px; box-shadow:0 10px 20px rgba(0,0,0,0.5); margin-bottom:30px; }
+        
+        /* SVG Circle Area */
+        .svg-board { position:relative; width:600px; height:450px; background:rgba(255,255,255,0.02); border-radius:10px; border:1px solid rgba(255,255,255,0.1); display:flex; justify-content:center; align-items:center; overflow:hidden; }
+        
+        /* Axes */
+        .axis { fill:none; stroke:#475569; stroke-width:2; }
+        
+        /* Unit Circle */
+        .unit-circle { fill:rgba(255,255,255,0.02); stroke:rgba(255,255,255,0.3); stroke-width:3; stroke-dasharray:5,5; }
+        
+        /* Triangle */
+        .tri { fill:rgba(139,92,246,0.1); stroke:none; transition:d 0.05s; }
+        
+        .hyp { fill:none; stroke:var(--primary); stroke-width:4; stroke-linecap:round; }
+        .sin-line { fill:none; stroke:var(--danger); stroke-width:5; stroke-linecap:round; filter:drop-shadow(0 0 5px var(--danger)); }
+        .cos-line { fill:none; stroke:var(--secondary); stroke-width:5; stroke-linecap:round; filter:drop-shadow(0 0 5px var(--secondary)); }
+        
+        /* Point on circle */
+        .pt { fill:white; stroke:var(--primary); stroke-width:3; }
+        
+        /* Angle Arc */
+        .angle-arc { fill:rgba(245,158,11,0.2); stroke:var(--accent); stroke-width:2; }
+        
+        /* Labels */
+        .lbl-axis { fill:#94A3B8; font-family:Outfit; font-size:16px; font-weight:600; text-anchor: middle; dominant-baseline: middle; }
+        .lbl-val { font-family:Outfit; font-size:22px; font-weight:900; transition:0.1s; text-anchor: middle; dominant-baseline: middle; }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.9.4.4. Trigonometrik Oranlar (Animasyon)</div>
+    </div>
+    
+    <h1>Trigonometri ve Birim Çember</h1>
+    <p class="subtitle">Birim çember (Hipotenüsü 1 olan dik üçgen) sayesinde, Karşı dik kenar direkt <b>Sinüs</b>, Komşu dik kenar ise direkt <b>Kosinüs</b> olur.</p>
+    
+    <div class="workspace">
+        <div class="expl-text" id="explText">Merkezi orijin olan \( R = 1 \) yarıçaplı çember çiziliyor. Açı: \( 0^\circ \)</div>
+        
+        <div class="math-rule-box" id="ruleBox">
+            <span id="mathOutput">\( \sin(\alpha) = \frac{\text{Karşı}}{\text{Hipotenüs}} = \frac{y}{1} = y \)</span>
+        </div>
+        
+        <div class="svg-board">
+            <svg width="100%" height="100%" viewBox="-150 -100 600 450" preserveAspectRatio="xMidYMid meet" id="mainSvg">
+                
+                <!-- Center is at (150, 200). Radius R = 250px (Visual Scale for 1) -->
+                <!-- Origin translation is better -->
+                <g transform="translate(150, 250) scale(1, -1)">
+                    
+                    <!-- Axes -->
+                    <line class="axis" x1="-150" y1="0" x2="400" y2="0" />
+                    <line class="axis" x1="0" y1="-100" x2="0" y2="300" />
+                    
+                    <!-- Circle R=250 -->
+                    <circle class="unit-circle" cx="0" cy="0" r="250" />
+                    
+                    <!-- Angle Arc -->
+                    <path class="angle-arc" id="arc" d="M 50 0 A 50 50 0 0 1 50 0 L 0 0 Z" />
+                    
+                    <!-- Triangle Body -->
+                    <polygon class="tri" id="triBody" points="0,0 250,0 250,0" />
+                    
+                    <!-- Lines -->
+                    <line class="cos-line" id="cosLine" x1="0" y1="0" x2="250" y2="0" />
+                    <line class="sin-line" id="sinLine" x1="250" y1="0" x2="250" y2="0" />
+                    <line class="hyp" id="hypLine" x1="0" y1="0" x2="250" y2="0" />
+                    
+                    <circle class="pt" id="pointP" cx="250" cy="0" r="6" />
+                </g>
+                
+                <!-- Labels -->
+                <text x="360" y="270" class="lbl-axis">x (Kosinüs Ekseni)</text>
+                <text x="160" y="-70" class="lbl-axis">y (Sinüs Ekseni)</text>
+                
+                <text x="150" y="250" class="lbl-val" id="lblHyp" fill="#8B5CF6">R=1</text>
+                <text x="150" y="250" class="lbl-val" id="lblCos" fill="#10B981">cos</text>
+                <text x="150" y="250" class="lbl-val" id="lblSin" fill="#F43F5E">sin</text>
+                <text x="210" y="235" class="lbl-val" id="lblAngle" fill="#F59E0B">0°</text>
+
+            </svg>
+        </div>
+        
+    </div>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        const explText = document.getElementById('explText');
+        
+        function updateMath(texString) {
+            document.getElementById('mathOutput').innerHTML = texString;
+            MathJax.typesetPromise([document.getElementById('mathOutput')]);
+        }
+
+        const R = 250;
+        
+        function drawFrame(angleDeg) {
+            let rad = angleDeg * Math.PI / 180;
+            let cx = R * Math.cos(rad);
+            let cy = R * Math.sin(rad);
+            
+            document.getElementById('pointP').setAttribute('cx', cx);
+            document.getElementById('pointP').setAttribute('cy', cy);
+            
+            document.getElementById('cosLine').setAttribute('x2', cx);
+            document.getElementById('sinLine').setAttribute('x1', cx);
+            document.getElementById('sinLine').setAttribute('x2', cx);
+            document.getElementById('sinLine').setAttribute('y2', cy);
+            
+            document.getElementById('hypLine').setAttribute('x2', cx);
+            document.getElementById('hypLine').setAttribute('y2', cy);
+            
+            document.getElementById('triBody').setAttribute('points', `0,0 ${cx},0 ${cx},${cy}`);
+            
+            // Arc
+            let arcX = 50 * Math.cos(rad);
+            let arcY = 50 * Math.sin(rad);
+            // svg A rx ry x-axis-rotation large-arc-flag sweep-flag x y
+            document.getElementById('arc').setAttribute('d', `M 50 0 A 50 50 0 0 1 ${arcX} ${arcY} L 0 0 Z`);
+            
+            // Labels positions (Translate is at 150,250 and scale is 1, -1)
+            document.getElementById('lblCos').setAttribute('x', 150 + cx/2);
+            document.getElementById('lblCos').setAttribute('y', 280); // Below axis
+            
+            document.getElementById('lblSin').setAttribute('x', 150 + cx + 25);
+            document.getElementById('lblSin').setAttribute('y', 250 - cy/2);
+            
+            document.getElementById('lblHyp').setAttribute('x', 150 + cx/2 - 30);
+            document.getElementById('lblHyp').setAttribute('y', 250 - cy/2 - 25);
+            
+            document.getElementById('lblAngle').setAttribute('x', 150 + 70 * Math.cos(rad/2));
+            document.getElementById('lblAngle').setAttribute('y', 250 - 70 * Math.sin(rad/2));
+            document.getElementById('lblAngle').textContent = Math.round(angleDeg) + "°";
+        }
+
+        async function runSequence() {
+            MathJax.typesetPromise();
+            await sleep(2000);
+            
+            explText.innerHTML = "Hipotenüs uzunluğu 1 birim olan bu dik üçgeni yukarı doğru kaldırıyoruz.";
+            
+            // Animate to 30 deg
+            for(let a=0; a<=30; a++) {
+                drawFrame(a);
+                await sleep(40);
+            }
+            
+            explText.innerHTML = "Açı \( 30^\circ \). Karşı kenar <span style='color:#F43F5E;font-weight:900'>sin(30°) = 0.5</span> değerini alır.";
+            updateMath(`\\( \\sin(30^\\circ) = \\dfrac{\\textbf{Karşı}}{\\text{Hipotenüs}(1)} = \\)`
+              + ` <span style="color:#F43F5E;font-size:1.8rem;font-weight:900">0.5</span>`);
+            await sleep(3500);
+            
+            // Animate to 60 deg
+            explText.innerHTML = "Açıyı daha da büyüttüğümüzde, dik üçgenin yüksekliği (sinüs) artar, tabanı (kosinüs) kısalır.";
+            for(let a=31; a<=60; a++) {
+                drawFrame(a);
+                await sleep(40);
+            }
+            
+            updateMath(`\\( \\cos(60^\\circ) = \\dfrac{\\textbf{Komşu}}{\\text{Hipotenüs}(1)} = \\)`
+              + ` <span style="color:#10B981;font-size:1.8rem;font-weight:900">0.5</span>`);
+            await sleep(3500);
+            
+            // Animate to 90 deg
+            explText.innerHTML = "Açı \( 90^\circ \) olduğunda Komşu (Kosinüs) tamamen sıfırlanır, Karşı (Sinüs) tam kapasiteye (1) ulaşır.";
+            for(let a=61; a<=90; a++) {
+                drawFrame(a);
+                await sleep(40);
+            }
+            
+            updateMath(`\\( \\sin(90^\\circ) = 1 \\quad , \\quad \\cos(90^\\circ) = 0 \\)`);
+            
+            await sleep(4000);
+            explText.innerHTML = "🔄 Animasyon bitti. Trigonometri aslında Birim Çemberin gölgelerinden ibarettir.";
+        }
+
+        window.onload = runSequence;
+    </script>
+</body>
+</html>

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10.2.3 - Parçalı Fonksiyon (Kargo Fiyatlandırma) Animasyonu</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --panel-bg: #1e293b;
+            --primary: #f59e0b; /* Amber */
+            --accent1: #10b981; /* Emerald */
+            --accent2: #38bdf8; /* Sky */
+            --accent3: #f43f5e; /* Rose */
+            --text-main: #f8fafc;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        
+        body { background-color: var(--bg-color); color: var(--text-main); display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; }
+
+        .header { width: 100%; max-width: 1000px; display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background: var(--panel-bg); border-radius: 12px; margin-bottom: 20px; border: 1px solid rgba(245, 158, 11, 0.3); }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 800; color: var(--primary); font-size: 1.2rem; }
+        .kazanim { background: rgba(245, 158, 11, 0.1); padding: 5px 15px; border-radius: 6px; color: var(--primary); }
+
+        h1 { font-size: 2.2rem; margin-bottom: 10px; text-align: center; }
+        .subtitle { color: #94a3b8; font-size: 1.05rem; margin-bottom: 30px; text-align: center; max-width: 800px; }
+
+        .container { display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 1000px; }
+
+        .dashboard { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
+        @media(max-width: 800px) { .dashboard { grid-template-columns: 1fr; } }
+
+        .controls { background: var(--panel-bg); padding: 25px; border-radius: 12px; display: flex; flex-direction: column; gap: 20px; border: 1px solid rgba(255,255,255,0.05); }
+
+        .scale-area {
+            background: #0f172a; border-radius: 12px; padding: 20px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border: 2px solid #334155; height: 200px; position: relative;
+        }
+
+        .box {
+            width: 80px; height: 80px; background: #854d0e; border: 2px solid #a16207;
+            position: absolute; bottom: 60px; display: flex; justify-content: center; align-items: center;
+            font-weight: 800; font-size: 1.2rem; box-shadow: 0 10px 15px rgba(0,0,0,0.5);
+            transition: transform 0.1s;
+        }
+        .box::after { content: '📦'; font-size: 2rem; }
+        
+        .scale-base {
+            width: 150px; height: 20px; background: #cbd5e1; position: absolute; bottom: 40px;
+            border-radius: 5px; box-shadow: 0 5px 0 #94a3b8;
+        }
+
+        .screen {
+            background: #020617; border: 2px solid var(--accent1); border-radius: 8px; padding: 10px 15px;
+            text-align: center; color: var(--accent1); font-family: monospace; font-size: 1.8rem; font-weight: bold;
+            box-shadow: inset 0 0 10px rgba(16, 185, 129, 0.5); margin-bottom: 10px; width: 100%;
+        }
+
+        .slider-group label { display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 8px; font-size: 0.95rem; }
+        input[type=range] { width: 100%; accent-color: var(--primary); }
+        .val-badge { color: var(--primary); font-weight: 800; background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 4px; }
+
+        .btn { background: var(--primary); color: black; border: none; padding: 12px; border-radius: 8px; font-size: 1.1rem; font-weight: 800; cursor: pointer; transition: 0.2s; }
+        .btn:hover { filter: brightness(1.1); }
+
+        .graph-container {
+            background: #0b1120; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative; overflow: hidden; min-height: 400px; display: flex; align-items: center; justify-content: center;
+        }
+
+        svg { width: 100%; height: 100%; display: block; }
+        .grid-line { stroke: rgba(255,255,255,0.1); stroke-width: 1; }
+        .axis-line { stroke: rgba(255,255,255,0.5); stroke-width: 2; }
+        .axis-label { fill: rgba(255,255,255,0.6); font-size: 14px; font-weight: 600; }
+        
+        .line-p1 { stroke: var(--accent1); stroke-width: 4; fill: none; filter: drop-shadow(0 0 5px var(--accent1)); }
+        .line-p2 { stroke: var(--accent2); stroke-width: 4; fill: none; filter: drop-shadow(0 0 5px var(--accent2)); }
+        .line-p3 { stroke: var(--accent3); stroke-width: 4; fill: none; filter: drop-shadow(0 0 5px var(--accent3)); }
+        
+        .current-point { fill: #fff; stroke: var(--primary); stroke-width: 3; filter: drop-shadow(0 0 5px #fff); transition: cx 0.1s, cy 0.1s; }
+        .current-label { fill: white; font-size: 16px; font-weight: 800; transition: x 0.1s, y 0.1s; }
+
+        .math-eq { text-align: center; font-size: 1.1rem; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px;}
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left"><span>@mufithocailematematik</span></div>
+        <div class="kazanim">MAT.10.2.3. Parçalı Fonksiyonlar (Animasyon)</div>
+    </div>
+    
+    <h1>Kargo Ücreti Simülasyonu</h1>
+    <p class="subtitle">Kargo şirketleri ağırlığa göre farklı tarife (kural) uygularlar. 0-5 kg arası sabit 30₺, 5-10 kg arası her kilo +5₺, 10 kg üstü her kilo +10₺ artar.</p>
+    
+    <div class="container">
+        
+        <div class="dashboard">
+            <div class="controls">
+                
+                <div class="scale-area">
+                    <div class="screen" id="weightScreen">0.0 kg</div>
+                    <div class="box" id="boxElem"></div>
+                    <div class="scale-base"></div>
+                </div>
+                
+                <div style="text-align:center; font-size: 1.2rem; font-weight:800; color:var(--primary);" id="costScreen">Ücret: 0.00 ₺</div>
+                
+                <div class="slider-group">
+                    <label>Kargo Ağırlığı (kg) <span class="val-badge" id="valW">0 kg</span></label>
+                    <input type="range" id="slW" min="0" max="15" step="0.1" value="0">
+                </div>
+                
+                <button class="btn" id="btnAnim">Otomatik Tart</button>
+                
+                <div class="math-eq" id="mathEq">
+                    \( f(x) = \begin{cases} 30, & 0 < x \le 5 \\ 30 + 5(x-5), & 5 < x \le 10 \\ 55 + 10(x-10), & x > 10 \end{cases} \)
+                </div>
+            </div>
+            
+            <div class="graph-container">
+                <svg viewBox="-2 -10 18 120" preserveAspectRatio="none" id="graphSvg">
+                    <g transform="scale(1, -1)">
+                        <g id="gridGroup"></g>
+                        <!-- Axes -->
+                        <line x1="0" y1="0" x2="16" y2="0" class="axis-line" />
+                        <line x1="0" y1="0" x2="0" y2="120" class="axis-line" />
+                        
+                        <path id="path1" class="line-p1" d="" />
+                        <path id="path2" class="line-p2" d="" />
+                        <path id="path3" class="line-p3" d="" />
+                        
+                        <circle id="currPt" class="current-point" cx="0" cy="0" r="0.4" style="display:none;" />
+                    </g>
+                    <g id="labelsGroup"></g>
+                    <text id="currLbl" class="current-label" x="0" y="0" style="display:none;"></text>
+                </svg>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const slW = document.getElementById('slW');
+        const valW = document.getElementById('valW');
+        const weightScreen = document.getElementById('weightScreen');
+        const costScreen = document.getElementById('costScreen');
+        const boxElem = document.getElementById('boxElem');
+        
+        const path1 = document.getElementById('path1');
+        const path2 = document.getElementById('path2');
+        const path3 = document.getElementById('path3');
+        const currPt = document.getElementById('currPt');
+        const currLbl = document.getElementById('currLbl');
+        
+        function f(x) {
+            if(x === 0) return 0;
+            if(x <= 5) return 30;
+            if(x <= 10) return 30 + 5 * (x - 5);
+            return 55 + 10 * (x - 10);
+        }
+
+        function drawBaseGraph() {
+            let gridHtml = ''; let labelHtml = '';
+            
+            // X axis: 0 to 15
+            for(let x=1; x<=15; x++) {
+                gridHtml += `<line x1="${x}" y1="0" x2="${x}" y2="120" class="grid-line"/>`;
+                if(x%2===0 || x===5) labelHtml += `<text x="${x}" y="5" class="axis-label" text-anchor="middle">${x}</text>`;
+            }
+            
+            // Y axis: 0 to 110
+            for(let y=10; y<=110; y+=10) {
+                gridHtml += `<line x1="0" y1="${y}" x2="16" y2="${y}" class="grid-line"/>`;
+                labelHtml += `<text x="-0.5" y="${-y}" class="axis-label" text-anchor="end" dominant-baseline="middle">${y}</text>`;
+            }
+            
+            document.getElementById('gridGroup').innerHTML = gridHtml;
+            document.getElementById('labelsGroup').innerHTML = labelHtml;
+            
+            // Draw paths
+            path1.setAttribute('d', `M 0 30 L 5 30`);
+            path2.setAttribute('d', `M 5 30 L 10 55`);
+            path3.setAttribute('d', `M 10 55 L 15 105`);
+        }
+
+        function updateSimulation(val) {
+            valW.innerText = `${val.toFixed(1)} kg`;
+            weightScreen.innerText = `${val.toFixed(1)} kg`;
+            
+            // Visual box squash
+            let squash = 1 - (val / 15) * 0.15; // squash up to 85%
+            boxElem.style.transform = `scaleY(${squash})`;
+            boxElem.style.bottom = `${60 - (1 - squash)*40}px`;
+            
+            let y = f(val);
+            costScreen.innerText = `Ücret: ${y.toFixed(2)} ₺`;
+            
+            if(val > 0) {
+                currPt.setAttribute('cx', val);
+                currPt.setAttribute('cy', y);
+                currPt.style.display = 'block';
+                
+                currLbl.setAttribute('x', val + 0.5);
+                currLbl.setAttribute('y', -y - 3);
+                currLbl.textContent = `(${val.toFixed(1)}, ${y.toFixed(1)})`;
+                currLbl.style.display = 'block';
+            } else {
+                currPt.style.display = 'none';
+                currLbl.style.display = 'none';
+            }
+            
+            // Change screen color based on part
+            if(val <= 5) { weightScreen.style.borderColor = 'var(--accent1)'; weightScreen.style.color = 'var(--accent1)'; }
+            else if (val <= 10) { weightScreen.style.borderColor = 'var(--accent2)'; weightScreen.style.color = 'var(--accent2)'; }
+            else { weightScreen.style.borderColor = 'var(--accent3)'; weightScreen.style.color = 'var(--accent3)'; }
+        }
+
+        slW.addEventListener('input', (e) => {
+            updateSimulation(parseFloat(e.target.value));
+        });
+
+        // Auto Animation
+        let animFrame;
+        let isAnim = false;
+        let currentW = 0;
+        
+        document.getElementById('btnAnim').addEventListener('click', () => {
+            if(isAnim) {
+                cancelAnimationFrame(animFrame);
+                isAnim = false;
+                document.getElementById('btnAnim').innerText = "Otomatik Tart";
+            } else {
+                currentW = 0;
+                isAnim = true;
+                document.getElementById('btnAnim').innerText = "Durdur";
+                runAnim();
+            }
+        });
+
+        function runAnim() {
+            if(currentW >= 15) {
+                isAnim = false;
+                document.getElementById('btnAnim').innerText = "Tekrarla";
+                return;
+            }
+            currentW += 0.05;
+            slW.value = currentW;
+            updateSimulation(currentW);
+            animFrame = requestAnimationFrame(runAnim);
+        }
+
+        window.onload = () => { drawBaseGraph(); updateSimulation(0); };
+    </script>
+</body>
+</html>

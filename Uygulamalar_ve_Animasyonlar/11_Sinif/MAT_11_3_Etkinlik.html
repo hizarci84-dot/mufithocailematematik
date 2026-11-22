@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>11.3 - Serpme Diyagramı ve Korelasyon Etkinliği</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0A0A12;
+            --panel-bg: #151522;
+            --primary: #00F0FF; 
+            --secondary: #FF00E4; 
+            --accent: #FFE600; 
+            --text-main: #FFFFFF;
+            --text-muted: #8A8A9E;
+            --grid-line: rgba(0, 240, 255, 0.12);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background-color: var(--bg-color); color: var(--text-main);
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; padding: 20px; overflow-x: hidden;
+            background-image: 
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        .header {
+            width: 100%; max-width: 1200px; display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 25px; background: rgba(21, 21, 34, 0.85); backdrop-filter: blur(10px);
+            border-radius: 16px; border: 1px solid rgba(0, 240, 255, 0.3);
+            margin-bottom: 20px; box-shadow: 0 0 20px rgba(0, 240, 255, 0.15);
+        }
+        
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 800; color: var(--primary); font-size: 1.1rem; }
+        .header-left img { width: 45px; height: 45px; border-radius: 10px; border: 1px solid var(--primary); }
+        .kazanim { background: rgba(0, 240, 255, 0.1); padding: 8px 15px; border-radius: 8px; color: var(--primary); font-weight: 600; font-size: 0.85rem; border: 1px solid rgba(0, 240, 255, 0.3); }
+
+        h1 { font-size: 2rem; font-weight: 900; margin-bottom: 8px; text-align: center; text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 0 10px rgba(0, 240, 255, 0.5); }
+        .subtitle { color: var(--text-muted); font-size: 1rem; margin-bottom: 25px; text-align: center; max-width: 900px; }
+
+        .workspace { display: flex; flex-direction: row; gap: 20px; width: 100%; max-width: 1200px; }
+        @media (max-width: 900px) { .workspace { flex-direction: column; } }
+
+        .controls {
+            flex: 1; display: flex; flex-direction: column; gap: 16px; background: var(--panel-bg);
+            padding: 22px; border-radius: 16px; border: 1px solid rgba(0, 240, 255, 0.3);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5); min-width: 320px;
+        }
+
+        .slider-group { background: rgba(0,0,0,0.4); padding: 16px; border-radius: 8px; border-left: 4px solid var(--primary); margin-bottom: 10px; }
+        .slider-header { display: flex; justify-content: space-between; margin-bottom: 12px; font-weight: 600; color: var(--text-main); font-size: 1rem; }
+        .slider-val { color: var(--primary); font-family: monospace; font-size: 1.4rem; font-weight: bold; }
+        
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; }
+        input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border-radius: 50%; background: var(--primary); cursor: pointer; -webkit-appearance: none; margin-top: -8px; box-shadow: 0 0 12px var(--primary); }
+
+        .btn-regen {
+            padding: 12px; background: rgba(0, 240, 255, 0.1); border: 1px solid var(--primary);
+            color: var(--primary); font-weight: 800; border-radius: 8px; cursor: pointer; transition: 0.3s;
+        }
+        .btn-regen:hover { background: rgba(0, 240, 255, 0.3); box-shadow: 0 0 15px rgba(0, 240, 255, 0.4); }
+
+        .math-box {
+            background: rgba(0,0,0,0.6); border: 1px dashed var(--accent); padding: 20px;
+            border-radius: 12px; font-size: 1.1rem; text-align: center; margin-top: auto; color: var(--text-main);
+            line-height: 1.8; min-height: 180px; display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+
+        .visual-container { flex: 2.2; display: flex; flex-direction: column; gap: 15px; }
+        
+        .graph-container {
+            display: flex; width: 100%; height: 500px; position: relative;
+            background: #0A0A12; border-radius: 16px; border: 2px solid var(--primary);
+            overflow: hidden; box-shadow: 0 0 30px rgba(0, 240, 255, 0.15) inset;
+        }
+
+        svg { width: 100%; height: 100%; display: block; }
+        
+        .svg-grid { stroke: rgba(255,255,255,0.06); stroke-width: 1; }
+        .svg-axis { stroke: rgba(255,255,255,0.3); stroke-width: 2; }
+        
+        .data-point { fill: var(--primary); opacity: 0.8; stroke: #0A0A12; stroke-width: 1.5; filter: drop-shadow(0 0 3px var(--primary)); transition: cx 0.2s, cy 0.2s; }
+        .best-fit-line { stroke: var(--accent); stroke-width: 2; stroke-dasharray: 8, 8; filter: drop-shadow(0 0 6px var(--accent)); transition: 0.2s; }
+        
+        .svg-label { fill: var(--text-muted); font-size: 14px; font-weight: 600; }
+        .svg-title { fill: var(--text-main); font-size: 16px; font-weight: 800; opacity: 0.9; }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=00F0FF&color=000'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.11.3. İstatistik - Serpme Diyagramı ve Korelasyon</div>
+    </div>
+    
+    <h1>Korelasyon Analizi (r)</h1>
+    <p class="subtitle">Korelasyon katsayısını (r) değiştirerek iki değişken (X ve Y) arasındaki ilişkinin yönünü (pozitif/negatif) ve gücünü (zayıf/güçlü) serpme diyagramında inceleyin.</p>
+    
+    <div class="workspace">
+        <div class="controls">
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span>Korelasyon (r)</span>
+                    <span class="slider-val" id="valR">0.80</span>
+                </div>
+                <input type="range" id="slideR" min="-1.0" max="1.0" step="0.05" value="0.80">
+            </div>
+
+            <button class="btn-regen" onclick="generateBaseData()">Rastgele Veri Üret</button>
+
+            <div class="math-box" id="mathOutput">
+                <!-- Status & Math -->
+            </div>
+        </div>
+        
+        <div class="visual-container">
+            <div class="graph-container">
+                <svg id="scatterSvg" viewBox="0 0 500 500">
+                    <g id="gridGroup"></g>
+                    <!-- Axes (from 50 to 450) -->
+                    <line x1="50" y1="450" x2="450" y2="450" class="svg-axis" />
+                    <line x1="50" y1="50" x2="50" y2="450" class="svg-axis" />
+                    <g id="labelsGroup"></g>
+                    
+                    <!-- Line of best fit -->
+                    <line id="bestFitLine" class="best-fit-line" x1="0" y1="0" x2="0" y2="0" />
+                    
+                    <!-- Points -->
+                    <g id="pointsGroup"></g>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const slideR = document.getElementById('slideR'); 
+        const valR = document.getElementById('valR');
+        const mathOutput = document.getElementById('mathOutput');
+        
+        const gridGroup = document.getElementById('gridGroup');
+        const labelsGroup = document.getElementById('labelsGroup');
+        const pointsGroup = document.getElementById('pointsGroup');
+        const bestFitLine = document.getElementById('bestFitLine');
+        
+        let isTypesetting = false;
+        let pendingTex = null;
+        
+        // Base standard normal values for X and Noise
+        let N = 40;
+        let base_x = [];
+        let base_noise = [];
+
+        // Box-Muller transform for normal distribution
+        function randomNormal() {
+            let u = 0, v = 0;
+            while(u === 0) u = Math.random();
+            while(v === 0) v = Math.random();
+            return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+        }
+
+        function generateBaseData() {
+            base_x = [];
+            base_noise = [];
+            for(let i=0; i<N; i++) {
+                base_x.push(randomNormal());
+                base_noise.push(randomNormal());
+            }
+            updateVisuals();
+        }
+
+        function renderMathClean(texString) {
+            if (isTypesetting) {
+                pendingTex = texString;
+                return;
+            }
+            isTypesetting = true;
+            
+            let temp = document.createElement('div');
+            temp.style.position = 'absolute';
+            temp.style.top = '-9999px';
+            temp.style.left = '-9999px';
+            temp.style.visibility = 'hidden';
+            temp.innerHTML = texString;
+            document.body.appendChild(temp);
+            
+            MathJax.typesetPromise([temp]).then(() => {
+                mathOutput.innerHTML = temp.innerHTML;
+                if (temp.parentNode) document.body.removeChild(temp);
+                isTypesetting = false;
+                
+                if (pendingTex) {
+                    let next = pendingTex;
+                    pendingTex = null;
+                    renderMathClean(next);
+                }
+            }).catch(err => {
+                if (temp.parentNode) document.body.removeChild(temp);
+                isTypesetting = false;
+            });
+        }
+
+        function drawGrid() {
+            let gridHtml = '';
+            let labelHtml = '';
+            
+            for(let i=1; i<=10; i++) {
+                let px = 50 + i * (400/10);
+                gridHtml += `<line x1="${px}" y1="50" x2="${px}" y2="450" class="svg-grid" />`;
+                labelHtml += `<text x="${px}" y="470" class="svg-label" text-anchor="middle">${i*10}</text>`;
+                
+                let py = 450 - i * (400/10);
+                gridHtml += `<line x1="50" y1="${py}" x2="450" y2="${py}" class="svg-grid" />`;
+                labelHtml += `<text x="40" y="${py+5}" class="svg-label" text-anchor="end">${i*10}</text>`;
+            }
+            
+            labelHtml += `<text x="450" y="485" class="svg-title" text-anchor="end">X Değişkeni</text>`;
+            labelHtml += `<text x="20" y="30" class="svg-title" text-anchor="start">Y Değişkeni</text>`;
+
+            gridGroup.innerHTML = gridHtml;
+            labelsGroup.innerHTML = labelHtml;
+        }
+
+        function updateVisuals() {
+            let r = parseFloat(slideR.value);
+            valR.innerText = (r > 0 ? "+" : "") + r.toFixed(2);
+            
+            // X and Y arrays
+            let x_vals = [];
+            let y_vals = [];
+            
+            for(let i=0; i<N; i++) {
+                // y = r*x + sqrt(1-r^2)*noise
+                let curX = base_x[i];
+                let curY = r * curX + Math.sqrt(1 - r*r) * base_noise[i];
+                x_vals.push(curX);
+                y_vals.push(curY);
+            }
+            
+            // Map standard normal (-3 to 3 approx) to SVG coords (50 to 450, center 250)
+            let pointsHtml = "";
+            let scale = 60; // scale factor
+            
+            // We want points strictly within bounds roughly
+            for(let i=0; i<N; i++) {
+                let svgX = 250 + x_vals[i] * scale;
+                let svgY = 250 - y_vals[i] * scale; // inverted Y
+                
+                // clamp just in case
+                if(svgX < 50) svgX = 50; if(svgX > 450) svgX = 450;
+                if(svgY < 50) svgY = 50; if(svgY > 450) svgY = 450;
+                
+                pointsHtml += `<circle cx="${svgX}" cy="${svgY}" r="5" class="data-point" />`;
+            }
+            pointsGroup.innerHTML = pointsHtml;
+            
+            // Best fit line (standardized variables => slope = r)
+            // Passes through (0,0) in standard normal space => (250, 250) in SVG
+            // Line: Y = r * X
+            let x1 = -3, y1 = r * x1;
+            let x2 = 3, y2 = r * x2;
+            
+            bestFitLine.setAttribute("x1", 250 + x1*scale);
+            bestFitLine.setAttribute("y1", 250 - y1*scale);
+            bestFitLine.setAttribute("x2", 250 + x2*scale);
+            bestFitLine.setAttribute("y2", 250 - y2*scale);
+            
+            // Math Output Analysis
+            let status = "";
+            if(Math.abs(r) < 0.3) status = "Zayıf";
+            else if(Math.abs(r) < 0.7) status = "Orta Şiddetli";
+            else if(Math.abs(r) < 1.0) status = "Güçlü";
+            else status = "Mükemmel";
+            
+            let yon = (r > 0) ? "Pozitif" : (r < 0 ? "Negatif" : "");
+            
+            let resText = "";
+            if(r === 0) resText = "İlişki Yok";
+            else resText = `${yon} ve ${status} İlişki`;
+            
+            let tex = `\\( \\text{Korelasyon Katsayısı } (r) = ${r.toFixed(2)} \\) <br><br>`;
+            tex += `<span style="color:var(--accent); font-weight:800; font-size:1.3rem;">${resText}</span>`;
+            
+            renderMathClean(tex);
+        }
+
+        slideR.addEventListener('input', updateVisuals);
+
+        window.onload = () => {
+            drawGrid();
+            generateBaseData(); // calls updateVisuals
+        };
+    </script>
+</body>
+</html>

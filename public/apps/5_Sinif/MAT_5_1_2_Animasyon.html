@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerçek Yaşam Problemleri Animasyonu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-top: #0F172A;
+            --bg-bottom: #1E3A8A;
+            --text-color: #F8FAFC;
+            --accent: #38BDF8; /* Ice blue */
+            --danger: #F87171; /* Red for melting/decrease */
+            --success: #34D399;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
+            color: var(--text-color);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Branding */
+        .brand-header {
+            position: absolute;
+            top: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 25px;
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+
+        .brand-header img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: contain;
+            background: white;
+            padding: 2px;
+        }
+
+        .brand-header span {
+            color: #E0F2FE;
+            font-weight: 600;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Kazanım Box */
+        .kazanim-box {
+            position: absolute;
+            bottom: 30px;
+            padding: 15px 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            text-align: center;
+            z-index: 100;
+        }
+
+        .kazanim-box p {
+            font-size: 1rem;
+            color: #E0F2FE;
+        }
+
+        /* Scene Container */
+        .scene {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+
+        .scene.active {
+            opacity: 1;
+        }
+
+        /* Elements */
+        .icon-large {
+            font-size: 8rem;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+            transition: transform 2s ease;
+        }
+        
+        .shrink .icon-large {
+            transform: scale(0.6);
+        }
+
+        .title-text {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 30px;
+            color: var(--accent);
+            line-height: 1.4;
+        }
+
+        .calc-row {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            font-size: 4rem;
+            font-weight: 800;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 1s ease;
+        }
+        .show-calc .calc-row {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .num-start { color: #E2E8F0; }
+        .num-minus { color: var(--danger); font-size: 3rem; }
+        .num-sub { color: var(--danger); }
+        .num-eq { color: var(--accent); }
+        .num-result { 
+            color: var(--success); 
+            opacity: 0;
+            transition: opacity 1s ease 1s;
+        }
+        
+        .show-result .num-result {
+            opacity: 1;
+        }
+
+        .final-msg {
+            margin-top: 40px;
+            font-size: 2rem;
+            color: #FDE047;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 1s ease 2s;
+        }
+        
+        .show-result .final-msg {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Replay Button */
+        #replayBtn {
+            position: absolute;
+            right: 30px;
+            bottom: 30px;
+            background: #38BDF8;
+            color: #0F172A;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            cursor: pointer;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+            z-index: 100;
+        }
+        
+        #replayBtn.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="brand-header">
+        <img src="../../logom.png" alt="Müfit Hoca Logo">
+        <span>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+            @mufithocailematematik
+        </span>
+    </div>
+
+    <!-- SCENE 1 -->
+    <div id="scene1" class="scene">
+        <div class="icon-large">🐻‍❄️ 🧊</div>
+        <div class="title-text">Küresel ısınma nedeniyle kutuplardaki buzullar eriyor...</div>
+    </div>
+
+    <!-- SCENE 2 -->
+    <div id="scene2" class="scene">
+        <div class="title-text" id="s2-title">2010 yılında buzulların alanı <strong>75.400 km²</strong> idi.</div>
+        <div class="icon-large" id="iceberg">🧊</div>
+    </div>
+    
+    <!-- SCENE 3 -->
+    <div id="scene3" class="scene">
+        <div class="title-text">2023 yılına geldiğimizde <strong>12.300 km²</strong> buzul eridi.</div>
+        <div class="calc-row" id="calcRow">
+            <div class="num-start">75.400</div>
+            <div class="num-minus">-</div>
+            <div class="num-sub">12.300</div>
+            <div class="num-eq">=</div>
+            <div class="num-result">63.100</div>
+        </div>
+        <div class="final-msg" id="finalMsg">Geriye 63.100 km² buzul kaldı. Dünyamızı koruyalım! 🌍</div>
+    </div>
+
+    <div class="kazanim-box">
+        <p><strong>MAT.5.1.2.</strong> Doğal sayılar ve işlemler içeren gerçek yaşam problemlerini çözebilme.</p>
+    </div>
+
+    <button id="replayBtn" onclick="startSequence()">Tekrar Oynat</button>
+
+    <script>
+        const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+        async function startSequence() {
+            // Reset state
+            document.getElementById('scene1').classList.remove('active');
+            document.getElementById('scene2').classList.remove('active', 'shrink');
+            document.getElementById('scene3').classList.remove('active', 'show-calc', 'show-result');
+            document.getElementById('replayBtn').classList.remove('visible');
+
+            await sleep(500);
+
+            // Scene 1
+            document.getElementById('scene1').classList.add('active');
+            await sleep(3500);
+            document.getElementById('scene1').classList.remove('active');
+            await sleep(1000);
+
+            // Scene 2
+            document.getElementById('scene2').classList.add('active');
+            await sleep(2500);
+            
+            // Shrink Iceberg to simulate melting
+            document.getElementById('s2-title').innerHTML = "Buzullar erimeye başladı...";
+            document.getElementById('scene2').classList.add('shrink');
+            await sleep(2000);
+            document.getElementById('scene2').classList.remove('active');
+            await sleep(1000);
+
+            // Scene 3
+            document.getElementById('scene3').classList.add('active');
+            await sleep(2000);
+            
+            // Show calculation
+            document.getElementById('scene3').classList.add('show-calc');
+            await sleep(2000);
+            
+            // Show result
+            document.getElementById('scene3').classList.add('show-result');
+            await sleep(4000);
+
+            // Replay
+            document.getElementById('replayBtn').classList.add('visible');
+        }
+
+        window.onload = startSequence;
+    </script>
+</body>
+</html>

@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dağılma Özelliği Animasyonu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A;
+            --text: #F8FAFC;
+            --c1: #EF4444; /* Red / Roman */
+            --c2: #3B82F6; /* Blue / Hikaye */
+            --c-shelf: #475569;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px 25px;
+            border-radius: 20px;
+            margin-bottom: 40px;
+            margin-top: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: #38BDF8; color: #0F172A; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        /* Main Container - Flex column prevents overlap */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 800px;
+            gap: 40px;
+        }
+
+        /* Title Area */
+        .title-area {
+            text-align: center;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        h1 {
+            font-size: 2.2rem;
+            color: #38BDF8;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.8s ease;
+        }
+        .show-title h1 { opacity: 1; transform: translateY(0); }
+        .hl-red { color: var(--c1); font-weight: 800; }
+        .hl-blue { color: var(--c2); font-weight: 800; }
+
+        /* Visual Area */
+        .visual-area {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background: rgba(255,255,255,0.03);
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.05);
+            width: 100%;
+            align-items: center;
+        }
+
+        .row {
+            display: flex;
+            gap: 20px;
+            opacity: 0;
+            transform: scale(0.9);
+            transition: all 0.5s ease;
+        }
+        
+        .show-r1 .r1, .show-r2 .r2, .show-r3 .r3, .show-r4 .r4, .show-r5 .r5 { 
+            opacity: 1; transform: scale(1); 
+        }
+
+        .group {
+            display: flex;
+            gap: 5px;
+            padding: 10px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            border: 1px solid transparent;
+            transition: all 1s ease;
+        }
+        
+        /* Step 2 highlighting */
+        .split-view .group-red { border-color: rgba(239, 68, 68, 0.5); background: rgba(239, 68, 68, 0.1); }
+        .split-view .group-blue { border-color: rgba(59, 130, 246, 0.5); background: rgba(59, 130, 246, 0.1); }
+
+        .book-icon {
+            width: 25px;
+            height: 35px;
+            border-radius: 3px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+        }
+        .book-red { background: linear-gradient(135deg, #F87171, #DC2626); }
+        .book-blue { background: linear-gradient(135deg, #60A5FA, #2563EB); }
+
+        /* Equation Area */
+        .eq-area {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            background: #1E293B;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .eq-line {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            font-size: 2.2rem;
+            font-weight: 800;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.8s ease;
+        }
+        .show-eq1 .eq1 { opacity: 1; transform: translateY(0); }
+        .show-eq2 .eq2 { opacity: 1; transform: translateY(0); }
+        .show-eq3 .eq3 { opacity: 1; transform: translateY(0); color: #34D399; font-size: 2.8rem;}
+
+        .badge {
+            background: #334155;
+            font-size: 1rem;
+            padding: 5px 15px;
+            border-radius: 20px;
+            color: #94A3B8;
+        }
+
+        /* Controls */
+        .controls {
+            margin-top: 20px;
+            margin-bottom: 40px;
+        }
+        button {
+            background: #38BDF8; color: #0F172A; border: none; 
+            padding: 12px 30px; border-radius: 10px; font-size: 1.2rem; font-weight: 800; 
+            cursor: pointer; opacity: 0; pointer-events: none; transition: all 0.3s ease;
+        }
+        button.visible { opacity: 1; pointer-events: auto; }
+        button:hover { background: #0284C7; color: white; transform: scale(1.05);}
+
+        @media (max-width: 600px) {
+            .header { flex-direction: column; gap: 15px; }
+            h1 { font-size: 1.6rem; }
+            .eq-line { font-size: 1.6rem; }
+            .show-eq3 .eq3 { font-size: 2rem; }
+            .book-icon { width: 15px; height: 25px; }
+            .row { gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.5.2.1. Dağılma Özelliği</div>
+    </div>
+
+    <div class="main-content" id="mainScene">
+        
+        <div class="title-area">
+            <h1 id="titleText">Kitaplıkta toplam kaç kitap var?</h1>
+        </div>
+
+        <div class="visual-area" id="visuals">
+            <!-- 5 Rows generated by JS -->
+        </div>
+
+        <div class="eq-area">
+            <div class="eq-line eq1">
+                <span class="badge">1. Yol</span>
+                <span>5 x (</span><span class="hl-red">3</span> <span>+</span> <span class="hl-blue">6</span><span>)</span>
+            </div>
+            
+            <div class="eq-line eq2">
+                <span class="badge">2. Yol</span>
+                <span>(5 x <span class="hl-red">3</span>)</span> 
+                <span>+</span> 
+                <span>(5 x <span class="hl-blue">6</span>)</span>
+            </div>
+
+            <div class="eq-line eq3">
+                = 15 + 30 = 45 Kitap
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="replayBtn" onclick="startSequence()">Tekrar Oynat</button>
+        </div>
+
+    </div>
+
+    <script>
+        // Generate the visual grid (5 rows, each with 3 red and 6 blue)
+        const visArea = document.getElementById('visuals');
+        for(let i=1; i<=5; i++) {
+            let row = document.createElement('div');
+            row.className = `row r${i}`;
+            
+            let redGroup = document.createElement('div');
+            redGroup.className = 'group group-red';
+            for(let j=0; j<3; j++) redGroup.innerHTML += '<div class="book-icon book-red"></div>';
+            
+            let blueGroup = document.createElement('div');
+            blueGroup.className = 'group group-blue';
+            for(let j=0; j<6; j++) blueGroup.innerHTML += '<div class="book-icon book-blue"></div>';
+            
+            row.appendChild(redGroup);
+            row.appendChild(blueGroup);
+            visArea.appendChild(row);
+        }
+
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        
+        async function startSequence() {
+            const scene = document.getElementById('mainScene');
+            const vis = document.getElementById('visuals');
+            const title = document.getElementById('titleText');
+            const btn = document.getElementById('replayBtn');
+
+            // Reset Everything
+            scene.classList.remove('show-title', 'show-eq1', 'show-eq2', 'show-eq3');
+            vis.classList.remove('show-r1', 'show-r2', 'show-r3', 'show-r4', 'show-r5', 'split-view');
+            btn.classList.remove('visible');
+            title.innerHTML = "Kitaplıkta toplam kaç kitap var?";
+            
+            await sleep(500);
+
+            // 1. Show Title
+            scene.classList.add('show-title');
+            await sleep(1500);
+
+            // 2. Show Rows one by one
+            title.innerHTML = "5 Rafımız var. Her rafta <span class='hl-red'>3 Kırmızı</span> ve <span class='hl-blue'>6 Mavi</span> kitap var.";
+            vis.classList.add('show-r1'); await sleep(400);
+            vis.classList.add('show-r2'); await sleep(400);
+            vis.classList.add('show-r3'); await sleep(400);
+            vis.classList.add('show-r4'); await sleep(400);
+            vis.classList.add('show-r5'); 
+            await sleep(2000);
+
+            // 3. Show Eq1
+            scene.classList.add('show-eq1');
+            await sleep(3000);
+
+            // 4. Split View
+            title.innerHTML = "Renkleri ayrı ayrı gruplayıp toplayabiliriz!<br><span style='font-size:1.4rem; color:#94A3B8;'>(Dağılma Özelliği)</span>";
+            vis.classList.add('split-view');
+            await sleep(2000);
+
+            // 5. Show Eq2 and Eq3
+            scene.classList.add('show-eq2');
+            await sleep(2500);
+            scene.classList.add('show-eq3');
+            
+            await sleep(1500);
+            btn.classList.add('visible');
+        }
+        
+        window.onload = startSequence;
+    </script>
+</body>
+</html>

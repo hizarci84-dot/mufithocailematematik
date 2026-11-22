@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daire Grafiği Oluşturucu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F0E17; --surface: #1A1A24; --text: #F8FAFC;
+            --primary: #8B5CF6; --secondary: #10B981;
+            --tertiary: #06B6D4; --danger: #F43F5E;
+            --accent: #F59E0B;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, #161625 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(139, 92, 246, 0.2); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; margin-bottom: 20px;}
+        h1 { font-size: 2.2rem; color: var(--tertiary); font-weight: 900;}
+        .subtitle { color: #94A3B8; font-size: 1.1rem; margin-top: 5px;}
+
+        .main-container {
+            display: flex; gap: 30px; width: 100%; max-width: 1000px; flex-wrap: wrap; justify-content: center;
+        }
+
+        .panel {
+            background: #11111A; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.4); 
+            padding: 30px; display: flex; width: 100%; gap: 30px;
+        }
+
+        .chart-area {
+            flex: 1; display: flex; justify-content: center; align-items: center; position: relative; min-width: 300px;
+            background: rgba(0,0,0,0.3); border-radius: 15px; padding: 20px;
+        }
+
+        svg { width: 100%; height: auto; max-width: 350px; transform: rotate(-90deg); overflow: visible;}
+        circle { fill: transparent; stroke-width: 100; transition: stroke-dasharray 1s ease-in-out, stroke-dashoffset 1s ease-in-out; cursor: pointer;}
+        circle:hover { stroke-width: 110; filter: drop-shadow(0 0 10px rgba(255,255,255,0.5));}
+
+        .data-area {
+            flex: 1; display: flex; flex-direction: column; gap: 15px; min-width: 300px;
+        }
+
+        .input-group {
+            background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 15px;
+            display: flex; flex-direction: column; gap: 10px; border-left: 5px solid gray;
+        }
+
+        .input-group label { font-weight: 800; font-size: 1.1rem; color: white;}
+        .input-group input { 
+            background: #1A1A24; border: 2px solid #334155; padding: 10px; border-radius: 8px;
+            color: white; font-size: 1.1rem; font-weight: 900; outline: none;
+        }
+
+        .result-bar {
+            display: flex; justify-content: space-between; font-size: 1.1rem; font-weight: 800; color: #94A3B8;
+        }
+        
+        .total-box {
+            background: rgba(16, 185, 129, 0.1); border: 2px solid var(--secondary); padding: 15px; border-radius: 15px;
+            font-size: 1.3rem; font-weight: 900; color: white; text-align: center; margin-top: 10px;
+        }
+
+        @media (max-width: 800px) {
+            .panel { flex-direction: column; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.7.5.2. Daire Grafiği (Etkinlik)</div>
+    </div>
+
+    <div class="title-area">
+        <h1>Orantısal Daire Grafiği</h1>
+        <p class="subtitle">Değerleri girdiğinizde sistem anlık olarak 360 dereceye orantılayıp dilimleri oluşturur.</p>
+    </div>
+
+    <div class="main-container">
+        
+        <div class="panel">
+            
+            <div class="data-area">
+                
+                <div class="input-group" style="border-left-color: var(--primary);">
+                    <label>A Grubu (Mor)</label>
+                    <input type="number" id="vA" value="40" min="0" oninput="updateChart()">
+                    <div class="result-bar">
+                        <span id="pA">%0</span> <span id="dA">0°</span>
+                    </div>
+                </div>
+
+                <div class="input-group" style="border-left-color: var(--tertiary);">
+                    <label>B Grubu (Mavi)</label>
+                    <input type="number" id="vB" value="30" min="0" oninput="updateChart()">
+                    <div class="result-bar">
+                        <span id="pB">%0</span> <span id="dB">0°</span>
+                    </div>
+                </div>
+
+                <div class="input-group" style="border-left-color: var(--accent);">
+                    <label>C Grubu (Turuncu)</label>
+                    <input type="number" id="vC" value="30" min="0" oninput="updateChart()">
+                    <div class="result-bar">
+                        <span id="pC">%0</span> <span id="dC">0°</span>
+                    </div>
+                </div>
+
+                <div class="total-box">
+                    Toplam Veri = <span id="vTotal" style="color:var(--secondary);">100</span><br>
+                    <span style="font-size:1rem; font-weight:600; color:#94A3B8;">Formül: (Değer / Toplam) × 360° = Merkez Açı</span>
+                </div>
+
+            </div>
+
+            <div class="chart-area">
+                <!-- SVG viewBox="0 0 200 200". Circle with r=50 and stroke-width=100 creates a solid pie chart -->
+                <!-- Circumference = 2 * pi * 50 = 314.159 -->
+                <svg viewBox="0 0 200 200" id="pieSvg">
+                    <!-- A -->
+                    <circle cx="100" cy="100" r="50" stroke="var(--primary)" id="cA" stroke-dasharray="0 314.159"></circle>
+                    <!-- B -->
+                    <circle cx="100" cy="100" r="50" stroke="var(--tertiary)" id="cB" stroke-dasharray="0 314.159"></circle>
+                    <!-- C -->
+                    <circle cx="100" cy="100" r="50" stroke="var(--accent)" id="cC" stroke-dasharray="0 314.159"></circle>
+                </svg>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        const vA = document.getElementById('vA');
+        const vB = document.getElementById('vB');
+        const vC = document.getElementById('vC');
+        const vTotal = document.getElementById('vTotal');
+
+        const pA = document.getElementById('pA');
+        const pB = document.getElementById('pB');
+        const pC = document.getElementById('pC');
+        
+        const dA = document.getElementById('dA');
+        const dB = document.getElementById('dB');
+        const dC = document.getElementById('dC');
+
+        const cA = document.getElementById('cA');
+        const cB = document.getElementById('cB');
+        const cC = document.getElementById('cC');
+
+        const CIRCUMFERENCE = 2 * Math.PI * 50; // ~314.159
+
+        function updateChart() {
+            let a = parseFloat(vA.value) || 0;
+            let b = parseFloat(vB.value) || 0;
+            let c = parseFloat(vC.value) || 0;
+            
+            let total = a + b + c;
+            vTotal.innerText = total;
+
+            if(total === 0) {
+                cA.setAttribute("stroke-dasharray", `0 ${CIRCUMFERENCE}`);
+                cB.setAttribute("stroke-dasharray", `0 ${CIRCUMFERENCE}`);
+                cC.setAttribute("stroke-dasharray", `0 ${CIRCUMFERENCE}`);
+                pA.innerText = "%0"; pB.innerText = "%0"; pC.innerText = "%0";
+                dA.innerText = "0°"; dB.innerText = "0°"; dC.innerText = "0°";
+                return;
+            }
+
+            let pctA = a / total;
+            let pctB = b / total;
+            let pctC = c / total;
+
+            // UI Text
+            pA.innerText = "%" + (pctA * 100).toFixed(1).replace('.0','');
+            pB.innerText = "%" + (pctB * 100).toFixed(1).replace('.0','');
+            pC.innerText = "%" + (pctC * 100).toFixed(1).replace('.0','');
+
+            dA.innerText = (pctA * 360).toFixed(1).replace('.0','') + "°";
+            dB.innerText = (pctB * 360).toFixed(1).replace('.0','') + "°";
+            dC.innerText = (pctC * 360).toFixed(1).replace('.0','') + "°";
+
+            // SVG Stroke values
+            let valA = pctA * CIRCUMFERENCE;
+            let valB = pctB * CIRCUMFERENCE;
+            let valC = pctC * CIRCUMFERENCE;
+
+            cA.setAttribute("stroke-dasharray", `${valA} ${CIRCUMFERENCE}`);
+            cA.setAttribute("stroke-dashoffset", 0);
+
+            cB.setAttribute("stroke-dasharray", `${valB} ${CIRCUMFERENCE}`);
+            cB.setAttribute("stroke-dashoffset", -valA);
+
+            cC.setAttribute("stroke-dasharray", `${valC} ${CIRCUMFERENCE}`);
+            cC.setAttribute("stroke-dashoffset", -(valA + valB));
+        }
+
+        // Init
+        updateChart();
+    </script>
+
+    <script>
+        // Global spam click prevention for Etkinlik files
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'BUTTON' && !e.target.hasAttribute('data-spam-locked')) {
+                e.target.setAttribute('data-spam-locked', 'true');
+                let originalOpacity = e.target.style.opacity || '1';
+                e.target.style.opacity = '0.7';
+                e.target.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    e.target.removeAttribute('data-spam-locked');
+                    e.target.style.opacity = originalOpacity;
+                    e.target.style.pointerEvents = 'auto';
+                }, 400);
+            }
+        });
+    </script>
+</body>
+</html>

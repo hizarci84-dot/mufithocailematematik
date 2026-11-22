@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matematiksel Akış Şeması</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F0E17; --surface: #1A1A24; --text: #F8FAFC;
+            --primary: #8B5CF6; --secondary: #10B981;
+            --tertiary: #06B6D4; --danger: #F43F5E;
+            --accent: #F59E0B;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, #161625 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(139, 92, 246, 0.2); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; margin-bottom: 20px;}
+        h1 { font-size: 2.2rem; color: var(--tertiary); font-weight: 900;}
+        .subtitle { color: #94A3B8; font-size: 1.1rem; margin-top: 5px;}
+
+        .container {
+            width: 100%; max-width: 1000px; display: grid; grid-template-columns: 1fr 1fr; gap: 30px;
+        }
+
+        /* Problem Info */
+        .problem-box {
+            grid-column: span 2; background: rgba(0,0,0,0.3); border: 2px dashed #334155;
+            border-radius: 20px; padding: 20px; text-align: center; font-size: 1.2rem; color: white;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        .problem-box strong { color: var(--primary); font-size: 1.5rem;}
+
+        /* Lists */
+        .list-container {
+            background: rgba(255,255,255,0.03); border-radius: 20px; padding: 25px;
+            border: 1px solid rgba(255,255,255,0.05); min-height: 400px;
+            display: flex; flex-direction: column; gap: 15px;
+        }
+
+        .list-title { font-size: 1.5rem; font-weight: 900; color: white; margin-bottom: 10px; text-align: center;}
+
+        /* Drag items */
+        .drag-item {
+            background: #11111A; border: 2px solid #334155; border-radius: 12px; padding: 15px;
+            font-weight: 800; font-size: 1.1rem; color: #E2E8F0; cursor: grab;
+            display: flex; align-items: center; justify-content: space-between;
+            transition: all 0.2s; position: relative;
+        }
+        .drag-item:active { cursor: grabbing; transform: scale(0.95); opacity: 0.8;}
+        .drag-item.dragging { opacity: 0.5; }
+        
+        /* Flow line indicator */
+        .drag-item::after {
+            content: '↓'; position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%);
+            color: var(--primary); font-size: 1.5rem; opacity: 0; pointer-events: none;
+        }
+
+        /* Target list formatting */
+        #targetList .drag-item { border-color: var(--primary); }
+        #targetList .drag-item:not(:last-child)::after { opacity: 1; }
+
+        .btn-check {
+            grid-column: span 2; background: var(--secondary); color: white; border: none;
+            padding: 15px; border-radius: 15px; font-size: 1.5rem; font-weight: 900;
+            cursor: pointer; transition: 0.3s; box-shadow: 0 10px 20px rgba(16, 185, 129, 0.4);
+            text-align: center; margin-top: 10px;
+        }
+        .btn-check:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(16, 185, 129, 0.6);}
+
+        .alert-box {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
+            background: rgba(16, 185, 129, 0.95); border: 2px solid white; color: white;
+            padding: 30px 50px; border-radius: 20px; font-weight: 900; font-size: 2rem;
+            opacity: 0; transition: all 0.5s; text-align: center; z-index: 100;
+            backdrop-filter: blur(10px); box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        .alert-error { background: rgba(244, 63, 94, 0.95); }
+
+        @media (max-width: 768px) {
+            .container { grid-template-columns: 1fr; }
+            .problem-box { grid-column: span 1; }
+            .btn-check { grid-column: span 1; }
+            .drag-item { font-size: 1rem; padding: 10px;}
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.7.2.4. Algoritma İfade Yöntemleri (Akış Şeması)</div>
+    </div>
+
+    <div class="title-area">
+        <h1>Denklem Algoritması</h1>
+        <p class="subtitle">Verilen problemin çözüm sürecini adım adım (algoritmik olarak) sağ tarafa diziniz.</p>
+    </div>
+
+    <div class="container">
+        
+        <div class="problem-box">
+            Problem: <strong>2x + 5 = 15</strong> denklemini sağlayan <strong>x</strong> değerini bulmak için nasıl bir ters işlem algoritması kurulur?
+        </div>
+
+        <!-- Source List -->
+        <div class="list-container" id="sourceList">
+            <div class="list-title">Karışık Adımlar</div>
+            
+            <!-- Items -> data-order defines correct order -->
+            <div class="drag-item" draggable="true" data-id="step5">Adım: x = 5 olarak bul</div>
+            <div class="drag-item" draggable="true" data-id="step4">Adım: Bulunan sonucu 2'ye böl</div>
+            <div class="drag-item" draggable="true" data-id="step2">Adım: Eşitliğin karşı tarafındaki sayı (15) alınır</div>
+            <div class="drag-item" draggable="true" data-id="step3">Adım: Eşitliğin karşı tarafındaki sayıdan 5 çıkar</div>
+            <div class="drag-item" draggable="true" data-id="step6">BİTİR</div>
+            <div class="drag-item" draggable="true" data-id="step1">BAŞLA</div>
+        </div>
+
+        <!-- Target List -->
+        <div class="list-container" id="targetList">
+            <div class="list-title">Algoritma (Akış Şeması)</div>
+            <!-- Drop items here -->
+        </div>
+
+        <button class="btn-check" onclick="checkAlgorithm()">Algoritmayı Çalıştır (Test Et)</button>
+
+    </div>
+
+    <div class="alert-box" id="alertBox"></div>
+
+    <script>
+        const draggables = document.querySelectorAll('.drag-item');
+        const containers = [document.getElementById('sourceList'), document.getElementById('targetList')];
+        const alertBox = document.getElementById('alertBox');
+
+        // Drag and Drop Logic
+        draggables.forEach(draggable => {
+            draggable.addEventListener('dragstart', () => {
+                draggable.classList.add('dragging');
+            });
+
+            draggable.addEventListener('dragend', () => {
+                draggable.classList.remove('dragging');
+            });
+        });
+
+        containers.forEach(container => {
+            container.addEventListener('dragover', e => {
+                e.preventDefault();
+                const afterElement = getDragAfterElement(container, e.clientY);
+                const draggable = document.querySelector('.dragging');
+                if (afterElement == null) {
+                    container.appendChild(draggable);
+                } else {
+                    container.insertBefore(draggable, afterElement);
+                }
+            });
+        });
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.drag-item:not(.dragging)')];
+
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child }
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        // Correct order sequence
+        const correctOrder = ['step1', 'step2', 'step3', 'step4', 'step5', 'step6'];
+
+        function checkAlgorithm() {
+            const targetList = document.getElementById('targetList');
+            const items = targetList.querySelectorAll('.drag-item');
+            
+            // Validate count
+            if(items.length < correctOrder.length) {
+                showAlert("HATA!", "Tüm adımları Akış Şeması bölümüne eklemelisin.", true);
+                return;
+            }
+
+            let isCorrect = true;
+            items.forEach((item, index) => {
+                if(item.getAttribute('data-id') !== correctOrder[index]) {
+                    isCorrect = false;
+                }
+            });
+
+            if(isCorrect) {
+                showAlert("ALGORİTMA BAŞARILI!", "Sıralama harika. Sistem mükemmel çalıştı! 🚀", false);
+            } else {
+                showAlert("BUG BULUNDU!", "Algoritmada mantık hatası var. Adımların sırasını kontrol et.", true);
+            }
+        }
+
+        function showAlert(title, msg, isError) {
+            alertBox.innerHTML = `<div>${title}</div><div style="font-size:1.2rem; margin-top:10px; font-weight:600;">${msg}</div>`;
+            if(isError) {
+                alertBox.classList.add('alert-error');
+            } else {
+                alertBox.classList.remove('alert-error');
+            }
+
+            alertBox.style.opacity = 1;
+            alertBox.style.transform = "translate(-50%, -50%) scale(1)";
+
+            setTimeout(() => {
+                alertBox.style.opacity = 0;
+                alertBox.style.transform = "translate(-50%, -50%) scale(0)";
+            }, 3000);
+        }
+
+    </script>
+
+    <script>
+        // Global spam click prevention for Etkinlik files
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'BUTTON' && !e.target.hasAttribute('data-spam-locked')) {
+                e.target.setAttribute('data-spam-locked', 'true');
+                let originalOpacity = e.target.style.opacity || '1';
+                e.target.style.opacity = '0.7';
+                e.target.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    e.target.removeAttribute('data-spam-locked');
+                    e.target.style.opacity = originalOpacity;
+                    e.target.style.pointerEvents = 'auto';
+                }, 400);
+            }
+        });
+    </script>
+</body>
+</html>

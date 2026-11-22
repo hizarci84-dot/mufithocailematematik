@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Koordinat Sistemi Oyunu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F0E17; --surface: #1A1A24; --text: #F8FAFC;
+            --primary: #8B5CF6; --secondary: #10B981;
+            --tertiary: #06B6D4; --danger: #F43F5E;
+            --accent: #F59E0B;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, #161625 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(139, 92, 246, 0.2); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; margin-bottom: 20px;}
+        h1 { font-size: 2.2rem; color: var(--tertiary); font-weight: 900;}
+        .subtitle { color: #94A3B8; font-size: 1.1rem; margin-top: 5px;}
+
+        .main-container {
+            display: flex; gap: 30px; width: 100%; max-width: 1000px; flex-wrap: wrap; justify-content: center;
+        }
+
+        .panel {
+            background: #11111A; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.4); 
+            padding: 30px; display: flex; width: 100%; gap: 30px; align-items: center; justify-content: center; flex-wrap: wrap;
+        }
+
+        .left-col {
+            display: flex; flex-direction: column; gap: 20px; align-items: center; width: 300px;
+        }
+
+        .target-box {
+            background: rgba(139, 92, 246, 0.1); border: 2px dashed var(--primary);
+            padding: 30px; border-radius: 20px; text-align: center; width: 100%;
+        }
+        
+        .target-lbl { font-size: 1.2rem; font-weight: 800; color: white; margin-bottom: 10px;}
+        .target-val { font-size: 3rem; font-weight: 900; color: var(--accent); letter-spacing: 2px;}
+        
+        .score-box { font-size: 1.5rem; font-weight: 900; color: var(--secondary); }
+
+        /* The Grid */
+        .grid-wrapper {
+            position: relative; width: 400px; height: 400px; background: #161625;
+            border: 2px solid #334155; border-radius: 10px; overflow: hidden;
+            cursor: crosshair;
+        }
+
+        /* Grid lines background */
+        .grid-bg {
+            position: absolute; width: 100%; height: 100%; top: 0; left: 0;
+            background-size: 40px 40px;
+            background-image: 
+                linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-position: center center;
+        }
+
+        /* Axes */
+        .axis-x {
+            position: absolute; width: 100%; height: 2px; background: white; top: 50%; transform: translateY(-50%);
+        }
+        .axis-y {
+            position: absolute; width: 2px; height: 100%; background: white; left: 50%; transform: translateX(-50%);
+        }
+
+        .axis-lbl { position: absolute; font-weight: 900; color: white; font-size: 1.2rem; }
+        .lbl-x { right: 10px; top: 52%; }
+        .lbl-y { top: 10px; right: 52%; }
+
+        .origin-lbl { position: absolute; font-weight: 900; color: white; top: 52%; left: 52%; }
+
+        /* Placed point */
+        .point {
+            position: absolute; width: 16px; height: 16px; border-radius: 50%;
+            transform: translate(-50%, -50%); transition: 0.2s; pointer-events: none;
+            box-shadow: 0 0 10px currentColor; z-index: 10;
+        }
+
+        .p-correct { background: var(--secondary); color: var(--secondary); }
+        .p-wrong { background: var(--danger); color: var(--danger); animation: shake 0.5s; }
+
+        @keyframes shake {
+            0%, 100% { transform: translate(-50%, -50%) translateX(0); }
+            25% { transform: translate(-50%, -50%) translateX(-5px); }
+            50% { transform: translate(-50%, -50%) translateX(5px); }
+            75% { transform: translate(-50%, -50%) translateX(-5px); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.8.2.1. Dik Koordinat Sistemi (Etkinlik)</div>
+    </div>
+
+    <div class="title-area">
+        <h1>Nokta Avcısı (x, y)</h1>
+        <p class="subtitle">Ekranda beliren hedef koordinatı grafikte bularak tıklayın.</p>
+    </div>
+
+    <div class="main-container">
+        
+        <div class="panel">
+            
+            <div class="left-col">
+                <div class="target-box">
+                    <div class="target-lbl">Hedef Nokta (x, y):</div>
+                    <div class="target-val" id="targetVal">(3, 2)</div>
+                </div>
+                <div class="score-box" id="scoreBox">Skor: 0</div>
+                <div style="color:#94A3B8; font-weight:600; text-align:center;">Önce X (yatay), Sonra Y (dikey) eksenine bakılır. Her kare 1 birimdir. Merkezi (0,0) noktasıdır.</div>
+            </div>
+
+            <div class="grid-wrapper" id="gridWrapper">
+                <div class="grid-bg"></div>
+                <div class="axis-x"></div>
+                <div class="axis-y"></div>
+                <div class="axis-lbl lbl-x">x</div>
+                <div class="axis-lbl lbl-y">y</div>
+                <div class="origin-lbl">0</div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        const gridWrapper = document.getElementById('gridWrapper');
+        const targetVal = document.getElementById('targetVal');
+        const scoreBox = document.getElementById('scoreBox');
+        
+        // Grid is 400x400. 1 unit = 40px. Grid is from -5 to +5 on both axes.
+        let targetX = 0;
+        let targetY = 0;
+        let score = 0;
+        
+        let lastPoint = null;
+
+        function nextTarget() {
+            // Random between -5 and 5, but let's avoid (0,0) always
+            do {
+                targetX = Math.floor(Math.random() * 11) - 5;
+                targetY = Math.floor(Math.random() * 11) - 5;
+            } while (targetX === 0 && targetY === 0);
+
+            targetVal.innerText = `(${targetX}, ${targetY})`;
+        }
+
+        gridWrapper.addEventListener('click', function(e) {
+            const rect = gridWrapper.getBoundingClientRect();
+            let clickX = e.clientX - rect.left; // 0 to 400
+            let clickY = e.clientY - rect.top;  // 0 to 400
+
+            // Convert pixels to coordinates
+            // Center is (200, 200) -> (0,0)
+            // 40px per unit
+            let coordX = Math.round((clickX - 200) / 40);
+            let coordY = Math.round((200 - clickY) / 40); // Y is inverted
+
+            // Draw point
+            if(lastPoint) lastPoint.remove();
+            
+            let p = document.createElement('div');
+            
+            // Snap to grid
+            let pxX = 200 + (coordX * 40);
+            let pxY = 200 - (coordY * 40);
+            
+            p.style.left = pxX + 'px';
+            p.style.top = pxY + 'px';
+            
+            if(coordX === targetX && coordY === targetY) {
+                p.className = 'point p-correct';
+                score += 10;
+                scoreBox.innerText = `Skor: ${score}`;
+                setTimeout(nextTarget, 1000);
+            } else {
+                p.className = 'point p-wrong';
+                // Show hint
+                targetVal.innerHTML = `<span style="color:var(--danger)">Hata! Tıkladığın: (${coordX}, ${coordY})</span>`;
+                setTimeout(() => {
+                    targetVal.innerText = `(${targetX}, ${targetY})`;
+                }, 1500);
+            }
+            
+            gridWrapper.appendChild(p);
+            lastPoint = p;
+        });
+
+        // Global spam click prevention for Etkinlik files
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'BUTTON' && !e.target.hasAttribute('data-spam-locked')) {
+                e.target.setAttribute('data-spam-locked', 'true');
+                let originalOpacity = e.target.style.opacity || '1';
+                e.target.style.opacity = '0.7';
+                e.target.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    e.target.removeAttribute('data-spam-locked');
+                    e.target.style.opacity = originalOpacity;
+                    e.target.style.pointerEvents = 'auto';
+                }, 400);
+            }
+        });
+
+        nextTarget();
+
+    </script>
+</body>
+</html>

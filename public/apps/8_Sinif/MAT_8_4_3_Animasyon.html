@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Silindirin Açınımı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg:#0F0E17; --primary:#8B5CF6; --secondary:#10B981; --tertiary:#06B6D4; --danger:#F43F5E; --accent:#F59E0B; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Outfit',sans-serif; }
+        body { background:linear-gradient(135deg,var(--bg),#161625); color:#F8FAFC; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:20px; }
+        .header { width:100%; max-width:1000px; display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); padding:15px 25px; border-radius:20px; border:1px solid rgba(139,92,246,0.2); margin-bottom:20px; }
+        .header-left { display:flex; align-items:center; gap:15px; font-weight:600; font-size:1.2rem; }
+        .header-left img { width:50px; height:50px; border-radius:50%; background:white; padding:2px; }
+        .kazanim { background:var(--primary); color:white; padding:5px 15px; border-radius:20px; font-weight:800; font-size:0.9rem; }
+        .title-area { text-align:center; margin-bottom:20px; }
+        h1 { font-size:2.2rem; color:var(--tertiary); font-weight:900; }
+        .subtitle { color:#94A3B8; font-size:1.1rem; margin-top:5px; }
+        .canvas-area { position:relative; width:100%; max-width:800px; height:460px; background:#11111A; border-radius:24px; border:1px solid rgba(255,255,255,0.05); box-shadow:inset 0 0 50px rgba(0,0,0,0.5); overflow:hidden; display:flex; align-items:center; justify-content:center; }
+        .expl-text { background:rgba(139,92,246,0.15); border:1px solid rgba(139,92,246,0.3); padding:15px 25px; border-radius:12px; font-size:1.25rem; color:white; font-weight:800; text-align:center; width:100%; max-width:800px; margin-bottom:15px; transition:0.5s; }
+        .net-part { transition:all 1.5s cubic-bezier(0.175,0.885,0.32,1.275); }
+        .btn-play { background:var(--primary); color:white; border:none; padding:15px 40px; border-radius:50px; font-size:1.2rem; font-weight:900; cursor:pointer; transition:all 0.3s; box-shadow:0 10px 20px rgba(139,92,246,0.4); margin-top:30px; }
+        .btn-play:hover { transform:translateY(-3px) scale(1.05); }
+        .formula-box { position:absolute; bottom:20px; background:rgba(0,0,0,0.9); border:2px solid var(--accent); padding:12px 30px; border-radius:20px; font-size:1.3rem; font-weight:900; color:white; opacity:0; transition:all 1s; text-align:center; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.8.4.3. Silindirin Açınımı (Animasyon)</div>
+    </div>
+    <div class="title-area">
+        <h1>Silindiri Aç! (Net)</h1>
+        <p class="subtitle">Silindiri keserek açtığımızda, 2 daire + 1 dikdörtgenden oluştuğunu görürüz.</p>
+    </div>
+    <div class="expl-text" id="explText">1. Silindirin 3 parçadan oluştuğunu görüyoruz.</div>
+    <div class="canvas-area">
+        <svg width="700" height="380" viewBox="0 0 700 380" id="svgNet">
+            <!-- Cylinder assembled (center ~200, 190) -->
+            <!-- Body -->
+            <rect id="nBody" class="net-part" x="110" y="100" width="180" height="150" fill="rgba(6,182,212,0.2)" stroke="var(--tertiary)" stroke-width="3"/>
+            <!-- Top cap -->
+            <ellipse id="nTop" class="net-part" cx="200" cy="100" rx="90" ry="30" fill="rgba(16,185,129,0.3)" stroke="var(--secondary)" stroke-width="3"/>
+            <!-- Bot cap -->
+            <ellipse id="nBot" class="net-part" cx="200" cy="250" rx="90" ry="30" fill="rgba(244,63,94,0.3)" stroke="var(--danger)" stroke-width="3"/>
+            <!-- Labels (assembled) -->
+            <text id="lTop" x="200" y="100" text-anchor="middle" dominant-baseline="middle" fill="white" font-weight="900" font-family="Outfit" font-size="14" opacity="0">Taban Dairesi</text>
+            <text id="lBody" x="200" y="175" text-anchor="middle" fill="white" font-weight="900" font-family="Outfit" font-size="14" opacity="0">Yanal Yüzey</text>
+            <text id="lBot" x="200" y="250" text-anchor="middle" dominant-baseline="middle" fill="white" font-weight="900" font-family="Outfit" font-size="14" opacity="0">Tavan Dairesi</text>
+        </svg>
+        <div class="formula-box" id="fBox">
+            Yanal Alan = 2πr × h (Dikdörtgen)<br>Tüm Yüzey = 2πr(r + h)
+        </div>
+    </div>
+    <button class="btn-play" id="btnPlay" onclick="runAnim()">Silindiri Aç!</button>
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        async function runAnim() {
+            document.getElementById('btnPlay').style.display='none';
+            const et = document.getElementById('explText');
+            et.textContent = '2. Yanal yüzeyi keserek açıyoruz...';
+            await sleep(1000);
+            // Unfold: move top up-left, body flattens, bot down-left
+            const nTop = document.getElementById('nTop');
+            const nBot = document.getElementById('nBot');
+            const nBody = document.getElementById('nBody');
+            // Move top circle up and to right side
+            nTop.style.transition = 'all 1.5s cubic-bezier(0.175,0.885,0.32,1.275)';
+            nTop.setAttribute('cx','560'); nTop.setAttribute('cy','80');
+            nTop.setAttribute('rx','50'); nTop.setAttribute('ry','50');
+            // Make top a circle
+            document.getElementById('lTop').style.opacity='1'; document.getElementById('lTop').setAttribute('x','560'); document.getElementById('lTop').setAttribute('y','80');
+            // Move body to center and widen
+            nBody.style.transition = 'all 1.5s cubic-bezier(0.175,0.885,0.32,1.275)';
+            nBody.setAttribute('x','300'); nBody.setAttribute('y','130'); nBody.setAttribute('width','280'); nBody.setAttribute('height','150');
+            document.getElementById('lBody').setAttribute('x','440'); document.getElementById('lBody').style.opacity='1';
+            // Move bot circle down and to right
+            nBot.style.transition = 'all 1.5s cubic-bezier(0.175,0.885,0.32,1.275)';
+            nBot.setAttribute('cx','560'); nBot.setAttribute('cy','310');
+            nBot.setAttribute('rx','50'); nBot.setAttribute('ry','50');
+            document.getElementById('lBot').setAttribute('x','560'); document.getElementById('lBot').setAttribute('y','310'); document.getElementById('lBot').style.opacity='1';
+            await sleep(2000);
+            et.textContent = '3. Silindirin ağını (açınımını) gördük: 2 Daire + 1 Dikdörtgen!';
+            await sleep(2000);
+            et.style.color = 'var(--accent)';
+            et.textContent = 'Yanal yüzey bir dikdörtgendir. Genişliği = Çevre (2πr), Uzunluğu = Yükseklik (h)';
+            document.getElementById('fBox').style.opacity = '1';
+        }
+    </script>
+</body>
+</html>

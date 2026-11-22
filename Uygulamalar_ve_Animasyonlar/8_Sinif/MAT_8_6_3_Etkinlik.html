@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Çeyrekler ve Aykırı Değer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg:#0F0E17; --surface:#1A1A24; --primary:#8B5CF6; --secondary:#10B981; --tertiary:#06B6D4; --danger:#F43F5E; --accent:#F59E0B; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Outfit',sans-serif; }
+        body { background:linear-gradient(135deg,var(--bg),#161625); color:#F8FAFC; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:20px; }
+        .header { width:100%; max-width:1000px; display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); padding:15px 25px; border-radius:20px; border:1px solid rgba(139,92,246,0.2); margin-bottom:20px; }
+        .header-left { display:flex; align-items:center; gap:15px; font-weight:600; font-size:1.2rem; }
+        .header-left img { width:50px; height:50px; border-radius:50%; background:white; padding:2px; }
+        .kazanim { background:var(--primary); color:white; padding:5px 15px; border-radius:20px; font-weight:800; font-size:0.9rem; }
+        h1 { font-size:2rem; color:var(--tertiary); font-weight:900; text-align:center; }
+        .subtitle { color:#94A3B8; font-size:1.05rem; margin-top:5px; text-align:center; margin-bottom:20px; }
+        .panel { background:#11111A; border-radius:24px; border:1px solid rgba(255,255,255,0.05); padding:25px; width:100%; max-width:1000px; display:flex; flex-direction:column; gap:20px; }
+        .input-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+        .input-row input[type=number] { width:60px; background:var(--surface); border:2px solid #334155; border-radius:8px; color:white; font-size:1.1rem; font-weight:700; padding:6px 8px; text-align:center; outline:none; }
+        .btn-calc { background:var(--primary); color:white; border:none; padding:10px 22px; border-radius:12px; font-size:1rem; font-weight:900; cursor:pointer; }
+        .btn-random { background:rgba(245,158,11,0.2); color:var(--accent); border:2px solid var(--accent); padding:10px 18px; border-radius:12px; font-size:1rem; font-weight:800; cursor:pointer; }
+        .stats-row { display:flex; gap:12px; flex-wrap:wrap; }
+        .stat-pill { background:var(--surface); padding:12px 18px; border-radius:15px; border-left:5px solid; font-size:1rem; flex:1; min-width:130px; }
+        .stat-lbl { color:#94A3B8; font-size:0.85rem; font-weight:700; }
+        .stat-val { font-size:1.5rem; font-weight:900; margin-top:3px; }
+        canvas { display:block; width:100%; background:#161625; border-radius:15px; }
+        .outlier-box { background:rgba(244,63,94,0.1); border:2px solid var(--danger); padding:15px; border-radius:15px; font-weight:700; color:white; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.8.6.3. Çeyrekler ve Aykırı Değer (Etkinlik)</div>
+    </div>
+    <h1>Box-Plot ve Aykırı Değer Dedektörü</h1>
+    <p class="subtitle">Çeyrekler (Q1, Q2, Q3) ve çeyrekler arası genişliği (IQR) hesaplayarak aykırı değerleri tespit edin.</p>
+    <div class="panel">
+        <div class="input-row">
+            <span style="font-weight:800;color:white;">Veri:</span>
+            <input type="number" class="dv" value="3" min="-999" max="999" step="1"><input type="number" class="dv" value="5" min="-999" max="999" step="1">
+            <input type="number" class="dv" value="7" min="-999" max="999" step="1"><input type="number" class="dv" value="8" min="-999" max="999" step="1">
+            <input type="number" class="dv" value="9" min="-999" max="999" step="1"><input type="number" class="dv" value="10" min="-999" max="999" step="1">
+            <input type="number" class="dv" value="11" min="-999" max="999" step="1"><input type="number" class="dv" value="12" min="-999" max="999" step="1">
+            <input type="number" class="dv" value="35" min="-999" max="999" step="1">
+            <button class="btn-calc" onclick="calc()">Analiz Et</button>
+            <button class="btn-random" onclick="rnd()">🎲 Rastgele</button>
+        </div>
+        <div class="stats-row" id="statsRow">
+            <div class="stat-pill" style="border-color:#8B5CF6"><div class="stat-lbl">Min</div><div class="stat-val" id="sMin">-</div></div>
+            <div class="stat-pill" style="border-color:#10B981"><div class="stat-lbl">Q1 (Alt Çeyrek)</div><div class="stat-val" id="sQ1">-</div></div>
+            <div class="stat-pill" style="border-color:#F43F5E"><div class="stat-lbl">Q2 (Medyan)</div><div class="stat-val" id="sQ2">-</div></div>
+            <div class="stat-pill" style="border-color:#06B6D4"><div class="stat-lbl">Q3 (Üst Çeyrek)</div><div class="stat-val" id="sQ3">-</div></div>
+            <div class="stat-pill" style="border-color:#F59E0B"><div class="stat-lbl">Max</div><div class="stat-val" id="sMax">-</div></div>
+            <div class="stat-pill" style="border-color:#EC4899"><div class="stat-lbl">IQR = Q3-Q1</div><div class="stat-val" id="sIQR">-</div></div>
+        </div>
+        <canvas id="cvs" height="130"></canvas>
+        <div class="outlier-box" id="outlierBox"></div>
+    </div>
+    <script>
+        function getVals(){return [...document.querySelectorAll('.dv')].map(i=>parseFloat(i.value)||0).sort((a,b)=>a-b);}
+        function quantile(arr,q){let pos=(arr.length-1)*q,lo=Math.floor(pos),hi=Math.ceil(pos),frac=pos-lo;return arr[lo]+(arr[hi]-arr[lo])*frac;}
+
+        function calc(){
+            let data=getVals();
+            let min=data[0],max=data[data.length-1];
+            let q1=quantile(data,0.25),q2=quantile(data,0.5),q3=quantile(data,0.75);
+            let iqr=q3-q1;
+            let lFence=q1-1.5*iqr,uFence=q3+1.5*iqr;
+            let outliers=data.filter(v=>v<lFence||v>uFence);
+
+            document.getElementById('sMin').textContent=min;
+            document.getElementById('sQ1').textContent=q1;
+            document.getElementById('sQ2').textContent=q2;
+            document.getElementById('sQ3').textContent=q3;
+            document.getElementById('sMax').textContent=max;
+            document.getElementById('sIQR').textContent=iqr.toFixed(1);
+
+            if(outliers.length>0){
+                document.getElementById('outlierBox').innerHTML=`⚠️ <b>Aykırı Değer Tespit Edildi!</b><br>
+                Alt sınır: Q1 − 1.5×IQR = ${q1} − ${(1.5*iqr).toFixed(1)} = ${lFence.toFixed(1)}<br>
+                Üst sınır: Q3 + 1.5×IQR = ${q3} + ${(1.5*iqr).toFixed(1)} = ${uFence.toFixed(1)}<br>
+                <span style="color:var(--danger);font-size:1.2rem;font-weight:900;">Aykırı değerler: ${outliers.join(', ')}</span>`;
+            } else {
+                document.getElementById('outlierBox').innerHTML='✅ Aykırı değer bulunamadı. Tüm veriler Q1−1.5×IQR ile Q3+1.5×IQR arasında.';
+                document.getElementById('outlierBox').style.borderColor='var(--secondary)';
+                document.getElementById('outlierBox').style.background='rgba(16,185,129,0.1)';
+            }
+
+            drawBoxPlot(data,min,max,q1,q2,q3,iqr,outliers);
+        }
+
+        function drawBoxPlot(data,min,max,q1,q2,q3,iqr,outliers){
+            const cvs=document.getElementById('cvs');cvs.width=cvs.offsetWidth;
+            const ctx=cvs.getContext('2d');
+            let W=cvs.width,H=130;
+            let padL=40,padR=40,midY=65;
+            let range=max-min||1;
+            function px(v){return padL+(v-min)/range*(W-padL-padR);}
+            ctx.clearRect(0,0,W,H);ctx.fillStyle='#161625';ctx.fillRect(0,0,W,H);
+            // Whisker lines
+            ctx.strokeStyle='rgba(255,255,255,0.5)';ctx.lineWidth=2;ctx.setLineDash([]);
+            let lFence=q1-1.5*iqr,uFence=q3+1.5*iqr;
+            let wL=Math.max(min,...data.filter(v=>v>=lFence)),wU=Math.min(max,...data.filter(v=>v<=uFence));
+            ctx.beginPath();ctx.moveTo(px(wL),midY);ctx.lineTo(px(q1),midY);ctx.stroke();
+            ctx.beginPath();ctx.moveTo(px(q3),midY);ctx.lineTo(px(wU),midY);ctx.stroke();
+            // Box
+            ctx.fillStyle='rgba(139,92,246,0.25)';
+            ctx.fillRect(px(q1),midY-25,px(q3)-px(q1),50);
+            ctx.strokeStyle='#8B5CF6';ctx.lineWidth=3;
+            ctx.strokeRect(px(q1),midY-25,px(q3)-px(q1),50);
+            // Median line
+            ctx.strokeStyle='#F43F5E';ctx.lineWidth=4;
+            ctx.beginPath();ctx.moveTo(px(q2),midY-25);ctx.lineTo(px(q2),midY+25);ctx.stroke();
+            // Whisker ends
+            [[wL],[wU]].forEach(([v])=>{ctx.strokeStyle='#94A3B8';ctx.lineWidth=2;
+                ctx.beginPath();ctx.moveTo(px(v),midY-12);ctx.lineTo(px(v),midY+12);ctx.stroke();});
+            // Outliers
+            outliers.forEach(v=>{
+                ctx.beginPath();ctx.arc(px(v),midY,8,0,Math.PI*2);
+                ctx.fillStyle='#F43F5E';ctx.fill();
+                ctx.strokeStyle='white';ctx.lineWidth=2;ctx.stroke();
+            });
+            // Labels
+            ctx.fillStyle='#94A3B8';ctx.font='600 10px Outfit';ctx.textAlign='center';
+            [[wL,'Min'],[q1,'Q1'],[q2,'Q2'],[q3,'Q3'],[wU,'Max']].forEach(([v,l])=>{
+                ctx.fillText(v,px(v),midY+40);
+                ctx.fillStyle='white';ctx.font='700 10px Outfit';ctx.fillText(l,px(v),midY-30);
+                ctx.fillStyle='#94A3B8';ctx.font='600 10px Outfit';
+            });
+        }
+
+        function rnd(){
+            document.querySelectorAll('.dv').forEach(i=>i.value=Math.floor(Math.random()*20)+1);
+            if(Math.random()>0.5){
+                let inputs=[...document.querySelectorAll('.dv')];
+                inputs[inputs.length-1].value=Math.floor(Math.random()*30)+30;
+            }
+            calc();
+        }
+
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'BUTTON' && !e.target.hasAttribute('data-spam-locked')) {
+                e.target.setAttribute('data-spam-locked','true'); e.target.style.opacity='0.7'; e.target.style.pointerEvents='none';
+                setTimeout(() => { e.target.removeAttribute('data-spam-locked'); e.target.style.opacity='1'; e.target.style.pointerEvents='auto'; }, 400);
+            }
+        });
+
+        window.addEventListener('resize',calc);
+        calc();
+    </script>
+</body>
+</html>

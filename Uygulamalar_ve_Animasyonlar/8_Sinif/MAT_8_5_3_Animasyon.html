@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Döndürme Animasyonu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg:#0F0E17; --primary:#8B5CF6; --secondary:#10B981; --tertiary:#06B6D4; --danger:#F43F5E; --accent:#F59E0B; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Outfit',sans-serif; }
+        body { background:linear-gradient(135deg,var(--bg),#161625); color:#F8FAFC; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:20px; }
+        .header { width:100%; max-width:1000px; display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); padding:15px 25px; border-radius:20px; border:1px solid rgba(139,92,246,0.2); margin-bottom:20px; }
+        .header-left { display:flex; align-items:center; gap:15px; font-weight:600; font-size:1.2rem; }
+        .header-left img { width:50px; height:50px; border-radius:50%; background:white; padding:2px; }
+        .kazanim { background:var(--primary); color:white; padding:5px 15px; border-radius:20px; font-weight:800; font-size:0.9rem; }
+        h1 { font-size:2.2rem; color:var(--tertiary); font-weight:900; text-align:center; }
+        .subtitle { color:#94A3B8; font-size:1.1rem; margin-top:5px; text-align:center; margin-bottom:20px; }
+        .canvas-area { position:relative; width:100%; max-width:800px; height:450px; background:#11111A; border-radius:24px; border:1px solid rgba(255,255,255,0.05); box-shadow:inset 0 0 50px rgba(0,0,0,0.5); overflow:hidden; }
+        canvas { position:absolute; top:0; left:0; }
+        .expl-text { background:rgba(139,92,246,0.15); border:1px solid rgba(139,92,246,0.3); padding:15px 25px; border-radius:12px; font-size:1.25rem; color:white; font-weight:800; text-align:center; width:100%; max-width:800px; margin-bottom:15px; transition:0.5s; }
+        .btn-row { display:flex; gap:15px; margin-top:20px; }
+        .btn-play { background:var(--primary); color:white; border:none; padding:15px 35px; border-radius:50px; font-size:1.1rem; font-weight:900; cursor:pointer; transition:all 0.3s; box-shadow:0 10px 20px rgba(139,92,246,0.4); }
+        .btn-play:hover { transform:translateY(-3px) scale(1.05); }
+        .formula-box { position:absolute; bottom:15px; right:15px; background:rgba(0,0,0,0.9); border:2px solid var(--accent); padding:10px 20px; border-radius:15px; font-size:1rem; font-weight:900; color:white; opacity:0; transition:all 1s; z-index:10; text-align:center; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.8.5.3. Döndürme Animasyonu</div>
+    </div>
+    <h1>Saatin Elleri Gibi Döner</h1>
+    <p class="subtitle">Döndürme işleminde şeklin her noktası merkeze eşit uzaklıkta yay çizerek döner.</p>
+    <div class="expl-text" id="explText">1. L-biçimli şekil (0,0) merkezine göre döndürülecek.</div>
+    <div class="canvas-area">
+        <canvas id="cvs" width="800" height="450"></canvas>
+        <div class="formula-box" id="fBox">
+            90° CCW: (x,y) → (-y, x)<br>
+            180°: (x,y) → (-x, -y)<br>
+            270° CCW: (x,y) → (y, -x)
+        </div>
+    </div>
+    <div class="btn-row">
+        <button class="btn-play" onclick="runAnim(90,'↺ 90°')">↺ 90° Döndür</button>
+        <button class="btn-play" style="background:var(--secondary);" onclick="runAnim(180,'180°')">180° Döndür</button>
+        <button class="btn-play" style="background:var(--tertiary);" onclick="runAnim(270,'↻ 270°')">↻ 270° Döndür</button>
+    </div>
+    <script>
+        const cvs=document.getElementById('cvs');const ctx=cvs.getContext('2d');
+        const CELL=38,OX=400,OY=225;
+        function gx(x){return OX+x*CELL;}function gy(y){return OY-y*CELL;}
+        const shape=[{x:1,y:1},{x:3,y:1},{x:3,y:2},{x:2,y:2},{x:2,y:4},{x:1,y:4}];
+        let currentShape=shape.map(p=>({...p}));
+        let isAnimating=false;
+
+        function drawGrid(){
+            ctx.clearRect(0,0,800,450);
+            ctx.strokeStyle='rgba(255,255,255,0.07)';ctx.lineWidth=1;
+            for(let x=-10;x<=10;x++){ctx.beginPath();ctx.moveTo(gx(x),0);ctx.lineTo(gx(x),450);ctx.stroke();}
+            for(let y=-6;y<=6;y++){ctx.beginPath();ctx.moveTo(0,gy(y));ctx.lineTo(800,gy(y));ctx.stroke();}
+            ctx.strokeStyle='rgba(255,255,255,0.35)';ctx.lineWidth=2;
+            ctx.beginPath();ctx.moveTo(0,gy(0));ctx.lineTo(800,gy(0));ctx.stroke();
+            ctx.beginPath();ctx.moveTo(gx(0),0);ctx.lineTo(gx(0),450);ctx.stroke();
+            ctx.fillStyle='#94A3B8';ctx.font='600 11px Outfit';ctx.textAlign='center';
+            for(let x=-9;x<=9;x+=2)if(x)ctx.fillText(x,gx(x),gy(0)+16);
+            ctx.textAlign='right';
+            for(let y=-5;y<=5;y+=2)if(y)ctx.fillText(y,gx(0)-6,gy(y)+4);
+            ctx.beginPath();ctx.arc(gx(0),gy(0),7,0,Math.PI*2);ctx.fillStyle='#F59E0B';ctx.fill();
+        }
+
+        function drawPolyAtAngle(pts,angleRad,fill,stroke,alpha){
+            ctx.save();ctx.translate(gx(0),gy(0));ctx.rotate(-angleRad);ctx.translate(-gx(0),-gy(0));
+            ctx.beginPath();ctx.moveTo(gx(pts[0].x),gy(pts[0].y));
+            pts.forEach(p=>ctx.lineTo(gx(p.x),gy(p.y)));ctx.closePath();
+            ctx.fillStyle=fill;ctx.globalAlpha=alpha;ctx.fill();
+            ctx.globalAlpha=1;ctx.strokeStyle=stroke;ctx.lineWidth=3;ctx.stroke();
+            ctx.restore();
+        }
+
+        function drawFrame(angle){
+            drawGrid();
+            // Ghost (original position)
+            drawPolyAtAngle(shape,0,'#8B5CF6','#8B5CF6',0.2);
+            // Current (animated)
+            let rad=angle*Math.PI/180;
+            drawPolyAtAngle(currentShape,rad,'#10B981','#10B981',0.6);
+            // Sweep arc for first vertex
+            let p=currentShape[0];
+            let r=Math.sqrt(p.x*p.x+p.y*p.y)*CELL;
+            ctx.beginPath();ctx.arc(gx(0),gy(0),r,Math.atan2(-p.y,p.x),-rad+Math.atan2(-p.y,p.x),false);
+            ctx.strokeStyle='rgba(245,158,11,0.4)';ctx.lineWidth=2;ctx.setLineDash([5,5]);ctx.stroke();ctx.setLineDash([]);
+            if(Math.abs(angle)>5){
+                ctx.fillStyle='#F59E0B';ctx.font='900 16px Outfit';ctx.textAlign='center';
+                ctx.fillText(Math.round(angle)+'°',gx(0)+r*0.5,gy(0)-r*0.5);
+            }
+        }
+
+        const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+        async function runAnim(degrees,label){
+            if(isAnimating)return;
+            isAnimating=true;
+            document.getElementById('explText').textContent=`${label} döndürme başlıyor...`;
+            const dur=1500,start=performance.now();
+            await new Promise(res=>{
+                function f(now){
+                    let t=Math.min((now-start)/dur,1);
+                    t=t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+                    drawFrame(degrees*t);
+                    if(t<1)requestAnimationFrame(f);else res();
+                }
+                requestAnimationFrame(f);
+            });
+            // Update currentShape
+            let rad=degrees*Math.PI/180;
+            currentShape=currentShape.map(p=>({
+                x:Math.round((p.x*Math.cos(-rad)-p.y*Math.sin(-rad))*10)/10,
+                y:Math.round((p.x*Math.sin(-rad)+p.y*Math.cos(-rad))*10)/10
+            }));
+            drawFrame(0);
+            document.getElementById('explText').style.color='var(--secondary)';
+            document.getElementById('explText').textContent=`✅ ${degrees}° döndürme tamamlandı! Şeklin boyutu değişmedi.`;
+            document.getElementById('fBox').style.opacity='1';
+            isAnimating=false;
+        }
+
+        drawFrame(0);
+    </script>
+</body>
+</html>

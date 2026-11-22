@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>11.1.3 - Üstel ve Logaritmik Fonksiyonlar Etkinliği</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0A0A12;
+            --panel-bg: #151522;
+            --primary: #00F0FF; /* Neon Cyan (Exponential) */
+            --secondary: #FF00E4; /* Neon Pink (Logarithmic) */
+            --accent: #FFE600; /* Neon Yellow (y=x line) */
+            --text-main: #FFFFFF;
+            --text-muted: #8A8A9E;
+            --grid-line: rgba(0, 240, 255, 0.12);
+            --axis-line: rgba(0, 240, 255, 0.5);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background-color: var(--bg-color); color: var(--text-main);
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; padding: 20px; overflow-x: hidden;
+            background-image: 
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        .header {
+            width: 100%; max-width: 1200px; display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 25px; background: rgba(21, 21, 34, 0.85); backdrop-filter: blur(10px);
+            border-radius: 16px; border: 1px solid rgba(0, 240, 255, 0.3);
+            margin-bottom: 20px; box-shadow: 0 0 20px rgba(0, 240, 255, 0.15);
+        }
+        
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 800; color: var(--primary); font-size: 1.1rem; }
+        .header-left img { width: 45px; height: 45px; border-radius: 10px; border: 1px solid var(--primary); }
+        .kazanim { background: rgba(0, 240, 255, 0.1); padding: 8px 15px; border-radius: 8px; color: var(--primary); font-weight: 600; font-size: 0.85rem; border: 1px solid rgba(0, 240, 255, 0.3); }
+
+        h1 { font-size: 2rem; font-weight: 900; margin-bottom: 8px; text-align: center; text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 0 10px rgba(0, 240, 255, 0.5); }
+        .subtitle { color: var(--text-muted); font-size: 1rem; margin-bottom: 25px; text-align: center; max-width: 900px; }
+
+        .workspace { display: flex; flex-direction: row; gap: 20px; width: 100%; max-width: 1200px; }
+        @media (max-width: 900px) { .workspace { flex-direction: column; } }
+
+        .controls {
+            flex: 1; display: flex; flex-direction: column; gap: 16px; background: var(--panel-bg);
+            padding: 22px; border-radius: 16px; border: 1px solid rgba(255, 0, 228, 0.3);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5); min-width: 320px;
+        }
+
+        .slider-group { background: rgba(0,0,0,0.4); padding: 16px; border-radius: 8px; border-left: 4px solid var(--accent); margin-bottom: 10px; }
+        .slider-header { display: flex; justify-content: space-between; margin-bottom: 12px; font-weight: 600; color: var(--text-main); font-size: 1rem; }
+        .slider-val { color: var(--accent); font-family: monospace; font-size: 1.2rem; font-weight: bold; }
+        
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; }
+        input[type=range]::-webkit-slider-thumb { height: 20px; width: 20px; border-radius: 50%; background: var(--accent); cursor: pointer; -webkit-appearance: none; margin-top: -6px; box-shadow: 0 0 12px var(--accent); }
+        
+        .legend { display: flex; flex-direction: column; gap: 12px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 8px; }
+        .legend-item { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 1.05rem; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+        .dot.cyan { background: var(--primary); box-shadow: 0 0 8px var(--primary); }
+        .dot.pink { background: var(--secondary); box-shadow: 0 0 8px var(--secondary); }
+        .dot.yellow { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+
+        .math-box {
+            background: rgba(0,0,0,0.6); border: 1px dashed var(--primary); padding: 20px;
+            border-radius: 12px; font-size: 1.1rem; text-align: center; margin-top: auto; color: var(--text-main);
+            line-height: 1.8; min-height: 140px; display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+
+        .visual-container { flex: 2.2; display: flex; flex-direction: column; gap: 15px; }
+        
+        .graph-container {
+            display: flex; width: 100%; height: 500px; position: relative;
+            background: #0A0A12; border-radius: 16px; border: 2px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden; box-shadow: 0 0 30px rgba(255, 0, 228, 0.1) inset;
+        }
+
+        svg { width: 100%; height: 100%; display: block; cursor: crosshair; }
+        
+        .svg-grid { stroke: rgba(255,255,255,0.06); stroke-width: 0.05; }
+        .svg-axis { stroke: var(--axis-line); stroke-width: 0.15; }
+        
+        .path-exp { fill: none; stroke: var(--primary); stroke-width: 0.25; stroke-linecap: round; filter: drop-shadow(0 0 5px var(--primary)); }
+        .path-log { fill: none; stroke: var(--secondary); stroke-width: 0.25; stroke-linecap: round; filter: drop-shadow(0 0 5px var(--secondary)); }
+        .path-sym { fill: none; stroke: var(--accent); stroke-width: 0.15; stroke-dasharray: 0.4, 0.4; opacity: 0.7; }
+        
+        .svg-label { fill: var(--text-muted); font-size: 0.4px; font-weight: 600; }
+        .svg-axis-title { fill: var(--text-main); font-size: 0.5px; font-weight: 800; opacity: 0.8; }
+        
+        .point-marker { fill: var(--bg-color); stroke-width: 0.1; r: 0.2; }
+        .marker-exp { stroke: var(--primary); filter: drop-shadow(0 0 5px var(--primary)); }
+        .marker-log { stroke: var(--secondary); filter: drop-shadow(0 0 5px var(--secondary)); }
+        .sym-line { stroke: var(--text-muted); stroke-width: 0.08; stroke-dasharray: 0.1, 0.1; }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=00F0FF&color=000'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.11.1.3. Üstel ve Logaritmik Fonksiyonlar</div>
+    </div>
+    
+    <h1>Ters Fonksiyon Simetrisi</h1>
+    <p class="subtitle">Üstel fonksiyon (<strong>f(x) = aˣ</strong>) ile logaritmik fonksiyon (<strong>g(x) = logₐ(x)</strong>) grafikleri <strong>y = x</strong> doğrusuna göre simetriktir. Taban değerini (a) değiştirerek inceleyin.</p>
+    
+    <div class="workspace">
+        <div class="controls">
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span>Taban (a) Değeri</span>
+                    <span class="slider-val" id="valA">2.0</span>
+                </div>
+                <!-- Logarithmic scale approach for slider to handle 0 to 1 and > 1 smoothly -->
+                <!-- Values from -10 to 10 mapped to a = 10^(val/10) => from 0.1 to 10. (Exclude a=1) -->
+                <input type="range" id="slideA" min="-10" max="10" step="0.1" value="3.01">
+            </div>
+
+            <div class="legend">
+                <div class="legend-item"><span class="dot cyan"></span> f(x) = aˣ (Üstel)</div>
+                <div class="legend-item"><span class="dot pink"></span> g(x) = logₐ(x) (Logaritmik)</div>
+                <div class="legend-item"><span class="dot yellow"></span> y = x (Simetri Ekseni)</div>
+            </div>
+
+            <div class="math-box" id="mathOutput">
+                <!-- Double buffered MathJax rendered Tex -->
+            </div>
+        </div>
+        
+        <div class="visual-container">
+            <div class="graph-container">
+                <!-- Coordinate bounds: x: -8 to 8, y: -8 to 8 -->
+                <svg id="graphSvg" viewBox="-8 -8 16 16" preserveAspectRatio="xMidYMid meet">
+                    <g transform="scale(1, -1)">
+                        <g id="gridGroup"></g>
+                        
+                        <!-- Axes -->
+                        <line x1="-8" y1="0" x2="8" y2="0" class="svg-axis" />
+                        <line x1="0" y1="-8" x2="0" y2="8" class="svg-axis" />
+                        
+                        <!-- y = x Line -->
+                        <line x1="-8" y1="-8" x2="8" y2="8" class="path-sym" />
+                        
+                        <!-- Curves -->
+                        <path id="pathExp" class="path-exp" d="" />
+                        <path id="pathLog" class="path-log" d="" />
+                        
+                        <!-- Interactive points -->
+                        <g id="interactiveGroup"></g>
+                    </g>
+                    <g id="labelsGroup"></g>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const slideA = document.getElementById('slideA'); 
+        const valA = document.getElementById('valA');
+        const mathOutput = document.getElementById('mathOutput');
+        const pathExp = document.getElementById('pathExp');
+        const pathLog = document.getElementById('pathLog');
+        const graphSvg = document.getElementById('graphSvg');
+        const interactiveGroup = document.getElementById('interactiveGroup');
+        
+        let isTypesetting = false;
+        let pendingTex = null;
+        let currentA = 2.0;
+
+        function getBaseValue(sliderVal) {
+            let v = parseFloat(sliderVal);
+            if(Math.abs(v) < 0.1) v = 0.1; // avoid exactly a=1 (which is 10^0)
+            return Math.pow(10, v / 15); // mapping range roughly 0.2 to 4.6
+        }
+
+        function drawGrid() {
+            let gridHtml = '';
+            let labelHtml = '';
+            
+            for(let i = -7; i <= 7; i += 1) {
+                if(i !== 0) {
+                    gridHtml += `<line x1="-8" y1="${i}" x2="8" y2="${i}" class="svg-grid" />`;
+                    gridHtml += `<line x1="${i}" y1="-8" x2="${i}" y2="8" class="svg-grid" />`;
+                    
+                    labelHtml += `<text x="-0.3" y="${-i + 0.15}" class="svg-label" text-anchor="end">${i}</text>`;
+                    labelHtml += `<text x="${i}" y="0.5" class="svg-label" text-anchor="middle">${i}</text>`;
+                }
+            }
+            
+            labelHtml += `<text x="7.5" y="-0.3" class="svg-axis-title">x</text>`;
+            labelHtml += `<text x="0.3" y="-7.5" class="svg-axis-title">y</text>`;
+            labelHtml += `<text x="6.5" y="-7.0" class="svg-label" fill="var(--accent)" style="font-size:0.5px">y = x</text>`;
+
+            document.getElementById('gridGroup').innerHTML = gridHtml;
+            document.getElementById('labelsGroup').innerHTML = labelHtml;
+        }
+
+        function renderMathClean(texString) {
+            if (isTypesetting) {
+                pendingTex = texString;
+                return;
+            }
+            isTypesetting = true;
+            
+            let temp = document.createElement('div');
+            temp.style.position = 'absolute';
+            temp.style.top = '-9999px';
+            temp.style.left = '-9999px';
+            temp.style.visibility = 'hidden';
+            temp.innerHTML = texString;
+            document.body.appendChild(temp);
+            
+            MathJax.typesetPromise([temp]).then(() => {
+                mathOutput.innerHTML = temp.innerHTML;
+                if (temp.parentNode) document.body.removeChild(temp);
+                isTypesetting = false;
+                
+                if (pendingTex) {
+                    let next = pendingTex;
+                    pendingTex = null;
+                    renderMathClean(next);
+                }
+            }).catch(err => {
+                if (temp.parentNode) document.body.removeChild(temp);
+                isTypesetting = false;
+            });
+        }
+
+        function updateVisuals() {
+            currentA = getBaseValue(slideA.value);
+            valA.innerText = currentA.toFixed(2);
+            
+            // Draw Exp: y = a^x
+            let step = 0.1;
+            let dExp = "";
+            let dLog = "";
+            
+            for(let x = -8; x <= 8; x += step) {
+                let yE = Math.pow(currentA, x);
+                if(yE >= -10 && yE <= 10) {
+                    dExp += (dExp === "" ? "M" : "L") + ` ${x.toFixed(3)} ${yE.toFixed(3)}`;
+                }
+            }
+            
+            // Draw Log: y = log_a(x) = ln(x)/ln(a)
+            for(let x = 0.001; x <= 8; x += step) {
+                let yL = Math.log(x) / Math.log(currentA);
+                if(yL >= -10 && yL <= 10) {
+                    dLog += (dLog === "" ? "M" : "L") + ` ${x.toFixed(3)} ${yL.toFixed(3)}`;
+                }
+            }
+            
+            pathExp.setAttribute("d", dExp);
+            pathLog.setAttribute("d", dLog);
+            
+            // Math Status
+            let statusTex = `\\( a = ${currentA.toFixed(2)} \\)<br><br>`;
+            statusTex += `\\( f(x) = ${currentA.toFixed(2)}^x \\)<br>`;
+            statusTex += `\\( g(x) = \\log_{${currentA.toFixed(2)}} (x) \\)<br><br>`;
+            
+            if(currentA > 1) {
+                statusTex += `<span style="color:var(--primary); font-weight:bold;">a > 1 (Artan Fonksiyonlar)</span>`;
+            } else {
+                statusTex += `<span style="color:var(--secondary); font-weight:bold;">0 < a < 1 (Azalan Fonksiyonlar)</span>`;
+            }
+            
+            renderMathClean(statusTex);
+            clearInteraction();
+        }
+
+        // SVG Interaction
+        function getMousePos(evt) {
+            let CTM = graphSvg.getScreenCTM();
+            return {
+                x: (evt.clientX - CTM.e) / CTM.a,
+                y: -((evt.clientY - CTM.f) / CTM.d) // Invert Y because we scaled(1, -1)
+            };
+        }
+
+        graphSvg.addEventListener('mousemove', (e) => {
+            let pos = getMousePos(e);
+            let px = pos.x;
+            if(px < -8 || px > 8) { clearInteraction(); return; }
+            
+            // We'll show a point on Exp curve, and its symmetric point on Log curve
+            let yE = Math.pow(currentA, px);
+            
+            // If yE is within view, show points
+            if(yE > -8 && yE < 8) {
+                // Symmetric point (yE, px) should lie on Log curve
+                
+                let html = "";
+                // Line connecting the symmetric points
+                html += `<line x1="${px}" y1="${yE}" x2="${yE}" y2="${px}" class="sym-line" />`;
+                
+                // Point on Exp
+                html += `<circle cx="${px}" cy="${yE}" class="point-marker marker-exp" />`;
+                
+                // Point on Log
+                html += `<circle cx="${yE}" cy="${px}" class="point-marker marker-log" />`;
+                
+                interactiveGroup.innerHTML = html;
+            } else {
+                clearInteraction();
+            }
+        });
+
+        graphSvg.addEventListener('mouseleave', clearInteraction);
+
+        function clearInteraction() {
+            interactiveGroup.innerHTML = "";
+        }
+
+        slideA.addEventListener('input', updateVisuals);
+
+        window.onload = () => {
+            drawGrid();
+            slideA.value = 4.5; // Roughly 2.0 when mapped
+            updateVisuals();
+        };
+    </script>
+</body>
+</html>

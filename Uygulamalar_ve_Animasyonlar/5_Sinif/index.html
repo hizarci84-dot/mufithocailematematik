@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Müfit Hoca Dijital Matematik Kütüphanesi. 5. Sınıf yeni müfredat (Maarif Modeli) matematik animasyonları ve interaktif laboratuvarları.">
+    <meta name="keywords" content="matematik, 5. sınıf, yeni müfredat, maarif modeli, interaktif eğitim, animasyon, kesirler, geometri, mufit hoca">
+    <meta name="author" content="Müfit Hoca">
+    
+    <title>Dijital Matematik Kütüphanesi | Müfit Hoca</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Load Library Database -->
+    <script src="library_data.js"></script>
+
+    <style>
+        :root {
+            --bg: #0F172A;
+            --surface: #1E293B;
+            --text: #F8FAFC;
+            --primary: #3B82F6;
+            --secondary: #10B981;
+            --amber: #F59E0B;
+            --danger: #F43F5E;
+            --purple: #8B5CF6;
+            --cyan: #06B6D4;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, var(--surface) 100%);
+            color: var(--text); min-height: 100vh; overflow-x: hidden;
+        }
+
+        /* Navbar */
+        .navbar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 20px 50px; background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.05); position: sticky; top: 0; z-index: 100;
+        }
+        .nav-brand { display: flex; align-items: center; gap: 15px; font-weight: 900; font-size: 1.5rem; color: white;}
+        .nav-brand img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .nav-brand span { background: linear-gradient(to right, var(--primary), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;}
+        
+        /* Hero & Search */
+        .hero {
+            text-align: center; padding: 60px 20px 40px 20px; max-width: 900px; margin: 0 auto;
+        }
+        .hero h1 { font-size: 3rem; font-weight: 900; margin-bottom: 20px; line-height: 1.2;}
+        .hero p { font-size: 1.2rem; color: #94A3B8; margin-bottom: 40px;}
+        
+        .search-bar-container {
+            display: flex; gap: 15px; max-width: 700px; margin: 0 auto; background: rgba(255,255,255,0.05);
+            padding: 10px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1);
+        }
+        .search-input {
+            flex: 1; background: transparent; border: none; color: white; font-size: 1.2rem;
+            padding: 15px 20px; outline: none;
+        }
+        .search-input::placeholder { color: #64748B; }
+        
+        .filter-select {
+            background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(255,255,255,0.1);
+            padding: 10px 20px; border-radius: 12px; font-size: 1rem; outline: none; cursor: pointer;
+        }
+
+        /* Library Grid */
+        .container {
+            max-width: 1200px; margin: 0 auto; padding: 0 20px 80px 20px;
+        }
+
+        .grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px;
+        }
+
+        .empty-state { text-align: center; color: #64748B; font-size: 1.5rem; font-weight: 600; grid-column: 1 / -1; padding: 50px 0;}
+
+        /* Card Design */
+        .card {
+            background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px;
+            padding: 25px; transition: all 0.3s; display: flex; flex-direction: column; cursor: pointer; position: relative;
+            overflow: hidden;
+        }
+        .card:hover { transform: translateY(-5px); border-color: rgba(255,255,255,0.15); box-shadow: 0 20px 40px rgba(0,0,0,0.4);}
+        .card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 5px;
+            background: var(--card-color, #3B82F6);
+        }
+        
+        .c-icon { font-size: 3rem; margin-bottom: 15px;}
+        .c-theme { font-size: 0.8rem; font-weight: 800; color: var(--card-color, #3B82F6); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;}
+        .c-title { font-size: 1.4rem; font-weight: 800; color: white; margin-bottom: 10px; line-height: 1.3;}
+        .c-desc { font-size: 1rem; color: #94A3B8; margin-bottom: 20px; flex-grow: 1;}
+        
+        .c-action {
+            display: flex; align-items: center; justify-content: space-between;
+            color: #94A3B8; font-weight: 800; font-size: 0.9rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;
+        }
+        .card:hover .c-action { color: white; }
+
+        /* Modal (Preview Cinema) */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9);
+            z-index: 1000; display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s; backdrop-filter: blur(5px);
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        
+        .modal-content {
+            width: 90%; max-width: 900px; background: var(--surface); border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.1); overflow: hidden; display: flex; flex-direction: column;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8); transform: translateY(50px); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .modal-overlay.active .modal-content { transform: translateY(0); }
+        
+        .modal-header {
+            display: flex; justify-content: space-between; align-items: center; padding: 20px 25px;
+            border-bottom: 1px solid rgba(255,255,255,0.05); background: #0B1120;
+        }
+        .modal-title { font-size: 1.5rem; font-weight: 800; color: white;}
+        .close-btn {
+            background: rgba(255,255,255,0.1); border: none; color: white; width: 40px; height: 40px;
+            border-radius: 50%; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+        }
+        .close-btn:hover { background: var(--danger); transform: rotate(90deg);}
+
+        .iframe-container { width: 100%; height: 500px; background: #000; position: relative;}
+        iframe { width: 100%; height: 100%; border: none; }
+        
+        .modal-footer {
+            padding: 25px; background: #0B1120; text-align: center; border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        .btn-lab {
+            display: inline-block; background: var(--secondary); color: white; text-decoration: none;
+            padding: 15px 40px; border-radius: 50px; font-size: 1.3rem; font-weight: 900;
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4); transition: all 0.3s;
+        }
+        .btn-lab:hover { transform: scale(1.05); box-shadow: 0 15px 30px rgba(16, 185, 129, 0.6); }
+
+        /* Loader */
+        .iframe-loader { position: absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-weight:800; color:#64748B; z-index:0; }
+        iframe { z-index:1; position: relative;}
+
+        @media (max-width: 768px) {
+            .navbar { padding: 15px; flex-direction: column; gap: 10px;}
+            .hero h1 { font-size: 2rem; }
+            .search-bar-container { flex-direction: column; }
+            .iframe-container { height: 350px; }
+            .modal-content { width: 95%; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-brand">
+            <img src="../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=3B82F6&color=fff'">
+            <span>Müfit Hoca Dijital Kütüphane</span>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <h1>Yeni Nesil Eğitim Arşivi</h1>
+        <p>Aradığınız konuyu yazın, önce animasyonla mantığını kavrayın, ardından laboratuvarda kendinizi test edin.</p>
+        
+        <div class="search-bar-container">
+            <input type="text" id="searchInput" class="search-input" placeholder="🔍 Konu, kazanım veya kelime arayın... (Örn: Kesir)">
+            <select id="themeFilter" class="filter-select">
+                <option value="all">Tüm Temalar</option>
+                <!-- Filled via JS -->
+            </select>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="grid" id="libraryGrid">
+            <!-- Cards rendered here by JS -->
+        </div>
+    </div>
+
+    <!-- PREVIEW MODAL -->
+    <div class="modal-overlay" id="previewModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="mTitle">Konu Başlığı</div>
+                <button class="close-btn" onclick="closeModal()">×</button>
+            </div>
+            
+            <div class="iframe-container">
+                <div class="iframe-loader">Animasyon Yükleniyor...</div>
+                <iframe id="mIframe" src=""></iframe>
+            </div>
+
+            <div class="modal-footer">
+                <p style="color:#94A3B8; margin-bottom:15px; font-weight:600;">Animasyonu izlediysen, şimdi öğrendiklerini uygulama vakti!</p>
+                <a href="#" id="mLabBtn" class="btn-lab" target="_blank">🧪 İnteraktif Laboratuvara Geç</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const grid = document.getElementById('libraryGrid');
+        const searchInput = document.getElementById('searchInput');
+        const themeFilter = document.getElementById('themeFilter');
+        
+        const previewModal = document.getElementById('previewModal');
+        const mTitle = document.getElementById('mTitle');
+        const mIframe = document.getElementById('mIframe');
+        const mLabBtn = document.getElementById('mLabBtn');
+
+        // Populate themes in dropdown
+        function initFilters() {
+            const themes = [...new Set(libraryData.map(item => item.theme))];
+            themes.forEach(theme => {
+                let opt = document.createElement('option');
+                opt.value = theme;
+                opt.innerText = theme;
+                themeFilter.appendChild(opt);
+            });
+        }
+
+        function renderLibrary() {
+            grid.innerHTML = '';
+            let q = searchInput.value.toLowerCase();
+            let t = themeFilter.value;
+
+            let filtered = libraryData.filter(item => {
+                let matchSearch = item.title.toLowerCase().includes(q) || 
+                                  item.description.toLowerCase().includes(q) || 
+                                  item.tags.some(tag => tag.toLowerCase().includes(q));
+                
+                let matchTheme = (t === 'all') || (item.theme === t);
+                
+                return matchSearch && matchTheme;
+            });
+
+            if(filtered.length === 0) {
+                grid.innerHTML = '<div class="empty-state">😔 Aradığınız kritere uygun materyal bulunamadı.</div>';
+                return;
+            }
+
+            filtered.forEach(item => {
+                let card = document.createElement('div');
+                card.className = 'card';
+                card.style.setProperty('--card-color', item.color);
+                
+                // Pass full object to openModal as a JSON string
+                let jsonStr = encodeURIComponent(JSON.stringify(item));
+                
+                card.innerHTML = `
+                    <div class="c-theme">${item.grade}. Sınıf • ${item.theme}</div>
+                    <div class="c-icon">${item.icon}</div>
+                    <div class="c-title">${item.title}</div>
+                    <div class="c-desc">${item.description}</div>
+                    <div class="c-action">
+                        <span>▶ Ön İzleme Yap</span>
+                        <span>➔</span>
+                    </div>
+                `;
+                
+                card.onclick = () => openModal(item);
+                grid.appendChild(card);
+            });
+        }
+
+        function openModal(item) {
+            mTitle.innerText = item.title;
+            // Add a timestamp query to bust cache if needed, or just plain url
+            mIframe.src = item.animUrl; 
+            mLabBtn.href = item.labUrl;
+            previewModal.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Stop background scroll
+        }
+
+        function closeModal() {
+            previewModal.classList.remove('active');
+            setTimeout(() => { mIframe.src = ""; }, 300); // clear iframe after transition
+            document.body.style.overflow = 'auto';
+        }
+
+        // Event Listeners
+        searchInput.addEventListener('input', renderLibrary);
+        themeFilter.addEventListener('change', renderLibrary);
+        
+        // Close modal on click outside
+        previewModal.addEventListener('click', (e) => {
+            if(e.target === previewModal) closeModal();
+        });
+
+        // Initialize
+        initFilters();
+        renderLibrary();
+    </script>
+</body>
+</html>

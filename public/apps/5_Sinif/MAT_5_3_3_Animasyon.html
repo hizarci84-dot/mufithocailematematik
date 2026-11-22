@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Açının Serüveni - Dönme Miktarı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A;
+            --text: #F8FAFC;
+            --primary: #8B5CF6; /* Purple */
+            --accent: #F43F5E; /* Rose */
+            --highlight: #FDE047; /* Yellow */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: radial-gradient(circle at center, #1E293B 0%, var(--bg) 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; justify-content: flex-start; padding: 20px; overflow-y: auto;
+        }
+
+        .header {
+            position: relative; width: 100%; max-width: 900px;
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); 
+            margin-bottom: 30px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { position: relative; text-align: center; width: 100%; margin-bottom: 20px; }
+        h1 { font-size: 2.2rem; color: var(--highlight); text-shadow: 0 5px 15px rgba(0,0,0,0.5); line-height: 1.4; transition: opacity 0.5s;}
+        .subtitle { font-size: 1.2rem; color: #94A3B8; margin-top: 10px; transition: opacity 0.5s;}
+
+        .canvas {
+            position: relative; width: 100%; max-width: 500px; height: 400px; display: flex; align-items: center; justify-content: center;
+        }
+
+        /* SVG Setup */
+        svg { width: 100%; height: 100%; overflow: visible; }
+        
+        .circle-bg { fill: none; stroke: rgba(255,255,255,0.05); stroke-width: 4; }
+        .circle-path { fill: none; stroke: var(--primary); stroke-width: 6; stroke-linecap: round; }
+        
+        /* Removed linecap round and added markers for true Ray (Işın) representation */
+        .line-fixed { stroke: white; stroke-width: 6; marker-end: url(#arrow-white); }
+        .line-moving { stroke: var(--accent); stroke-width: 6; marker-end: url(#arrow-red); transform-origin: 300px 250px; }
+        .center-dot { fill: white; r: 8; }
+        
+        /* 90 degree square */
+        .rect-90 { fill: none; stroke: var(--highlight); stroke-width: 3; opacity: 0; transition: opacity 0.3s; }
+        
+        /* Drop shadow for text */
+        .svg-text { text-shadow: 0 5px 15px rgba(244, 63, 94, 0.5); font-variant-numeric: tabular-nums;}
+
+        #replayBtn { 
+            position: relative; margin-top: 30px; background: var(--primary); color: white; border: none; 
+            padding: 15px 40px; border-radius: 50px; font-size: 1.2rem; font-weight: 800; 
+            cursor: pointer; opacity: 0; pointer-events: none; transition: all 0.5s ease; box-shadow: 0 10px 20px rgba(139, 92, 246, 0.4);
+        }
+        #replayBtn.visible { opacity: 1; pointer-events: auto; }
+        #replayBtn:hover { transform: scale(1.05); background: #7C3AED;}
+
+        @media (max-width: 768px) {
+            .header { flex-direction: column; gap: 10px; }
+            h1 { font-size: 1.5rem; }
+            .canvas { height: 350px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.5.3.3. Açı Ölçümü</div>
+    </div>
+
+    <div class="title-area">
+        <h1 id="mTitle">Açı: Işının Dönme Miktarıdır</h1>
+        <p class="subtitle" id="mSub">Bir ışın, sabit bir nokta etrafında dönerek açıları oluşturur.</p>
+    </div>
+
+    <div class="canvas">
+        <svg viewBox="0 0 600 500">
+            <defs>
+                <marker id="arrow-white" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto">
+                    <path d="M 0 1 L 8 5 L 0 9 z" fill="white" />
+                </marker>
+                <marker id="arrow-red" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto">
+                    <path d="M 0 1 L 8 5 L 0 9 z" fill="#F43F5E" />
+                </marker>
+            </defs>
+
+            <!-- Background full circle radius=200 -->
+            <circle class="circle-bg" cx="300" cy="250" r="200" />
+            
+            <!-- Exact Math Arc Path (Dynamically drawn by JS) -->
+            <path class="circle-path" id="cPath" d="" />
+            
+            <!-- 90 Degree Marker -->
+            <rect class="rect-90" id="rect90" x="300" y="220" width="30" height="30" />
+
+            <!-- Rays: both extend beyond the circle (r=200, so they end at x=550) to look like real rays -->
+            <line class="line-fixed" x1="300" y1="250" x2="550" y2="250" />
+            <line class="line-moving" id="rayMoving" x1="300" y1="250" x2="550" y2="250" />
+            
+            <circle class="center-dot" cx="300" cy="250" />
+            
+            <!-- Angle Label inside SVG to prevent any HTML overlapping -->
+            <text x="300" y="490" id="angleLabel" class="svg-text" fill="white" font-size="50" font-weight="800" text-anchor="middle">0°</text>
+        </svg>
+    </div>
+
+    <button id="replayBtn" onclick="startAnim()">Tekrar Oynat</button>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        
+        // Exact mathematical arc generator
+        function getArcPath(x, y, r, angle) {
+            if(angle === 0) return "";
+            
+            // Fix: To draw a perfect 360 circle without browser path ambiguity (which caused the shifted circle bug),
+            // we use two perfect 180-degree half-circles connected together.
+            if(angle === 360) {
+                return `M ${x+r} ${y} A ${r} ${r} 0 1 0 ${x-r} ${y} A ${r} ${r} 0 1 0 ${x+r} ${y}`; 
+            }
+            
+            // counter-clockwise: y is inverted in SVG, so subtract from y
+            let rad = angle * Math.PI / 180;
+            let endX = x + r * Math.cos(rad);
+            let endY = y - r * Math.sin(rad); 
+            
+            let largeArcFlag = angle > 180 ? 1 : 0;
+            
+            return `M ${x+r} ${y} A ${r} ${r} 0 ${largeArcFlag} 0 ${endX} ${endY}`;
+        }
+        
+        async function startAnim() {
+            const ray = document.getElementById('rayMoving');
+            const path = document.getElementById('cPath');
+            const label = document.getElementById('angleLabel');
+            const rect90 = document.getElementById('rect90');
+            const title = document.getElementById('mTitle');
+            const sub = document.getElementById('mSub');
+            const btn = document.getElementById('replayBtn');
+
+            // Reset
+            btn.classList.remove('visible');
+            label.style.opacity = '1';
+            rect90.style.opacity = '0';
+            ray.style.transform = `rotate(0deg)`;
+            path.setAttribute('d', '');
+            path.style.stroke = 'var(--primary)';
+            
+            title.innerText = "Açı: Işının Dönme Miktarıdır";
+            sub.innerText = "Bir ışın, sabit bir nokta etrafında dönerek açıları oluşturur.";
+            
+            await sleep(1000);
+
+            // Animate up to 90
+            for(let i=0; i<=90; i++) {
+                ray.style.transform = `rotate(-${i}deg)`;
+                path.setAttribute('d', getArcPath(300, 250, 200, i));
+                label.textContent = `${i}°`;
+                await sleep(15);
+            }
+            
+            title.innerHTML = "DİK AÇI <span style='color:#FDE047'>(90°)</span>";
+            sub.innerText = "Tam dik kesişim.";
+            rect90.style.opacity = '1';
+            await sleep(2500);
+            rect90.style.opacity = '0';
+
+            // Animate up to 180
+            for(let i=91; i<=180; i++) {
+                ray.style.transform = `rotate(-${i}deg)`;
+                path.setAttribute('d', getArcPath(300, 250, 200, i));
+                label.textContent = `${i}°`;
+                await sleep(15);
+            }
+
+            title.innerHTML = "DOĞRU AÇI <span style='color:#FDE047'>(180°)</span>";
+            sub.innerText = "Tam açının (tam turun) yarısı kadardır. Dümdüz bir çizgi oluşturur.";
+            await sleep(3000);
+
+            // Animate up to 360
+            for(let i=181; i<=360; i++) {
+                ray.style.transform = `rotate(-${i}deg)`;
+                path.setAttribute('d', getArcPath(300, 250, 200, i));
+                label.textContent = `${i}°`;
+                await sleep(15);
+            }
+
+            title.innerHTML = "TAM AÇI <span style='color:#FDE047'>(360°)</span>";
+            sub.innerText = "Bir tam dönmenin (tam turun) meydana getirdiği açıdır.";
+            
+            // Pulse effect
+            path.style.transition = 'stroke 0.5s';
+            path.style.stroke = '#FDE047';
+            setTimeout(() => path.style.stroke = 'var(--primary)', 500);
+
+            await sleep(3500);
+
+            title.innerText = "1 Derece (1°) Nedir?";
+            sub.innerHTML = "Bu <b>tam turun</b> (360 derecenin) tam olarak <b style='color:#F43F5E'>360'ta birine</b> (1/360) bir derece denir.";
+            
+            btn.classList.add('visible');
+        }
+        
+        window.onload = startAnim;
+    </script>
+</body>
+</html>

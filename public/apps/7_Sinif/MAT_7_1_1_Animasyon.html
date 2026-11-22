@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sayı Kümelerinin Evrimi ve Mutlak Değer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F0E17; /* Darker, slightly purple background */
+            --surface: #1A1A24;
+            --text: #F8FAFC;
+            
+            /* 7th Grade Cyberpunk/Modern Palette */
+            --primary: #8B5CF6; /* Purple */
+            --secondary: #10B981; /* Neon Green */
+            --tertiary: #06B6D4; /* Cyan */
+            --danger: #F43F5E; /* Rose / Pink */
+            --accent: #F59E0B; /* Amber */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, #161625 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(139, 92, 246, 0.2); margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(139, 92, 246, 0.1);
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; width: 100%; max-width: 900px; margin-bottom: 20px; min-height: 90px;}
+        h1 { font-size: 2.2rem; color: var(--tertiary); text-shadow: 0 5px 15px rgba(6, 182, 212, 0.3); line-height: 1.3; transition: all 0.5s;}
+        .subtitle { font-size: 1.2rem; color: #94A3B8; margin-top: 10px; line-height: 1.5; transition: all 0.5s;}
+        .subtitle span { color: white; font-weight: 800; background: rgba(139,92,246,0.2); padding: 2px 8px; border-radius: 5px;}
+
+        /* Canvas Area for Animations */
+        .canvas-area {
+            position: relative; width: 100%; max-width: 900px; height: 450px; 
+            background: #11111A; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.4); 
+            overflow: hidden; display: flex; align-items: center; justify-content: center;
+        }
+
+        /* Number Sets Animation */
+        .set-anim-container {
+            position: absolute; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+            opacity: 1; transition: opacity 0.5s;
+        }
+        .set-circle {
+            position: absolute; border-radius: 50%; display: flex; align-items: flex-start; justify-content: center;
+            padding-top: 20px; font-weight: 900; font-size: 2rem; border: 3px solid; opacity: 0; transform: scale(0);
+            transition: all 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.5); text-shadow: 0 2px 5px black;
+        }
+        
+        .set-n { width: 150px; height: 150px; background: rgba(16, 185, 129, 0.2); border-color: var(--secondary); color: var(--secondary); z-index: 3;}
+        .set-z { width: 280px; height: 280px; background: rgba(6, 182, 212, 0.2); border-color: var(--tertiary); color: var(--tertiary); z-index: 2;}
+        .set-q { width: 420px; height: 420px; background: rgba(139, 92, 246, 0.2); border-color: var(--primary); color: var(--primary); z-index: 1;}
+
+        .floating-numbers {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;
+        }
+        .f-num {
+            position: absolute; font-size: 1.5rem; font-weight: 800; color: white; opacity: 0;
+            transition: all 0.5s; transform: translate(-50%, -50%);
+        }
+
+        /* Absolute Value Animation */
+        .abs-anim-container {
+            position: absolute; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.5s;
+        }
+        
+        .number-line {
+            position: relative; width: 80%; height: 4px; background: #334155; margin-top: 50px;
+            display: flex; align-items: center; border-radius: 2px;
+        }
+        
+        .nl-tick {
+            position: absolute; width: 2px; height: 20px; background: #94A3B8; top: -8px;
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+        }
+        .nl-tick span { margin-top: 25px; font-weight: 800; font-size: 1.2rem; color: #94A3B8; }
+        .nl-tick.zero span { color: white; font-size: 1.5rem; margin-top: 30px;}
+        .nl-tick.zero { background: white; height: 30px; top: -13px;}
+        
+        .object-icon {
+            position: absolute; top: -60px; font-size: 3rem; transform: translateX(-50%);
+            transition: left 1.5s ease-in-out; text-shadow: 0 5px 10px rgba(0,0,0,0.5); z-index: 10;
+        }
+
+        .distance-arc {
+            position: absolute; top: -50px; left: 50%; width: 0; height: 60px;
+            border-top: 3px dashed var(--secondary); border-radius: 50% 50% 0 0;
+            transform: translateX(-100%); transform-origin: right bottom;
+            opacity: 0; transition: all 1.5s ease-in-out;
+        }
+        
+        .distance-label {
+            position: absolute; top: -80px; width: 100px; text-align: center; font-weight: 900; font-size: 1.5rem; color: var(--secondary);
+            opacity: 0; transition: opacity 0.5s;
+        }
+
+        .formula-box {
+            background: rgba(0,0,0,0.5); padding: 15px 30px; border-radius: 20px; border: 2px solid var(--primary);
+            font-size: 2.5rem; font-weight: 900; color: white; margin-top: 40px; opacity: 0; transition: 0.5s;
+        }
+
+        .btn-controls {
+            display: flex; gap: 15px; margin-top: 25px;
+        }
+        .btn {
+            background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); padding: 12px 30px; border-radius: 50px;
+            font-size: 1.1rem; font-weight: 800; cursor: pointer; transition: all 0.3s;
+        }
+        .btn:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
+        .btn.active { background: var(--primary); border-color: var(--primary); box-shadow: 0 5px 15px rgba(139, 92, 246, 0.4);}
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none;}
+
+        @media (max-width: 768px) {
+            .header { flex-direction: column; gap: 10px; }
+            .set-n { width: 100px; height: 100px; font-size: 1.5rem;}
+            .set-z { width: 200px; height: 200px; font-size: 1.5rem;}
+            .set-q { width: 300px; height: 300px; font-size: 1.5rem;}
+            .f-num { font-size: 1.2rem; }
+            .number-line { width: 90%; }
+            .nl-tick span { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.7.1.1. Tam Sayıların Rasyonel Sayılara Genişlemesi ve Mutlak Değer</div>
+    </div>
+
+    <div class="title-area">
+        <h1 id="mTitle">Sayıların Evrimi</h1>
+        <p class="subtitle" id="mSub">İnsanlar önce saymayı öğrendi, sonra negatiflere ihtiyaç duydu, en sonunda da parçaları ifade etmek için rasyonel sayıları keşfetti.</p>
+    </div>
+
+    <div class="canvas-area">
+        
+        <!-- View 1: Sets -->
+        <div class="set-anim-container" id="viewSets">
+            <div class="set-circle set-q" id="setQ">Q</div>
+            <div class="set-circle set-z" id="setZ">Z</div>
+            <div class="set-circle set-n" id="setN">N</div>
+            
+            <div class="floating-numbers" id="fNums"></div>
+        </div>
+
+        <!-- View 2: Absolute Value -->
+        <div class="abs-anim-container" id="viewAbs">
+            
+            <div class="number-line" id="nLine">
+                <!-- Ticks generated by JS -->
+                <div class="object-icon" id="objIcon">🚁</div>
+                <div class="distance-arc" id="distArc"></div>
+                <div class="distance-label" id="distLabel">0 Birim</div>
+            </div>
+
+            <div class="formula-box" id="formulaBox">| -5 | = 5</div>
+        </div>
+
+    </div>
+
+    <div class="btn-controls">
+        <button class="btn active" id="btnSets" onclick="startSetsAnim()">Sayı Kümeleri</button>
+        <button class="btn" id="btnAbs" onclick="startAbsAnim()">Mutlak Değer</button>
+    </div>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        const mTitle = document.getElementById('mTitle');
+        const mSub = document.getElementById('mSub');
+        
+        // Sets Elements
+        const viewSets = document.getElementById('viewSets');
+        const setN = document.getElementById('setN');
+        const setZ = document.getElementById('setZ');
+        const setQ = document.getElementById('setQ');
+        const fNums = document.getElementById('fNums');
+
+        // Abs Elements
+        const viewAbs = document.getElementById('viewAbs');
+        const nLine = document.getElementById('nLine');
+        const objIcon = document.getElementById('objIcon');
+        const distArc = document.getElementById('distArc');
+        const distLabel = document.getElementById('distLabel');
+        const formulaBox = document.getElementById('formulaBox');
+
+        // Buttons
+        const btnSets = document.getElementById('btnSets');
+        const btnAbs = document.getElementById('btnAbs');
+
+        let isAnimating = false;
+
+        // Number Line Generator
+        function buildNumberLine() {
+            let html = '';
+            for(let i = -5; i <= 5; i++) {
+                let leftPct = ((i + 5) / 10) * 100;
+                let cClass = i === 0 ? "nl-tick zero" : "nl-tick";
+                html += `<div class="${cClass}" style="left: ${leftPct}%;"><span>${i}</span></div>`;
+            }
+            // Keep the dynamic elements
+            html += `
+                <div class="object-icon" id="objIcon">🚁</div>
+                <div class="distance-arc" id="distArc"></div>
+                <div class="distance-label" id="distLabel">0 Birim</div>
+            `;
+            nLine.innerHTML = html;
+        }
+
+        async function createFloatingNumber(txt, x, y, delay, color = "white") {
+            let el = document.createElement('div');
+            el.className = 'f-num';
+            el.innerText = txt;
+            el.style.left = x + '%';
+            el.style.top = y + '%';
+            el.style.color = color;
+            fNums.appendChild(el);
+            await sleep(delay);
+            el.style.opacity = 1;
+        }
+
+        async function startSetsAnim() {
+            if(isAnimating) return;
+            isAnimating = true;
+            btnAbs.classList.remove('active');
+            btnSets.classList.add('active');
+
+            viewAbs.style.opacity = 0;
+            viewAbs.style.pointerEvents = 'none';
+            viewSets.style.opacity = 1;
+            fNums.innerHTML = ''; // clear
+
+            mTitle.innerText = "Doğal Sayılar (N)";
+            mTitle.style.color = "var(--secondary)";
+            mSub.innerHTML = "Doğada sayabildiğimiz nesneleri ifade eder (0, 1, 2, 3...).";
+            
+            setZ.style.transform = "scale(0)"; setZ.style.opacity = 0;
+            setQ.style.transform = "scale(0)"; setQ.style.opacity = 0;
+            
+            setN.style.transform = "scale(1)"; setN.style.opacity = 1;
+            await sleep(800);
+            createFloatingNumber("0", 50, 60, 200, "var(--secondary)");
+            createFloatingNumber("5", 40, 50, 200, "var(--secondary)");
+            createFloatingNumber("142", 60, 55, 200, "var(--secondary)");
+
+            await sleep(2000);
+            mTitle.innerText = "Tam Sayılar (Z)";
+            mTitle.style.color = "var(--tertiary)";
+            mSub.innerHTML = "Borç, deniz seviyesi altı, sıfırın altındaki sıcaklıklar için <span>Negatif Sayılar</span> eklendi.";
+            
+            setZ.style.transform = "scale(1)"; setZ.style.opacity = 1;
+            await sleep(800);
+            createFloatingNumber("-1", 30, 40, 200, "var(--tertiary)");
+            createFloatingNumber("-7", 70, 70, 200, "var(--tertiary)");
+            createFloatingNumber("-100", 75, 30, 200, "var(--tertiary)");
+
+            await sleep(2000);
+            mTitle.innerText = "Rasyonel Sayılar (Q)";
+            mTitle.style.color = "var(--primary)";
+            mSub.innerHTML = "Bütün olmayan parçaları (kesirler, ondalıklar) ifade etmek için kümeler daha da genişledi.";
+            
+            setQ.style.transform = "scale(1)"; setQ.style.opacity = 1;
+            await sleep(800);
+            createFloatingNumber("1/2", 15, 20, 200, "var(--primary)");
+            createFloatingNumber("-3/4", 85, 80, 200, "var(--primary)");
+            createFloatingNumber("0.75", 80, 15, 200, "var(--primary)");
+            createFloatingNumber("-2.5", 20, 85, 200, "var(--primary)");
+
+            await sleep(1000);
+            mSub.innerHTML = "Her Doğal Sayı aynı zamanda bir Tam Sayıdır. Her Tam Sayı (paydası 1 olan) bir Rasyonel Sayıdır!";
+            
+            isAnimating = false;
+        }
+
+        async function startAbsAnim() {
+            if(isAnimating) return;
+            isAnimating = true;
+            btnSets.classList.remove('active');
+            btnAbs.classList.add('active');
+
+            viewSets.style.opacity = 0;
+            viewAbs.style.opacity = 1;
+            viewAbs.style.pointerEvents = 'auto';
+
+            buildNumberLine();
+            let oIcon = document.getElementById('objIcon');
+            let dArc = document.getElementById('distArc');
+            let dLabel = document.getElementById('distLabel');
+            let fBox = document.getElementById('formulaBox');
+
+            mTitle.innerText = "Mutlak Değer Nedir?";
+            mTitle.style.color = "var(--tertiary)";
+            mSub.innerHTML = "Mutlak değer, bir sayının sayı doğrusunda <span>0'a (başlangıç noktasına) olan uzaklığıdır</span>.";
+            
+            oIcon.style.left = "50%"; // start at 0
+            fBox.style.opacity = 0;
+            dArc.style.opacity = 0;
+            dLabel.style.opacity = 0;
+
+            await sleep(1500);
+            
+            // Go to 4
+            mSub.innerHTML = "Helikopter 0'dan havalandı ve +4 noktasına uçtu. 0'a uzaklığı 4 birimdir.";
+            oIcon.style.left = "90%"; // +4 is at 90% (from -5 to 5, so 4 is 9/10 = 90%)
+            oIcon.style.transform = "translateX(-50%) scaleX(1)"; // facing right
+            
+            await sleep(1500);
+            
+            dArc.style.left = "50%";
+            dArc.style.width = "40%";
+            dArc.style.transform = "translateX(0)";
+            dArc.style.borderTop = "3px dashed var(--secondary)";
+            dArc.style.opacity = 1;
+            
+            dLabel.style.left = "70%";
+            dLabel.style.transform = "translateX(-50%)";
+            dLabel.innerText = "4 Birim";
+            dLabel.style.opacity = 1;
+
+            fBox.innerText = "| +4 | = 4";
+            fBox.style.opacity = 1;
+            fBox.style.borderColor = "var(--secondary)";
+
+            await sleep(3500);
+
+            // Go to -3
+            mSub.innerHTML = "Şimdi geriye, -3 noktasına doğru uçuyor. Uzaklık ASLA negatif olamaz!";
+            oIcon.style.transform = "translateX(-50%) scaleX(-1)"; // facing left
+            oIcon.style.left = "20%"; // -3 is at 20%
+            
+            fBox.style.opacity = 0;
+            dArc.style.opacity = 0;
+            dLabel.style.opacity = 0;
+
+            await sleep(1500);
+
+            dArc.style.left = "50%";
+            dArc.style.width = "30%";
+            dArc.style.transform = "translateX(-100%)";
+            dArc.style.borderTop = "3px dashed var(--danger)";
+            dArc.style.opacity = 1;
+            
+            dLabel.style.left = "35%";
+            dLabel.style.transform = "translateX(-50%)";
+            dLabel.innerText = "3 Birim";
+            dLabel.style.color = "var(--danger)";
+            dLabel.style.opacity = 1;
+
+            fBox.innerText = "| -3 | = 3";
+            fBox.style.opacity = 1;
+            fBox.style.borderColor = "var(--danger)";
+
+            await sleep(1500);
+            mSub.innerHTML = "İşte bu yüzden, sayının işareti ne olursa olsun mutlak değeri <span>daima pozitiftir</span>.";
+
+            isAnimating = false;
+        }
+
+        // Auto start
+        setTimeout(() => { startSetsAnim(); }, 500);
+
+    </script>
+</body>
+</html>

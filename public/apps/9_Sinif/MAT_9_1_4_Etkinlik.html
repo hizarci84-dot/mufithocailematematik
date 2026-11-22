@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İşlem Özellikleri Motoru</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    
+    <!-- MATHJAX -->
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root { --bg:#0F0E17; --primary:#8B5CF6; --secondary:#10B981; --tertiary:#06B6D4; --danger:#F43F5E; --accent:#F59E0B; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Outfit',sans-serif; }
+        body { background:linear-gradient(135deg,var(--bg),#161625); color:#F8FAFC; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:20px; overflow-x:hidden; }
+        
+        .header { width:100%; max-width:1100px; display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); padding:15px 25px; border-radius:20px; border:1px solid rgba(139,92,246,0.2); margin-bottom:20px; backdrop-filter:blur(10px); }
+        .header-left { display:flex; align-items:center; gap:15px; font-weight:600; font-size:1.2rem; }
+        .header-left img { width:50px; height:50px; border-radius:50%; background:white; padding:2px; }
+        .kazanim { background:var(--primary); color:white; padding:8px 20px; border-radius:20px; font-weight:800; font-size:1rem; box-shadow: 0 0 20px rgba(139,92,246,0.4); }
+        
+        h1 { font-size:2.5rem; color:var(--tertiary); font-weight:900; text-align:center; margin-bottom:5px; }
+        .subtitle { color:#94A3B8; font-size:1.15rem; text-align:center; margin-bottom:25px; font-weight:600; max-width:800px; }
+        
+        .workspace { width:100%; max-width:1100px; background:#11111A; border:1px solid rgba(255,255,255,0.1); border-radius:24px; padding:30px; box-shadow:inset 0 0 50px rgba(0,0,0,0.5); display:flex; flex-direction:column; align-items:center; min-height:500px; }
+        
+        .expl-text { background:rgba(139,92,246,0.15); border:1px solid rgba(139,92,246,0.4); padding:15px 25px; border-radius:15px; font-size:1.3rem; color:white; font-weight:800; text-align:center; width:100%; margin-bottom:40px; }
+        
+        .machine-container { width:100%; display:flex; flex-direction:column; align-items:center; gap:30px; }
+        
+        /* The Expression Block */
+        .expr-block { background:rgba(0,0,0,0.8); border:2px solid #334155; padding:20px 40px; border-radius:15px; font-size:2rem; min-width:300px; text-align:center; display:flex; align-items:center; justify-content:center; box-shadow:0 10px 20px rgba(0,0,0,0.5); transition:all 0.5s; position:relative; }
+        
+        /* The Buttons (Machine Actions) */
+        .actions-row { display:flex; gap:20px; flex-wrap:wrap; justify-content:center; }
+        .btn-machine { background:rgba(255,255,255,0.05); color:white; border:2px solid; padding:15px 30px; border-radius:50px; font-size:1.2rem; font-weight:900; cursor:pointer; transition:0.3s; }
+        .btn-machine:hover { background:rgba(255,255,255,0.1); transform:translateY(-2px); }
+        
+        .btn-com { border-color:var(--primary); }   /* Değişme */
+        .btn-ass { border-color:var(--secondary); } /* Birleşme */
+        .btn-dis { border-color:var(--accent); }    /* Dağılma */
+        
+        .feedback { margin-top:20px; font-size:1.5rem; font-weight:900; padding:10px 20px; border-radius:10px; opacity:0; transition:0.3s; }
+        .feedback.success { background:rgba(16,185,129,0.2); color:var(--secondary); opacity:1; }
+        .feedback.error { background:rgba(244,63,94,0.2); color:var(--danger); opacity:1; }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.9.1.4. İşlem Özellikleri (Etkinlik)</div>
+    </div>
+    
+    <h1>Özellik Motoru</h1>
+    <p class="subtitle">Ekranda verilen cebirsel ifadenin hangi işlem makinesine girmesi gerektiğini bulun. Doğru makineyi seçerseniz, ifade kurallara uygun olarak dönüşecektir.</p>
+    
+    <div class="workspace">
+        <div class="expl-text" id="explText">Soru 1: Aşağıdaki ifadeyi eşiti olan farklı bir biçimde yazmak için hangi özellik kullanılmalıdır?</div>
+        
+        <div class="machine-container">
+            <!-- Expression Display -->
+            <div class="expr-block" id="exprBlock">
+                <span id="mathOutput"></span>
+            </div>
+            
+            <div style="color:#94A3B8; font-weight:800; font-size:1.2rem; margin-top:10px;">👇 İşlem Makineleri 👇</div>
+            
+            <div class="actions-row">
+                <button class="btn-machine btn-com" onclick="checkAnswer('com')">Değişme Özelliği</button>
+                <button class="btn-machine btn-ass" onclick="checkAnswer('ass')">Birleşme Özelliği</button>
+                <button class="btn-machine btn-dis" onclick="checkAnswer('dis')">Dağılma Özelliği</button>
+            </div>
+            
+            <div class="feedback" id="feedback"></div>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            { id: 1, startTex: `\\( a \\cdot (b + c) \\)`, correct: 'dis', resultTex: `\\( a\\cdot b + a\\cdot c \\)` },
+            { id: 2, startTex: `\\( (x + y) + z \\)`, correct: 'ass', resultTex: `\\( x + (y + z) \\)` },
+            { id: 3, startTex: `\\( p \\cdot q \\)`, correct: 'com', resultTex: `\\( q \\cdot p \\)` },
+            { id: 4, startTex: `\\( 2x(y - 3) \\)`, correct: 'dis', resultTex: `\\( 2xy - 6x \\)` }
+        ];
+        
+        let currentQ = 0;
+        const mathOutput = document.getElementById('mathOutput');
+        const feedback = document.getElementById('feedback');
+        const exprBlock = document.getElementById('exprBlock');
+        const explText = document.getElementById('explText');
+
+        function loadQuestion() {
+            if (currentQ >= questions.length) {
+                explText.innerHTML = "🎉 Tüm görevleri tamamladınız!";
+                exprBlock.style.display = "none";
+                document.querySelector('.actions-row').style.display = "none";
+                feedback.className = "feedback success";
+                feedback.textContent = "Tebrikler!";
+                return;
+            }
+            
+            explText.innerHTML = `Soru ${currentQ + 1}: Aşağıdaki ifade hangi özelliğe uygundur?`;
+            exprBlock.style.borderColor = "#334155";
+            exprBlock.style.boxShadow = "0 10px 20px rgba(0,0,0,0.5)";
+            feedback.className = "feedback";
+            
+            mathOutput.innerHTML = questions[currentQ].startTex;
+            MathJax.typesetPromise([mathOutput]);
+        }
+
+        function checkAnswer(chosenType) {
+            let q = questions[currentQ];
+            if (chosenType === q.correct) {
+                // Success
+                feedback.className = "feedback success";
+                feedback.textContent = "Doğru Makine! İfade dönüştürülüyor...";
+                exprBlock.style.borderColor = "var(--secondary)";
+                exprBlock.style.boxShadow = "0 0 30px rgba(16,185,129,0.5)";
+                
+                // Show result
+                mathOutput.innerHTML = q.resultTex;
+                MathJax.typesetPromise([mathOutput]).then(() => {
+                    setTimeout(() => {
+                        currentQ++;
+                        loadQuestion();
+                    }, 3000);
+                });
+            } else {
+                // Error
+                feedback.className = "feedback error";
+                feedback.textContent = "Yanlış makine. Lütfen tekrar deneyin.";
+                exprBlock.style.borderColor = "var(--danger)";
+                
+                setTimeout(() => {
+                    exprBlock.style.borderColor = "#334155";
+                    feedback.className = "feedback";
+                }, 2000);
+            }
+        }
+
+        // Init
+        loadQuestion();
+    </script>
+</body>
+</html>

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sayı ve Şekil Örüntüleri Animasyonu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A;
+            --text: #F8FAFC;
+            --primary: #38BDF8; /* Blue */
+            --accent: #F472B6; /* Pink */
+            --highlight: #FDE047; /* Yellow */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, #1E293B 0%, var(--bg) 100%);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center; padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 900px;
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px;
+            margin-bottom: 30px; margin-top: 10px; border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: #0F172A; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .main-content {
+            display: flex; flex-direction: column; align-items: center;
+            width: 100%; max-width: 900px; gap: 30px;
+        }
+
+        .title-area { text-align: center; min-height: 80px; display: flex; align-items: center; justify-content: center; }
+        h1 { font-size: 2.2rem; color: var(--primary); opacity: 0; transform: translateY(-20px); transition: all 0.8s ease; line-height: 1.3;}
+        .show-title h1 { opacity: 1; transform: translateY(0); }
+        .hl { color: var(--highlight); }
+        
+        /* Shape Pattern Visuals */
+        .pattern-area {
+            display: flex; gap: 30px; align-items: flex-end; justify-content: center;
+            background: rgba(255,255,255,0.03); padding: 30px 40px; border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.05); width: 100%;
+            min-height: 250px;
+        }
+
+        .step-col {
+            display: flex; flex-direction: column; align-items: center; gap: 15px;
+            opacity: 0; transform: scale(0.9); transition: all 0.5s ease;
+        }
+        .show-s1 .s1, .show-s2 .s2, .show-s3 .s3 { opacity: 1; transform: scale(1); }
+        
+        .step-label { font-size: 1.2rem; font-weight: 800; color: #94A3B8; }
+        
+        .blocks {
+            display: flex; align-items: flex-end; justify-content: center; position: relative;
+        }
+        
+        /* Specific shapes layout */
+        .block-unit {
+            width: 30px; height: 30px; background: var(--primary); border-radius: 5px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.3), 0 5px 10px rgba(0,0,0,0.5);
+            margin: 2px;
+        }
+        .block-accent { background: var(--accent); } /* Highlight added blocks */
+
+        /* Draw crosses to represent 4, 7, 10 */
+        .cross {
+            display: grid;
+            grid-template-areas: 
+                ". top ."
+                "left center right"
+                ". bottom .";
+            gap: 2px;
+        }
+        /* Step 1: cross with 4 blocks (no top) */
+        .c-s1 { grid-template-areas: ". top ." "left center right"; } 
+        /* Step 2: grow legs */
+        
+        /* Let's simplify the shape: a vertical tower + a base */
+        .tower-base { display: flex; flex-direction: column; align-items: center; }
+        .tower { display: flex; flex-direction: column-reverse; gap: 2px; margin-bottom: 2px;}
+        .base { display: flex; gap: 2px;}
+
+        /* Equation/Rule Area */
+        .rule-area {
+            width: 100%; display: flex; flex-direction: column; gap: 20px;
+            background: #1E293B; padding: 30px; border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .eq-line {
+            display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 15px;
+            font-size: 2.2rem; font-weight: 800; opacity: 0; transform: translateY(20px); transition: all 0.8s ease;
+        }
+        .show-eq1 .eq1 { opacity: 1; transform: translateY(0); }
+        .show-eq2 .eq2 { opacity: 1; transform: translateY(0); }
+        .show-eq3 .eq3 { opacity: 1; transform: translateY(0); color: #10B981; font-size: 2.8rem;}
+
+        .arrow { font-size: 2rem; color: var(--accent); margin: 0 20px;}
+
+        /* Controls */
+        .controls { margin-top: 20px; margin-bottom: 40px; }
+        button {
+            background: var(--primary); color: #0F172A; border: none; 
+            padding: 12px 30px; border-radius: 10px; font-size: 1.2rem; font-weight: 800; 
+            cursor: pointer; opacity: 0; pointer-events: none; transition: all 0.3s ease;
+        }
+        button.visible { opacity: 1; pointer-events: auto; }
+        button:hover { background: #0284C7; color: white; transform: scale(1.05);}
+
+        @media (max-width: 600px) {
+            .header { flex-direction: column; gap: 15px; }
+            h1 { font-size: 1.5rem; }
+            .eq-line { font-size: 1.5rem; }
+            .show-eq3 .eq3 { font-size: 2rem; }
+            .pattern-area { padding: 20px 10px; gap: 15px;}
+            .block-unit { width: 20px; height: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.5.2.3. Örüntü Kuralını Bulma</div>
+    </div>
+
+    <div class="main-content" id="mainScene">
+        
+        <div class="title-area">
+            <h1 id="titleText">4, 7, 10, 13... örüntüsünün <span class="hl">50. Adımını</span> nasıl buluruz?</h1>
+        </div>
+
+        <div class="pattern-area" id="visuals">
+            
+            <div class="step-col s1">
+                <div class="tower-base">
+                    <div class="tower"><div class="block-unit"></div></div>
+                    <div class="base">
+                        <div class="block-unit"></div><div class="block-unit"></div><div class="block-unit"></div>
+                    </div>
+                </div>
+                <div class="step-label">1. Adım (4)</div>
+            </div>
+
+            <div class="step-col s2">
+                <div class="tower-base">
+                    <div class="tower">
+                        <div class="block-unit block-accent"></div>
+                        <div class="block-unit"></div>
+                    </div>
+                    <div class="base">
+                        <div class="block-unit block-accent"></div>
+                        <div class="block-unit"></div>
+                        <div class="block-unit"></div>
+                        <div class="block-unit block-accent"></div>
+                    </div>
+                </div>
+                <div class="step-label">2. Adım (7)</div>
+            </div>
+
+            <div class="step-col s3">
+                <div class="tower-base">
+                    <div class="tower">
+                        <div class="block-unit block-accent"></div>
+                        <div class="block-unit"></div>
+                        <div class="block-unit"></div>
+                    </div>
+                    <div class="base">
+                        <div class="block-unit block-accent"></div>
+                        <div class="block-unit"></div>
+                        <div class="block-unit"></div>
+                        <div class="block-unit"></div>
+                        <div class="block-unit block-accent"></div>
+                    </div>
+                </div>
+                <div class="step-label">3. Adım (10)</div>
+            </div>
+
+        </div>
+
+        <div class="rule-area">
+            <div class="eq-line eq1">
+                <span style="color:#94A3B8;">Artış Miktarı =</span> <span class="hl" style="font-size:3rem;">+3</span>
+            </div>
+            
+            <div class="eq-line eq2">
+                <span style="color:#F472B6;">Örüntü Kuralı:</span>
+                <span>Adım Sayısı x <span class="hl">3</span> + 1</span>
+            </div>
+
+            <div class="eq-line eq3">
+                <span>50. Adım</span>
+                <span class="arrow">➔</span>
+                <span>50 x 3 + 1 = 151</span>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="replayBtn" onclick="startSequence()">Tekrar Oynat</button>
+        </div>
+
+    </div>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        
+        async function startSequence() {
+            const scene = document.getElementById('mainScene');
+            const vis = document.getElementById('visuals');
+            const title = document.getElementById('titleText');
+            const btn = document.getElementById('replayBtn');
+
+            // Reset Everything
+            scene.classList.remove('show-title', 'show-eq1', 'show-eq2', 'show-eq3');
+            vis.classList.remove('show-s1', 'show-s2', 'show-s3');
+            btn.classList.remove('visible');
+            title.innerHTML = "4, 7, 10, 13... örüntüsünün <span class='hl'>50. Adımını</span> nasıl buluruz?<br><span style='font-size:1.2rem; color:#94A3B8;'>Tek tek saymalı mıyız?</span>";
+            
+            await sleep(500);
+
+            // 1. Show Title
+            scene.classList.add('show-title');
+            await sleep(2500);
+
+            // 2. Show Steps
+            title.innerHTML = "Bunun yerine şekli inceleyip kuralı (ilişkiyi) bulalım.";
+            vis.classList.add('show-s1'); await sleep(1000);
+            vis.classList.add('show-s2'); await sleep(1000);
+            vis.classList.add('show-s3'); await sleep(2000);
+
+            // 3. Show Eq1 (Increase)
+            title.innerHTML = "Her adımda şekle <span class='hl'>tam 3 adet</span> yeni blok ekleniyor.";
+            scene.classList.add('show-eq1');
+            await sleep(3000);
+
+            // 4. Show Eq2 (Rule)
+            title.innerHTML = "Demek ki kuralın içinde 'Çarpı 3' gizli.<br><span style='font-size:1.2rem; color:#94A3B8;'>1. Adım: 1 x 3 = 3 (ama 4 olması lazım, demek ki +1 ekleyeceğiz)</span>";
+            scene.classList.add('show-eq2');
+            await sleep(4000);
+
+            // 5. Show Eq3 (50th step)
+            title.innerHTML = "Şimdi 50. adımı tek tek saymadan saniyeler içinde bulabiliriz!";
+            scene.classList.add('show-eq3');
+            
+            await sleep(2000);
+            btn.classList.add('visible');
+        }
+        
+        window.onload = startSequence;
+    </script>
+</body>
+</html>

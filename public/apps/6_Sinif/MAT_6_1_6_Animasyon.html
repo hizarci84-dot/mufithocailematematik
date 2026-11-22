@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kesir ve Bölme İlişkisi - Animasyon</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A; --text: #F8FAFC;
+            --primary: #3B82F6; --secondary: #10B981;
+            --tertiary: #F59E0B; --danger: #F43F5E;
+            --purple: #8B5CF6; --cyan: #06B6D4;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 900px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--secondary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; width: 100%; max-width: 800px; margin-bottom: 20px; height: 110px;}
+        h1 { font-size: 2.2rem; color: var(--secondary); text-shadow: 0 5px 15px rgba(0,0,0,0.5); line-height: 1.3;}
+        .subtitle { font-size: 1.2rem; color: #94A3B8; margin-top: 10px; line-height: 1.5; min-height: 55px;}
+        .subtitle span { color: white; font-weight: 800; background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 5px;}
+
+        .canvas-area {
+            position: relative; width: 100%; max-width: 800px; height: 450px; 
+            background: #0B1120; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.3); 
+            overflow: hidden; display: flex; align-items: center; justify-content: center;
+        }
+
+        .scene { position: absolute; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.8s; pointer-events: none;}
+        .scene.active { opacity: 1; z-index: 10; }
+
+        /* Fraction to Division */
+        .eq-display { display: flex; align-items: center; gap: 30px; font-size: 4rem; font-weight: 900; color: white;}
+        
+        .fraction-box { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; line-height: 1.1;}
+        .fb-top { border-bottom: 4px solid white; padding: 0 10px; color: var(--tertiary);}
+        .fb-bot { padding: 0 10px; color: var(--primary);}
+
+        .transform-arrow { font-size: 3rem; color: #94A3B8; opacity: 0; transform: translateX(-20px); transition: all 0.5s;}
+        
+        .div-box { display: flex; align-items: center; gap: 15px; opacity: 0; transform: translateX(20px); transition: all 0.5s;}
+        .db-left { color: var(--tertiary); }
+        .db-sign { color: white; }
+        .db-right { color: var(--primary); }
+
+        .result-box {
+            font-size: 4rem; font-weight: 900; color: var(--secondary); margin-top: 30px;
+            opacity: 0; transform: scale(0.8); transition: all 0.5s;
+        }
+
+        .repeating-line { text-decoration: overline; color: var(--danger); }
+
+        .btn-start {
+            margin-top: 30px; background: var(--secondary); color: white; border: none; padding: 15px 40px; border-radius: 50px;
+            font-size: 1.2rem; font-weight: 800; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 20px rgba(16, 185, 129, 0.4);
+        }
+        .btn-start:hover { transform: scale(1.05); }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=3B82F6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.6.1.6. Kesir ve Bölme İlişkisi</div>
+    </div>
+
+    <div class="title-area">
+        <h1 id="mTitle">Gizli Bölme İşlemi</h1>
+        <p class="subtitle" id="mSub">Kesir çizgisi aslında bir <span>Bölme İşaretidir.</span> Payı paydaya bölerek ondalık sayılara ulaşırız.</p>
+    </div>
+
+    <div class="canvas-area">
+        
+        <!-- SCENE 1: Terminating -->
+        <div class="scene active" id="sc1">
+            <div class="eq-display">
+                <div class="fraction-box">
+                    <div class="fb-top">3</div>
+                    <div class="fb-bot">4</div>
+                </div>
+                <div class="transform-arrow" id="ar1">➔</div>
+                <div class="div-box" id="db1">
+                    <div class="db-left">3</div>
+                    <div class="db-sign">÷</div>
+                    <div class="db-right">4</div>
+                </div>
+            </div>
+            <div class="result-box" id="rb1">0,75</div>
+            <div style="font-size:1.2rem; color:#94A3B8; margin-top:20px; font-weight:800; opacity:0; transition:all 0.5s;" id="msg1">İşlem biter. Buna <span>Sonlu Ondalık Gösterim</span> denir.</div>
+        </div>
+
+        <!-- SCENE 2: Repeating -->
+        <div class="scene" id="sc2">
+            <div class="eq-display">
+                <div class="fraction-box">
+                    <div class="fb-top">1</div>
+                    <div class="fb-bot">3</div>
+                </div>
+                <div class="transform-arrow" id="ar2">➔</div>
+                <div class="div-box" id="db2">
+                    <div class="db-left">1</div>
+                    <div class="db-sign">÷</div>
+                    <div class="db-right">3</div>
+                </div>
+            </div>
+            <div class="result-box" id="rb2" style="color:white; display:flex; gap:5px;">0,3<span id="rep3" style="opacity:0;">333...</span></div>
+            <div style="font-size:1.2rem; color:#94A3B8; margin-top:20px; font-weight:800; opacity:0; transition:all 0.5s; text-align:center;" id="msg2">İşlem HİÇ BİTMEZ! Sürekli 3 çıkar.<br>Buna <span style="color:var(--danger);">Devirli Ondalık Gösterim</span> denir. Kısaca <span class="repeating-line">0,3</span> yazarız.</div>
+        </div>
+
+    </div>
+
+    <button class="btn-start" id="startBtn" onclick="runTimeline()">Animasyonu Başlat</button>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        const mTitle = document.getElementById('mTitle');
+        const mSub = document.getElementById('mSub');
+        const startBtn = document.getElementById('startBtn');
+        
+        async function runTimeline() {
+            startBtn.style.display = 'none';
+
+            // SCENE 1
+            document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+            document.getElementById('sc1').classList.add('active');
+            mTitle.innerText = "Sonlu Bölme İşlemi";
+            mSub.innerHTML = "3 çikolatayı 4 kişiye bölüştürelim.";
+            
+            await sleep(1500);
+            document.getElementById('ar1').style.opacity = 1;
+            document.getElementById('ar1').style.transform = "translateX(0)";
+            document.getElementById('db1').style.opacity = 1;
+            document.getElementById('db1').style.transform = "translateX(0)";
+            
+            await sleep(2000);
+            document.getElementById('rb1').style.opacity = 1;
+            document.getElementById('rb1').style.transform = "scale(1)";
+            
+            await sleep(1000);
+            document.getElementById('msg1').style.opacity = 1;
+            await sleep(3500);
+
+            // SCENE 2
+            document.getElementById('sc1').classList.remove('active');
+            document.getElementById('sc2').classList.add('active');
+            mTitle.innerText = "Hiç Bitmeyen Bölme!";
+            mSub.innerHTML = "1 çikolatayı 3 kişiye tam olarak paylaştıramayız.";
+
+            await sleep(1500);
+            document.getElementById('ar2').style.opacity = 1;
+            document.getElementById('ar2').style.transform = "translateX(0)";
+            document.getElementById('db2').style.opacity = 1;
+            document.getElementById('db2').style.transform = "translateX(0)";
+            
+            await sleep(2000);
+            document.getElementById('rb2').style.opacity = 1;
+            document.getElementById('rb2').style.transform = "scale(1)";
+            
+            await sleep(1000);
+            document.getElementById('rep3').style.opacity = 1;
+            
+            await sleep(1500);
+            document.getElementById('msg2').style.opacity = 1;
+
+            setTimeout(() => {
+                startBtn.style.display = 'block';
+                startBtn.innerText = "Tekrar İzle";
+            }, 4000);
+        }
+    </script>
+</body>
+</html>

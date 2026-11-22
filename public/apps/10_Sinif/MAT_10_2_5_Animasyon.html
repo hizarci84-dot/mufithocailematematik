@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10.2.5 - Bileşke Fonksiyon (İndirim ve KDV) Animasyonu</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --panel-bg: #1e293b;
+            --primary: #f59e0b; /* Amber */
+            --g-color: #ef4444; /* Red - Discount */
+            --f-color: #3b82f6; /* Blue - Tax */
+            --text-main: #f8fafc;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        
+        body { background-color: var(--bg-color); color: var(--text-main); display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; }
+
+        .header { width: 100%; max-width: 1000px; display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background: var(--panel-bg); border-radius: 12px; margin-bottom: 20px; border: 1px solid rgba(245, 158, 11, 0.3); }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 800; color: var(--primary); font-size: 1.2rem; }
+        .kazanim { background: rgba(245, 158, 11, 0.1); padding: 5px 15px; border-radius: 6px; color: var(--primary); }
+
+        h1 { font-size: 2.2rem; margin-bottom: 10px; text-align: center; }
+        .subtitle { color: #94a3b8; font-size: 1.05rem; margin-bottom: 30px; text-align: center; max-width: 800px; }
+
+        .container { display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 1000px; }
+
+        .dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media(max-width: 800px) { .dashboard { grid-template-columns: 1fr; } }
+
+        .controls { background: var(--panel-bg); padding: 25px; border-radius: 12px; display: flex; flex-direction: column; gap: 20px; border: 1px solid rgba(255,255,255,0.05); }
+
+        .slider-group label { display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 8px; font-size: 0.95rem; }
+        input[type=range] { width: 100%; }
+        input[type=range].g-slider { accent-color: var(--g-color); }
+        input[type=range].f-slider { accent-color: var(--f-color); }
+        
+        .val-badge { font-weight: 800; background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 4px; }
+        .btn { background: var(--primary); color: black; border: none; padding: 12px; border-radius: 8px; font-size: 1.1rem; font-weight: 800; cursor: pointer; transition: 0.2s; }
+        .btn:hover { filter: brightness(1.1); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .anim-area {
+            background: #0b1120; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);
+            position: relative; overflow: hidden; min-height: 400px; display: flex; align-items: center; justify-content: center;
+        }
+
+        .store-path {
+            width: 80%; height: 120px; background: #334155; border-radius: 60px; position: relative;
+            display: flex; justify-content: space-between; align-items: center; padding: 0 40px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        .station {
+            width: 120px; height: 160px; background: #1e293b; border-radius: 12px;
+            position: absolute; top: -20px; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            border: 3px solid; box-shadow: 0 10px 20px rgba(0,0,0,0.5); z-index: 10;
+        }
+        .st-g { left: 10%; border-color: var(--g-color); }
+        .st-f { right: 10%; border-color: var(--f-color); }
+        
+        .st-title { font-size: 1.5rem; font-weight: 900; margin-bottom: 10px; }
+        .st-g .st-title { color: var(--g-color); }
+        .st-f .st-title { color: var(--f-color); }
+        
+        .st-desc { font-size: 0.9rem; color: #94a3b8; text-align: center; padding: 0 5px; }
+
+        .item {
+            width: 80px; height: 50px; background: #10b981; border-radius: 6px;
+            position: absolute; left: -100px; display: flex; justify-content: center; align-items: center;
+            font-weight: 800; font-size: 1.1rem; color: white; border: 2px solid #fff;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4); z-index: 20; transition: left 1s linear, transform 0.5s;
+        }
+        
+        .receipt-area {
+            background: #f8fafc; color: #0f172a; padding: 20px; border-radius: 8px; font-family: monospace;
+            min-height: 200px; box-shadow: inset 0 0 10px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 10px;
+        }
+        .receipt-title { font-size: 1.4rem; font-weight: 800; text-align: center; border-bottom: 2px dashed #94a3b8; padding-bottom: 10px; margin-bottom: 10px; }
+        .receipt-line { display: flex; justify-content: space-between; font-size: 1.2rem; }
+        .receipt-line.total { font-weight: 800; font-size: 1.4rem; border-top: 2px solid #0f172a; padding-top: 10px; margin-top: 10px; }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left"><span>@mufithocailematematik</span></div>
+        <div class="kazanim">MAT.10.2.5. Bileşke Fonksiyonlar (Animasyon)</div>
+    </div>
+    
+    <h1>Mağaza Fiyatlandırma Sistemi</h1>
+    <p class="subtitle">Bileşke fonksiyonlar peş peşe uygulanan işlemlerdir. Örneğin bir ürüne önce %20 indirim (g(x)), ardından indirimli fiyata %10 KDV (f(x)) uygulandığında f(g(x)) bileşke fonksiyonu oluşur.</p>
+    
+    <div class="container">
+        
+        <div class="dashboard">
+            <div class="controls">
+                
+                <div class="slider-group">
+                    <label>Ürün Etiket Fiyatı (x) <span class="val-badge" id="valX" style="color:var(--text-main);">1000 ₺</span></label>
+                    <input type="range" id="slX" min="100" max="5000" step="100" value="1000">
+                </div>
+                
+                <div class="slider-group" style="margin-top:15px;">
+                    <label>g(x): İndirim Oranı <span class="val-badge" id="valG" style="color:var(--g-color);">%20</span></label>
+                    <input type="range" class="g-slider" id="slG" min="0" max="50" step="5" value="20">
+                </div>
+                
+                <div class="slider-group" style="margin-top:15px;">
+                    <label>f(x): KDV Oranı <span class="val-badge" id="valF" style="color:var(--f-color);">%10</span></label>
+                    <input type="range" class="f-slider" id="slF" min="0" max="20" step="1" value="10">
+                </div>
+                
+                <button class="btn" id="btnRun" style="margin-top:20px;">Kasaya Git ( f(g(x)) )</button>
+                
+                <div id="mathBox" style="background:rgba(0,0,0,0.3); padding:10px; border-radius:8px; margin-top:10px; text-align:center; font-size:1.1rem;">
+                    \( f(g(x)) = ? \)
+                </div>
+                
+            </div>
+            
+            <div class="receipt-area" id="receipt">
+                <div class="receipt-title">FİŞ (MAĞAZA A.Ş.)</div>
+                <!-- lines injected here -->
+            </div>
+        </div>
+        
+        <div class="anim-area">
+            <div class="store-path">
+                <div class="station st-g" id="stG">
+                    <div class="st-title">g(x)</div>
+                    <div class="st-desc">İndirim<br>Uygula</div>
+                </div>
+                
+                <div class="station st-f" id="stF">
+                    <div class="st-title">f(x)</div>
+                    <div class="st-desc">KDV<br>Ekle</div>
+                </div>
+                
+                <div class="item" id="animItem">1000 ₺</div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const slX = document.getElementById('slX'); const valX = document.getElementById('valX');
+        const slG = document.getElementById('slG'); const valG = document.getElementById('valG');
+        const slF = document.getElementById('slF'); const valF = document.getElementById('valF');
+        
+        const btnRun = document.getElementById('btnRun');
+        const animItem = document.getElementById('animItem');
+        const receipt = document.getElementById('receipt');
+        const mathBox = document.getElementById('mathBox');
+        
+        let x = 1000, pIndirim = 20, pKdv = 10;
+        
+        function updateParams() {
+            x = parseInt(slX.value);
+            pIndirim = parseInt(slG.value);
+            pKdv = parseInt(slF.value);
+            
+            valX.innerText = `${x} ₺`;
+            valG.innerText = `%${pIndirim}`;
+            valF.innerText = `%${pKdv}`;
+            
+            let mulG = (1 - pIndirim/100).toFixed(2);
+            let mulF = (1 + pKdv/100).toFixed(2);
+            let mulTotal = (mulG * mulF).toFixed(3);
+            
+            mathBox.innerHTML = `\\( g(x) = ${mulG}x \\quad f(x) = ${mulF}x \\)<br><br>\\( f(g(x)) = ${mulF}(${mulG}x) = ${mulTotal}x \\)`;
+            MathJax.typesetPromise([mathBox]);
+        }
+        
+        slX.addEventListener('input', updateParams);
+        slG.addEventListener('input', updateParams);
+        slF.addEventListener('input', updateParams);
+        
+        btnRun.addEventListener('click', () => {
+            btnRun.disabled = true;
+            
+            let mulG = (1 - pIndirim/100);
+            let mulF = (1 + pKdv/100);
+            
+            let gx = x * mulG;
+            let fgx = gx * mulF;
+            
+            // clear receipt
+            receipt.innerHTML = `<div class="receipt-title">FİŞ (MAĞAZA A.Ş.)</div>`;
+            
+            // Animation
+            animItem.style.transition = 'none';
+            animItem.style.left = '-150px';
+            animItem.innerText = `${x} ₺`;
+            animItem.style.transform = 'scale(1)';
+            
+            setTimeout(() => {
+                animItem.style.transition = 'left 1s linear';
+                animItem.style.left = '10%'; // Into G
+            }, 50);
+            
+            setTimeout(() => {
+                animItem.style.transform = 'scale(1.2)';
+                animItem.style.background = 'var(--g-color)';
+                animItem.innerText = `${gx.toFixed(1)} ₺`;
+                
+                receipt.innerHTML += `<div class="receipt-line"><span>Etiket Fiyatı (x)</span> <span>${x.toFixed(2)} ₺</span></div>`;
+                receipt.innerHTML += `<div class="receipt-line" style="color:var(--g-color);"><span>İndirim (%${pIndirim})</span> <span>-${(x - gx).toFixed(2)} ₺</span></div>`;
+                
+            }, 1050);
+            
+            setTimeout(() => {
+                animItem.style.transform = 'scale(1)';
+                animItem.style.left = '75%'; // Into F
+            }, 1550);
+            
+            setTimeout(() => {
+                animItem.style.transform = 'scale(1.2)';
+                animItem.style.background = 'var(--f-color)';
+                animItem.innerText = `${fgx.toFixed(1)} ₺`;
+                
+                receipt.innerHTML += `<div class="receipt-line" style="color:var(--f-color);"><span>KDV (%${pKdv})</span> <span>+${(fgx - gx).toFixed(2)} ₺</span></div>`;
+                
+            }, 2550);
+            
+            setTimeout(() => {
+                animItem.style.transform = 'scale(1)';
+                animItem.style.left = '110%'; // Out
+                
+                receipt.innerHTML += `<div class="receipt-line total"><span>ÖDENEN ( f(g(x)) )</span> <span>${fgx.toFixed(2)} ₺</span></div>`;
+                
+                btnRun.disabled = false;
+            }, 3050);
+        });
+        
+        window.onload = () => updateParams();
+    </script>
+</body>
+</html>

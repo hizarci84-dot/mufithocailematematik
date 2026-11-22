@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Köşegen Sihirbazı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A; --surface: #1E293B; --text: #F8FAFC;
+            --primary: #3B82F6; --secondary: #10B981;
+            --tertiary: #F59E0B; --danger: #F43F5E;
+            --purple: #8B5CF6; --cyan: #06B6D4;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, var(--surface) 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--tertiary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .container {
+            width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 20px;
+        }
+
+        .wizard-panel {
+            background: rgba(255,255,255,0.03); border-radius: 20px; padding: 30px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center;
+        }
+
+        .wizard-panel h2 { font-size: 2rem; color: var(--tertiary); margin-bottom: 10px; font-weight: 900;}
+
+        .canvas-area {
+            position: relative; width: 100%; height: 350px; margin-top: 20px; margin-bottom: 20px;
+            background: #0B1120; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.5); overflow: hidden; display: flex; align-items: center; justify-content: center;
+        }
+
+        .center-point { position: absolute; width: 10px; height: 10px; background: white; border-radius: 50%; z-index: 5; box-shadow: 0 0 10px white; }
+
+        .diag {
+            position: absolute; height: 6px; background: var(--primary); border-radius: 3px;
+            transform-origin: center; transition: all 1s cubic-bezier(0.4, 0, 0.2, 1); z-index: 3;
+        }
+        
+        .boundary {
+            position: absolute; stroke: var(--secondary); stroke-width: 3; stroke-dasharray: 8 4;
+            fill: rgba(16, 185, 129, 0.15); transition: all 1s cubic-bezier(0.4, 0, 0.2, 1); z-index: 1;
+        }
+
+        .controls {
+            display: flex; gap: 15px; justify-content: center; margin-bottom: 30px; flex-wrap: wrap;
+        }
+
+        .toggle-btn {
+            background: rgba(255,255,255,0.05); border: 2px solid #64748B; color: white; padding: 10px 20px; border-radius: 10px;
+            font-size: 1.1rem; font-weight: 800; cursor: pointer; transition: all 0.3s;
+        }
+        .toggle-btn.active { background: rgba(59, 130, 246, 0.2); border-color: var(--primary); color: var(--primary); box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);}
+
+        .options-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px;
+        }
+
+        .opt-btn {
+            background: #0B1120; border: 2px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 15px;
+            font-size: 1.2rem; font-weight: 800; color: #94A3B8; cursor: pointer; transition: all 0.3s;
+        }
+        .opt-btn:hover { border-color: var(--tertiary); color: white; transform: translateY(-2px);}
+        .opt-btn.correct { background: rgba(16, 185, 129, 0.2); border-color: var(--secondary); color: white;}
+        .opt-btn.wrong { background: rgba(244, 63, 94, 0.2); border-color: var(--danger); color: white;}
+
+        .feedback {
+            font-size: 1.2rem; font-weight: 800; padding: 15px; border-radius: 15px; display: none; margin-top: 10px;
+        }
+        .feedback.success { background: rgba(16, 185, 129, 0.1); color: var(--secondary); border: 1px solid var(--secondary); display: block;}
+        .feedback.error { background: rgba(244, 63, 94, 0.1); color: var(--danger); border: 1px solid var(--danger); display: block;}
+
+        @media (max-width: 768px) {
+            .header { flex-direction: column; gap: 10px; }
+            .options-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=3B82F6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.6.3.3. Köşegen Sihirbazı</div>
+    </div>
+
+    <div class="container">
+        
+        <div class="wizard-panel">
+            <h2>🪄 Köşegen Sihirbazı</h2>
+            <p style="color:#94A3B8;">Köşegenlerin özelliklerini açıp kapatarak iskeleti değiştir. Sonra hangi dörtgenin oluştuğunu tahmin et!</p>
+            
+            <div class="controls">
+                <button class="toggle-btn" id="btnPerp" onclick="togglePerp()">Köşegenleri Dik Kesiştir</button>
+                <button class="toggle-btn" id="btnEqual" onclick="toggleEqual()">Köşegen Boylarını Eşitle</button>
+            </div>
+
+            <div class="canvas-area" id="canvas">
+                <svg id="svgBoundary" width="100%" height="100%" style="position:absolute; top:0; left:0; z-index:2;">
+                    <polygon class="boundary" id="poly" points="" />
+                </svg>
+
+                <div class="center-point"></div>
+                <div class="diag" id="d1" style="background: var(--primary);"></div>
+                <div class="diag" id="d2" style="background: var(--danger);"></div>
+            </div>
+
+            <h3 style="color:white; margin-bottom: 15px;">Bu iskelet hangi dörtgene ait?</h3>
+            
+            <div class="options-grid" id="optGrid">
+                <button class="opt-btn" onclick="checkAnswer('Paralelkenar', this)">Paralelkenar</button>
+                <button class="opt-btn" onclick="checkAnswer('Eşkenar Dörtgen', this)">Eşkenar Dörtgen</button>
+                <button class="opt-btn" onclick="checkAnswer('Dikdörtgen', this)">Dikdörtgen</button>
+                <button class="opt-btn" onclick="checkAnswer('Kare', this)">Kare</button>
+            </div>
+
+            <div class="feedback" id="fb"></div>
+
+        </div>
+
+    </div>
+
+    <script>
+        let isPerp = false;
+        let isEqual = false;
+
+        const d1 = document.getElementById('d1');
+        const d2 = document.getElementById('d2');
+        const poly = document.getElementById('poly');
+        
+        function updateShape() {
+            // Base state: Bisecting (Parallelogram)
+            let len1 = 280;
+            let len2 = 180;
+            let ang1 = 20;
+            let ang2 = -30;
+
+            if (isPerp) {
+                ang1 = 0;
+                ang2 = -90;
+            }
+
+            if (isEqual) {
+                len2 = len1;
+            }
+            
+            // To make visual nice, slightly rotate rectangle so it's not tilted weirdly
+            if(isEqual && !isPerp) {
+                ang1 = 30;
+                ang2 = -30;
+            }
+            if(isEqual && isPerp) {
+                ang1 = 45;
+                ang2 = -45;
+            }
+
+            d1.style.width = len1 + "px";
+            d1.style.transform = `rotate(${ang1}deg)`;
+            
+            d2.style.width = len2 + "px";
+            d2.style.transform = `rotate(${ang2}deg)`;
+
+            // SVG coordinates
+            const canvas = document.getElementById('canvas');
+            const cx = canvas.offsetWidth / 2;
+            const cy = canvas.offsetHeight / 2;
+            const rad = (deg) => deg * Math.PI / 180;
+
+            const p1 = {x: cx + (len1/2)*Math.cos(rad(ang1)), y: cy + (len1/2)*Math.sin(rad(ang1))};
+            const p3 = {x: cx - (len1/2)*Math.cos(rad(ang1)), y: cy - (len1/2)*Math.sin(rad(ang1))};
+            
+            const p2 = {x: cx + (len2/2)*Math.cos(rad(ang2)), y: cy + (len2/2)*Math.sin(rad(ang2))};
+            const p4 = {x: cx - (len2/2)*Math.cos(rad(ang2)), y: cy - (len2/2)*Math.sin(rad(ang2))};
+
+            poly.setAttribute('points', `${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y} ${p4.x},${p4.y}`);
+            
+            // Reset feedback and buttons
+            document.getElementById('fb').className = "feedback";
+            document.querySelectorAll('.opt-btn').forEach(b => {
+                b.className = "opt-btn";
+            });
+        }
+
+        function togglePerp() {
+            isPerp = !isPerp;
+            document.getElementById('btnPerp').classList.toggle('active');
+            updateShape();
+        }
+
+        function toggleEqual() {
+            isEqual = !isEqual;
+            document.getElementById('btnEqual').classList.toggle('active');
+            updateShape();
+        }
+
+        function getCorrectShape() {
+            if(!isPerp && !isEqual) return "Paralelkenar";
+            if(isPerp && !isEqual) return "Eşkenar Dörtgen";
+            if(!isPerp && isEqual) return "Dikdörtgen";
+            if(isPerp && isEqual) return "Kare";
+        }
+
+        function checkAnswer(ans, btnElement) {
+            let correct = getCorrectShape();
+            let fb = document.getElementById('fb');
+            
+            document.querySelectorAll('.opt-btn').forEach(b => b.className = "opt-btn");
+
+            if(ans === correct) {
+                btnElement.classList.add('correct');
+                fb.className = "feedback success";
+                fb.innerText = `Doğru! Oluşan şekil bir ${correct}.`;
+            } else {
+                btnElement.classList.add('wrong');
+                fb.className = "feedback error";
+                fb.innerText = `Yanlış. İskeleti (köşegen özelliklerini) tekrar incele. Doğrusu ${correct} olmalıydı.`;
+            }
+        }
+
+        // Init
+        setTimeout(updateShape, 100);
+        window.addEventListener('resize', updateShape);
+    </script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matematiksel Akış Şeması (Animasyon)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F0E17; --surface: #1A1A24; --text: #F8FAFC;
+            --primary: #8B5CF6; --secondary: #10B981;
+            --tertiary: #06B6D4; --danger: #F43F5E;
+            --accent: #F59E0B;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, #161625 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(139, 92, 246, 0.2); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; margin-bottom: 20px;}
+        h1 { font-size: 2.2rem; color: var(--tertiary); font-weight: 900;}
+        .subtitle { color: #94A3B8; font-size: 1.1rem; margin-top: 5px;}
+
+        .canvas-area {
+            position: relative; width: 100%; max-width: 900px; min-height: 500px; 
+            background: #11111A; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.4); 
+            display: flex; flex-direction: column; align-items: center; padding: 30px;
+        }
+
+        .problem-box {
+            background: rgba(0,0,0,0.3); border: 2px dashed #334155;
+            border-radius: 20px; padding: 20px; text-align: center; font-size: 1.5rem; color: white;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2); width: 80%; margin-bottom: 30px;
+        }
+        .problem-box strong { color: var(--primary); font-size: 2rem;}
+
+        .flow-container {
+            display: flex; flex-direction: column; align-items: center; gap: 0; width: 100%;
+        }
+
+        .flow-item {
+            background: #11111A; border: 2px solid #334155; border-radius: 12px; padding: 15px 30px;
+            font-weight: 800; font-size: 1.2rem; color: #E2E8F0; display: flex; align-items: center; justify-content: center;
+            opacity: 0; transform: translateY(-20px); transition: all 0.5s; position: relative; z-index: 2;
+        }
+
+        .flow-arrow {
+            width: 4px; height: 30px; background: var(--secondary); opacity: 0; transition: 0.5s;
+            position: relative; z-index: 1;
+        }
+        .flow-arrow::after {
+            content: ''; position: absolute; bottom: -5px; left: -6px; border-width: 8px; border-style: solid;
+            border-color: var(--secondary) transparent transparent transparent;
+        }
+
+        .flow-item.active { opacity: 1; transform: translateY(0); border-color: var(--secondary); box-shadow: 0 0 20px rgba(16,185,129,0.3);}
+        .flow-arrow.active { opacity: 1; }
+
+        .btn-play {
+            background: var(--primary); color: white; border: none; padding: 15px 40px; border-radius: 50px;
+            font-size: 1.2rem; font-weight: 900; cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(139, 92, 246, 0.4); margin-top: 30px;
+        }
+        .btn-play:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 15px 25px rgba(139, 92, 246, 0.6); }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.7.2.4. Algoritma (Animasyon)</div>
+    </div>
+
+    <div class="title-area">
+        <h1>Otomatik Akış Şeması Çözücü</h1>
+        <p class="subtitle">Bir denklemin adım adım algoritmasını (Ters işlem mantığı) izleyin.</p>
+    </div>
+
+    <div class="canvas-area">
+        
+        <div class="problem-box">
+            Denklem: <strong>2x + 5 = 15</strong>
+        </div>
+
+        <div class="flow-container" id="flowContainer">
+            <!-- Items injected by JS -->
+        </div>
+
+    </div>
+
+    <button class="btn-play" id="btnPlay" onclick="runFlow()">Algoritmayı Çalıştır</button>
+
+    <script>
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+        const flowContainer = document.getElementById('flowContainer');
+        const btnPlay = document.getElementById('btnPlay');
+
+        const steps = [
+            { text: "BAŞLA", color: "var(--accent)" },
+            { text: "Karşıdaki sayıyı al (15)", color: "white" },
+            { text: "5 çıkar (Ters İşlem) -> 10", color: "white" },
+            { text: "2'ye böl (Ters İşlem) -> 5", color: "white" },
+            { text: "x = 5 olarak yazdır", color: "var(--tertiary)" },
+            { text: "BİTİR", color: "var(--danger)" }
+        ];
+
+        async function runFlow() {
+            btnPlay.disabled = true;
+            btnPlay.style.opacity = 0.5;
+            flowContainer.innerHTML = "";
+
+            for(let i=0; i<steps.length; i++) {
+                
+                // Add Item
+                let item = document.createElement('div');
+                item.className = "flow-item";
+                item.style.color = steps[i].color;
+                if(i===0 || i===steps.length-1) item.style.borderRadius = "30px"; // terminal shape
+                item.innerText = steps[i].text;
+                flowContainer.appendChild(item);
+
+                await sleep(50);
+                item.classList.add('active');
+                await sleep(1500); // wait for reading
+
+                // Add Arrow (if not last)
+                if(i < steps.length - 1) {
+                    let arrow = document.createElement('div');
+                    arrow.className = "flow-arrow";
+                    flowContainer.appendChild(arrow);
+                    
+                    await sleep(50);
+                    arrow.classList.add('active');
+                    await sleep(500);
+                }
+            }
+
+            btnPlay.disabled = false;
+            btnPlay.style.opacity = 1;
+            btnPlay.innerText = "Yeniden Çalıştır";
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>11.1.4 - Fonksiyonlarda İşlemler Animasyonu</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0A0A12;
+            --panel-bg: #151522;
+            --primary: #00F0FF; 
+            --secondary: #FF00E4; 
+            --accent: #FFE600; 
+            --text-main: #FFFFFF;
+            --text-muted: #8A8A9E;
+            --grid-line: rgba(0, 240, 255, 0.12);
+            --axis-line: rgba(0, 240, 255, 0.5);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background-color: var(--bg-color); color: var(--text-main);
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; padding: 20px; overflow-x: hidden;
+            background-image: 
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        .header {
+            width: 100%; max-width: 1200px; display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 25px; background: rgba(21, 21, 34, 0.85); backdrop-filter: blur(10px);
+            border-radius: 16px; border: 1px solid rgba(0, 240, 255, 0.3);
+            margin-bottom: 20px; box-shadow: 0 0 20px rgba(0, 240, 255, 0.15);
+        }
+        
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 800; color: var(--primary); font-size: 1.1rem; }
+        .header-left img { width: 45px; height: 45px; border-radius: 10px; border: 1px solid var(--primary); }
+        .kazanim { background: rgba(0, 240, 255, 0.1); padding: 8px 15px; border-radius: 8px; color: var(--primary); font-weight: 600; font-size: 0.85rem; border: 1px solid rgba(0, 240, 255, 0.3); }
+
+        h1 { font-size: 2rem; font-weight: 900; margin-bottom: 8px; text-align: center; text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 0 10px rgba(0, 240, 255, 0.5); }
+        .subtitle { color: var(--text-muted); font-size: 1rem; margin-bottom: 25px; text-align: center; max-width: 900px; }
+
+        .workspace { display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 1200px; align-items: center; }
+
+        .anim-container {
+            display: flex; width: 100%; height: 500px; position: relative;
+            background: #0A0A12; border-radius: 16px; border: 2px solid var(--accent);
+            overflow: hidden; box-shadow: 0 0 30px rgba(255, 230, 0, 0.15) inset;
+        }
+
+        svg { width: 100%; height: 100%; display: block; }
+        
+        .svg-grid { stroke: rgba(255,255,255,0.06); stroke-width: 0.05; }
+        .svg-axis { stroke: var(--axis-line); stroke-width: 0.15; }
+        
+        .path-f { fill: none; stroke: var(--primary); stroke-width: 0.1; opacity: 0.8; stroke-dasharray: 0.2, 0.2;}
+        .path-g { fill: none; stroke: var(--secondary); stroke-width: 0.1; opacity: 0.8; stroke-dasharray: 0.2, 0.2;}
+        .path-h { fill: none; stroke: var(--accent); stroke-width: 0.15; stroke-linecap: round; filter: drop-shadow(0 0 5px var(--accent)); }
+        
+        .scan-line { stroke: rgba(255,255,255,0.4); stroke-width: 0.08; stroke-dasharray: 0.1, 0.1; display: none;}
+        .seg-f { stroke: var(--primary); stroke-width: 0.15; filter: drop-shadow(0 0 3px var(--primary)); display: none;}
+        .seg-g { stroke: var(--secondary); stroke-width: 0.15; filter: drop-shadow(0 0 3px var(--secondary)); display: none;}
+        
+        .point-h { fill: var(--accent); r: 0.15; filter: drop-shadow(0 0 8px var(--accent)); display: none;}
+        
+        .svg-label { fill: var(--text-muted); font-size: 0.3px; font-weight: 600; }
+
+        .controls {
+            display: flex; gap: 20px; background: var(--panel-bg); justify-content: space-between; align-items: center;
+            padding: 20px 30px; border-radius: 16px; border: 1px solid rgba(255, 0, 228, 0.3);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5); width: 100%; flex-wrap: wrap;
+        }
+
+        .btn-play {
+            background: var(--accent); color: #000; border: none; padding: 14px 40px; border-radius: 12px;
+            font-size: 1.2rem; font-weight: 900; cursor: pointer; transition: 0.3s; box-shadow: 0 0 15px rgba(255, 230, 0, 0.4);
+        }
+        .btn-play:hover { transform: scale(1.05); box-shadow: 0 0 25px rgba(255, 230, 0, 0.7); }
+        .btn-play:disabled { background: #333; color: #666; cursor: not-allowed; box-shadow: none; transform: none; }
+
+        .status-box {
+            background: rgba(0,0,0,0.6); border: 1px dashed var(--accent); padding: 15px 30px;
+            border-radius: 12px; font-size: 1.3rem; text-align: center; color: var(--text-main); flex: 1;
+            min-height: 60px; display: flex; align-items: center; justify-content: center; font-weight: 700;
+        }
+        
+        .val-f { color: var(--primary); }
+        .val-g { color: var(--secondary); }
+        .val-h { color: var(--accent); }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=00F0FF&color=000'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.11.1.4. Fonksiyonlarda Noktasal Toplama (Animasyon)</div>
+    </div>
+    
+    <h1>Noktasal Toplama Geometrisi</h1>
+    <p class="subtitle"><strong>(f+g)(x) = f(x) + g(x)</strong> bağıntısının grafik üzerinde nasıl oluştuğunu izleyin. Her bir x noktası için f ve g fonksiyonlarının y değerleri (dikey çubuklar) üst üste eklenerek h grafiğini oluşturur.</p>
+    
+    <div class="workspace">
+        <div class="anim-container">
+            <svg id="graphSvg" viewBox="-0.5 -3 7 6" preserveAspectRatio="xMidYMid meet">
+                <g transform="scale(1, -1)">
+                    <g id="gridGroup"></g>
+                    
+                    <!-- Axes -->
+                    <line x1="-0.5" y1="0" x2="6.5" y2="0" class="svg-axis" />
+                    <line x1="0" y1="-3" x2="0" y2="3" class="svg-axis" />
+                    
+                    <!-- Background Functions -->
+                    <path id="pathF" class="path-f" d="" />
+                    <path id="pathG" class="path-g" d="" />
+                    
+                    <!-- Result Function Trail -->
+                    <path id="pathH" class="path-h" d="" />
+                    
+                    <!-- Animation Elements -->
+                    <line id="scanLine" class="scan-line" x1="0" y1="-3" x2="0" y2="3" />
+                    <line id="segF" class="seg-f" x1="0" y1="0" x2="0" y2="0" />
+                    <line id="segG" class="seg-g" x1="0" y1="0" x2="0" y2="0" />
+                    <circle id="pointH" class="point-h" cx="0" cy="0" />
+                </g>
+                <g id="labelsGroup"></g>
+            </svg>
+        </div>
+
+        <div class="controls">
+            <button class="btn-play" id="btnPlay" onclick="startAnimation()">TOPLAMAYI BAŞLAT</button>
+            <div class="status-box" id="mathOutput">
+                <!-- Status output -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const btnPlay = document.getElementById('btnPlay');
+        const pathF = document.getElementById('pathF');
+        const pathG = document.getElementById('pathG');
+        const pathH = document.getElementById('pathH');
+        
+        const scanLine = document.getElementById('scanLine');
+        const segF = document.getElementById('segF');
+        const segG = document.getElementById('segG');
+        const pointH = document.getElementById('pointH');
+        
+        const mathOutput = document.getElementById('mathOutput');
+        
+        let animActive = false;
+        let scanX = 0;
+        let trailD = "";
+
+        function drawGrid() {
+            let gridHtml = '';
+            let labelHtml = '';
+            
+            for(let y = -2; y <= 2; y += 1) {
+                if(y !== 0) {
+                    gridHtml += `<line x1="-0.5" y1="${y}" x2="6.5" y2="${y}" class="svg-grid" />`;
+                    labelHtml += `<text x="-0.2" y="${-y + 0.12}" class="svg-label" text-anchor="end">${y}</text>`;
+                }
+            }
+            
+            let piSteps = [
+                {val: 0, str: "0", y: 0.4},
+                {val: Math.PI/2, str: "π/2", y: 0.4},
+                {val: Math.PI, str: "π", y: 0.4},
+                {val: 1.5*Math.PI, str: "3π/2", y: 0.4},
+                {val: 2*Math.PI, str: "2π", y: 0.4}
+            ];
+            
+            piSteps.forEach(step => {
+                gridHtml += `<line x1="${step.val}" y1="-3" x2="${step.val}" y2="3" class="svg-grid" />`;
+                labelHtml += `<text x="${step.val}" y="${step.y}" class="svg-label" text-anchor="middle">${step.str}</text>`;
+            });
+
+            document.getElementById('gridGroup').innerHTML = gridHtml;
+            document.getElementById('labelsGroup').innerHTML = labelHtml;
+        }
+        
+        function initCurves() {
+            let dF = "";
+            let dG = "";
+            for(let x = 0; x <= 2*Math.PI; x += 0.05) {
+                let yF = Math.sin(x);
+                let yG = Math.cos(x);
+                dF += (x === 0 ? "M" : "L") + ` ${x.toFixed(3)} ${yF.toFixed(3)}`;
+                dG += (x === 0 ? "M" : "L") + ` ${x.toFixed(3)} ${yG.toFixed(3)}`;
+            }
+            pathF.setAttribute("d", dF);
+            pathG.setAttribute("d", dG);
+        }
+
+        function startAnimation() {
+            if(animActive) return;
+            animActive = true;
+            btnPlay.disabled = true;
+            
+            scanX = 0;
+            trailD = "";
+            pathH.setAttribute("d", "");
+            
+            scanLine.style.display = "block";
+            segF.style.display = "block";
+            segG.style.display = "block";
+            pointH.style.display = "block";
+            
+            mathOutput.innerHTML = `\\( f(x) = \\sin(x) \\quad \\text{ve} \\quad g(x) = \\cos(x) \\)`;
+            MathJax.typesetPromise([mathOutput]);
+            
+            requestAnimationFrame(animStep);
+        }
+
+        function animStep() {
+            scanX += 0.02; // speed
+            
+            if(scanX > 2*Math.PI) {
+                animActive = false;
+                scanLine.style.display = "none";
+                segF.style.display = "none";
+                segG.style.display = "none";
+                btnPlay.innerText = "YENİDEN OYNAT";
+                btnPlay.disabled = false;
+                
+                mathOutput.innerHTML = `<span class="val-h">\\( h(x) = (f+g)(x) = \\sin(x) + \\cos(x) \\)</span> grafiği tamamlandı!`;
+                MathJax.typesetPromise([mathOutput]);
+                return;
+            }
+            
+            let yF = Math.sin(scanX);
+            let yG = Math.cos(scanX);
+            let yH = yF + yG;
+            
+            // Scanner line
+            scanLine.setAttribute("x1", scanX);
+            scanLine.setAttribute("x2", scanX);
+            
+            // F Segment (from 0 to yF)
+            segF.setAttribute("x1", scanX);
+            segF.setAttribute("x2", scanX);
+            segF.setAttribute("y1", 0);
+            segF.setAttribute("y2", yF);
+            
+            // G Segment stacked on F (from yF to yF + yG)
+            segG.setAttribute("x1", scanX);
+            segG.setAttribute("x2", scanX);
+            segG.setAttribute("y1", yF);
+            segG.setAttribute("y2", yH);
+            
+            // H Point
+            pointH.setAttribute("cx", scanX);
+            pointH.setAttribute("cy", yH);
+            
+            // Update Trail
+            trailD += (trailD === "" ? "M" : "L") + ` ${scanX.toFixed(3)} ${yH.toFixed(3)}`;
+            pathH.setAttribute("d", trailD);
+            
+            // Math Update (every few frames to not choke DOM)
+            if(Math.floor(scanX * 100) % 5 === 0) {
+                mathOutput.innerHTML = `
+                    <i>f</i>(${scanX.toFixed(1)}) = <span class="val-f">${yF.toFixed(2)}</span>, &nbsp;&nbsp; 
+                    <i>g</i>(${scanX.toFixed(1)}) = <span class="val-g">${yG.toFixed(2)}</span> &nbsp;&nbsp; &#8658; &nbsp;&nbsp; 
+                    <i>h</i> = <span class="val-h">${yH.toFixed(2)}</span>
+                `;
+            }
+            
+            requestAnimationFrame(animStep);
+        }
+
+        window.onload = () => {
+            drawGrid();
+            initCurves();
+            mathOutput.innerHTML = `<span style="color:var(--text-muted)">Animasyonu başlatmak için butona tıklayın.</span>`;
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hacim Doldurma Laboratuvarı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F0E17; --surface: #1A1A24; --text: #F8FAFC;
+            --primary: #8B5CF6; --secondary: #10B981;
+            --tertiary: #06B6D4; --danger: #F43F5E;
+            --accent: #F59E0B;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg) 0%, #161625 100%);
+            color: var(--text); min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 1000px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05); padding: 15px 25px; border-radius: 20px; border: 1px solid rgba(139, 92, 246, 0.2); margin-bottom: 20px;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 600; font-size: 1.2rem; }
+        .header-left img { width: 50px; height: 50px; border-radius: 50%; background: white; padding: 2px;}
+        .kazanim { background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 800; font-size: 0.9rem;}
+
+        .title-area { text-align: center; margin-bottom: 20px;}
+        h1 { font-size: 2.2rem; color: var(--tertiary); font-weight: 900;}
+        .subtitle { color: #94A3B8; font-size: 1.1rem; margin-top: 5px;}
+
+        .canvas-area {
+            position: relative; width: 100%; max-width: 800px; height: 500px; 
+            background: #11111A; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 20px 40px rgba(0,0,0,0.4); 
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 50px;
+        }
+
+        .tank {
+            width: 300px; height: 200px; border: 4px solid rgba(139, 92, 246, 0.5);
+            border-top: none; position: relative; background: rgba(139, 92, 246, 0.1);
+            display: flex; flex-wrap: wrap-reverse; align-content: flex-start; justify-content: flex-start;
+            gap: 2px; padding: 2px;
+        }
+        
+        .tank::before {
+            content: ''; position: absolute; width: 100%; height: 100%; border: 2px dashed rgba(139, 92, 246, 0.3);
+            top: 0; left: 0; pointer-events: none;
+        }
+
+        .unit-cube {
+            width: 48px; height: 48px; background: var(--tertiary); border: 2px solid white;
+            box-shadow: inset -5px -5px 10px rgba(0,0,0,0.3); opacity: 0; transform: translateY(-50px);
+            animation: dropIn 0.3s forwards;
+        }
+
+        @keyframes dropIn {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .counter-box {
+            position: absolute; top: 30px; left: 30px; background: rgba(0,0,0,0.5); border: 2px solid var(--primary);
+            padding: 15px 30px; border-radius: 15px; font-size: 1.5rem; font-weight: 900; color: white;
+        }
+        .counter-box span { color: var(--accent); font-size: 2rem;}
+
+        .btn-add {
+            background: var(--secondary); color: white; border: none; padding: 15px 40px; border-radius: 50px;
+            font-size: 1.2rem; font-weight: 900; cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.4); margin-top: 30px;
+        }
+        .btn-add:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 15px 25px rgba(16, 185, 129, 0.6); }
+        .btn-add:active { transform: translateY(0) scale(0.95); }
+        .btn-add:disabled { background: #475569; box-shadow: none; cursor: not-allowed; }
+
+        .alert-box {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
+            background: rgba(16, 185, 129, 0.95); border: 2px solid white; color: white;
+            padding: 30px 50px; border-radius: 20px; font-weight: 900; font-size: 2rem;
+            opacity: 0; transition: all 0.5s; text-align: center; z-index: 100;
+            backdrop-filter: blur(10px); box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=8B5CF6&color=fff'">
+            <span>@mufithocailematematik</span>
+        </div>
+        <div class="kazanim">MAT.7.4.3. Eş Nesnelerle Hacim (Etkinlik)</div>
+    </div>
+
+    <div class="title-area">
+        <h1>Prizmayı Doldur</h1>
+        <p class="subtitle">Boş prizmayı birim küplerle tamamen doldurarak hacmini bulun.</p>
+    </div>
+
+    <div class="canvas-area">
+        
+        <div class="counter-box">Küp Sayısı: <br><span id="counter">0</span></div>
+
+        <div class="tank" id="tank"></div>
+
+        <button class="btn-add" id="btnAdd" onclick="addCube()">+1 Küp Ekle</button>
+
+    </div>
+
+    <div class="alert-box" id="alertBox">DOLDU! Prizmanın Hacmi = 24 Birim Küp.</div>
+
+    <script>
+        const tank = document.getElementById('tank');
+        const counter = document.getElementById('counter');
+        const btnAdd = document.getElementById('btnAdd');
+        const alertBox = document.getElementById('alertBox');
+
+        let count = 0;
+        const MAX_CUBES = 24; // 6 cols x 4 rows (tank width 300/50=6, height 200/50=4. Each cube 48px + 2px gap = 50px)
+
+        function addCube() {
+            if(count < MAX_CUBES) {
+                count++;
+                counter.innerText = count;
+                
+                let cube = document.createElement('div');
+                cube.className = 'unit-cube';
+                tank.appendChild(cube);
+
+                if(count === MAX_CUBES) {
+                    btnAdd.disabled = true;
+                    btnAdd.innerText = "Tamamen Doldu";
+                    
+                    alertBox.style.opacity = 1;
+                    alertBox.style.transform = "translate(-50%, -50%) scale(1)";
+                    setTimeout(() => {
+                        alertBox.style.opacity = 0;
+                        alertBox.style.transform = "translate(-50%, -50%) scale(0)";
+                    }, 4000);
+                }
+            }
+        }
+    </script>
+
+    <script>
+        // Global spam click prevention for Etkinlik files
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'BUTTON' && !e.target.hasAttribute('data-spam-locked')) {
+                e.target.setAttribute('data-spam-locked', 'true');
+                let originalOpacity = e.target.style.opacity || '1';
+                e.target.style.opacity = '0.7';
+                e.target.style.pointerEvents = 'none';
+                setTimeout(() => {
+                    e.target.removeAttribute('data-spam-locked');
+                    e.target.style.opacity = originalOpacity;
+                    e.target.style.pointerEvents = 'auto';
+                }, 400);
+            }
+        });
+    </script>
+</body>
+</html>

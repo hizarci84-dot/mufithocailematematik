@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10.7.2 - Bayes Teoremi ve Medikal Risk Simülatörü</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            /* Medical / Risk Lab Theme */
+            --bg-color: #0f172a; /* slate-900 */
+            --panel-bg: #1e293b; /* slate-800 */
+            
+            --primary: #38bdf8; /* cyan-400 */
+            --healthy: #10b981; /* emerald-500 */
+            --sick: #ef4444; /* red-500 */
+            --test-pos: #f59e0b; /* amber-500 */
+            
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        
+        body {
+            background-color: var(--bg-color); color: var(--text-main);
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; padding: 20px; overflow-x: hidden;
+        }
+
+        .header {
+            width: 100%; max-width: 1200px; display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 25px; background: var(--panel-bg);
+            border-radius: 12px; border: 1px solid rgba(56, 189, 248, 0.3);
+            margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+        
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 800; color: var(--primary); font-size: 1.2rem; }
+        .header-left img { width: 40px; height: 40px; border-radius: 8px; filter: hue-rotate(150deg); }
+        .kazanim { background: rgba(56, 189, 248, 0.1); padding: 5px 15px; border-radius: 6px; color: var(--primary); font-size: 0.9rem; border: 1px solid var(--primary); }
+
+        h1 { font-size: 2.2rem; font-weight: 900; margin-bottom: 10px; text-align: center; color: white; }
+        .subtitle { color: var(--text-muted); font-size: 1.05rem; margin-bottom: 30px; text-align: center; max-width: 900px; }
+
+        .workspace { display: flex; flex-direction: row; gap: 20px; width: 100%; max-width: 1200px; }
+        @media (max-width: 900px) { .workspace { flex-direction: column; } }
+
+        .controls {
+            flex: 1; display: flex; flex-direction: column; gap: 20px; background: var(--panel-bg);
+            padding: 25px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        .slider-group { display: flex; flex-direction: column; gap: 8px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; }
+        .slider-header { display: flex; justify-content: space-between; font-weight: 600; font-size: 1.05rem; }
+        .val-badge { background: rgba(0,0,0,0.4); padding: 3px 10px; border-radius: 6px; font-weight: 800; color: var(--primary); }
+        
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; margin: 10px 0; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; cursor: pointer; background: rgba(255,255,255,0.1); border-radius: 5px; }
+        input[type=range]::-webkit-slider-thumb { height: 20px; width: 20px; border-radius: 50%; background: var(--primary); cursor: pointer; -webkit-appearance: none; margin-top: -7px; transition: 0.2s; }
+
+        .btn-action {
+            background: var(--primary); color: #000; border: none; padding: 15px; border-radius: 8px;
+            font-size: 1.2rem; font-weight: 900; cursor: pointer; transition: 0.2s; text-transform: uppercase;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.4); margin-top: 10px;
+        }
+        .btn-action:hover { transform: translateY(-2px); box-shadow: 0 0 25px rgba(56, 189, 248, 0.6); }
+        .btn-action:disabled { background: var(--text-muted); cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .math-box {
+            background: rgba(0,0,0,0.4); border-left: 4px solid var(--test-pos); padding: 15px;
+            border-radius: 8px; font-size: 1rem; margin-top: auto; color: white;
+        }
+
+        .graph-container {
+            flex: 2; display: flex; flex-direction: column; gap: 15px;
+        }
+        
+        .population-grid {
+            background: #0b1120; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);
+            padding: 20px; display: grid; grid-template-columns: repeat(40, 1fr); gap: 4px;
+            min-height: 400px; align-content: start; box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+        }
+
+        /* 1000 dots */
+        .dot { width: 100%; aspect-ratio: 1; border-radius: 50%; background-color: var(--healthy); transition: 0.3s; position: relative; }
+        .dot.sick { background-color: var(--sick); box-shadow: 0 0 5px var(--sick); z-index: 2; }
+        
+        /* Positive Test Overlay (Cross) */
+        .dot::after {
+            content: ''; position: absolute; top: -2px; left: -2px; right: -2px; bottom: -2px;
+            border: 2px solid transparent; border-radius: 50%; opacity: 0; transition: 0.3s;
+        }
+        .dot.tested-pos::after { border-color: var(--test-pos); opacity: 1; box-shadow: 0 0 5px var(--test-pos); }
+        
+        .legend-box {
+            display: flex; justify-content: center; gap: 25px; background: var(--panel-bg);
+            padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);
+        }
+        .leg-item { display: flex; align-items: center; gap: 8px; font-size: 0.95rem; font-weight: 600; }
+        .leg-dot { width: 16px; height: 16px; border-radius: 50%; }
+        .leg-dot.h { background: var(--healthy); }
+        .leg-dot.s { background: var(--sick); }
+        .leg-dot.tp { background: var(--sick); border: 2px solid var(--test-pos); }
+        .leg-dot.fp { background: var(--healthy); border: 2px solid var(--test-pos); }
+
+        .result-panel {
+            background: rgba(245, 158, 11, 0.1); border: 1px solid var(--test-pos);
+            padding: 20px; border-radius: 12px; text-align: center; display: none;
+        }
+        .result-title { font-size: 1.5rem; font-weight: 900; color: var(--test-pos); margin-bottom: 10px; }
+        .result-desc { font-size: 1.1rem; line-height: 1.5; }
+        .result-highlight { font-size: 2.5rem; font-weight: 900; color: white; display: block; margin: 10px 0; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="../../logom.png" alt="Logo" onerror="this.src='https://ui-avatars.com/api/?name=MH&background=38bdf8&color=fff'">
+            <span>@mufithocailematematik [MED-LAB]</span>
+        </div>
+        <div class="kazanim">MAT.10.7.2. Bayes Teoremi ve Risk Analizi</div>
+    </div>
+    
+    <h1>Tıbbi Test Yanılgısı (Bayes Simülatörü)</h1>
+    <p class="subtitle">Ekranda 1000 kişiyi temsil eden popülasyon bulunmaktadır. Hastalığın yaygınlığını ve testin doğruluk oranını ayarlayın. Testi pozitif çıkan birinin GERÇEKTE hasta olma olasılığının ne kadar şaşırtıcı olduğunu keşfedin!</p>
+    
+    <div class="workspace">
+        <div class="controls">
+            
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span style="color:var(--sick);">Hastalık Görülme Sıklığı P(H)</span>
+                    <span class="val-badge" id="valPrev">%1</span>
+                </div>
+                <input type="range" id="slPrev" min="1" max="50" step="1" value="1">
+            </div>
+            
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span style="color:var(--primary);">Testin Hastayı Bulma Oranı P(+|H)</span>
+                    <span class="val-badge" id="valSens">%99</span>
+                </div>
+                <input type="range" id="slSens" min="50" max="100" step="1" value="99">
+                <div style="font-size:0.85rem; color:var(--text-muted); margin-top:5px;">Hassasiyet (Sensitivity): Hasta olanların ne kadarını doğru tespit ettiği.</div>
+            </div>
+            
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span style="color:var(--healthy);">Sağlamı Doğru Bulma Oranı P(-|S)</span>
+                    <span class="val-badge" id="valSpec">%95</span>
+                </div>
+                <input type="range" id="slSpec" min="50" max="100" step="1" value="95">
+                <div style="font-size:0.85rem; color:var(--text-muted); margin-top:5px;">Seçicilik (Specificity): Sağlamların yüzde kaçını negatif bulduğu. (100 - Bu Değer = Yalancı Pozitiflik Oranı)</div>
+            </div>
+
+            <button class="btn-action" id="btnTest">Nüfusu Test Et!</button>
+            <button class="btn-action" id="btnReset" style="background:transparent; color:white; border:2px solid var(--text-muted); margin-top:0; display:none;">Sıfırla</button>
+            
+            <div class="math-box" id="mathBox">
+                <div style="font-weight:bold; margin-bottom:10px; color:var(--primary);">Bayes Teoremi</div>
+                <div id="mathFormula">\( P(H|+) = \frac{P(+|H) \cdot P(H)}{P(+|H)P(H) + P(+|S)P(S)} \)</div>
+            </div>
+        </div>
+        
+        <div class="graph-container">
+            <div class="legend-box">
+                <div class="leg-item"><div class="leg-dot h"></div> Sağlam</div>
+                <div class="leg-item"><div class="leg-dot s"></div> Hasta</div>
+                <div class="leg-item"><div class="leg-dot tp"></div> Gerçek Pozitif (Hasta ve Test +)</div>
+                <div class="leg-item"><div class="leg-dot fp"></div> Yalancı Pozitif (Sağlam ama Test +)</div>
+            </div>
+            
+            <div class="population-grid" id="popGrid">
+                <!-- 1000 dots generated via JS -->
+            </div>
+            
+            <div class="result-panel" id="resPanel">
+                <div class="result-title">Test Sonuçları Açıklandı!</div>
+                <div class="result-desc">
+                    Toplam 1000 kişiden <strong id="resPosCount" style="color:white;">0</strong> kişinin testi <strong>POZİTİF</strong> çıktı.<br>
+                    Eğer testiniz pozitif çıktıysa, "Kesin hastayım" diyebilir misiniz?<br>
+                    Sizinle aynı sonucu alanlar arasında gerçekten hasta olanların oranı:
+                </div>
+                <span class="result-highlight" id="resRealProb">%0.0</span>
+                <div class="result-desc" style="color:var(--text-muted); font-size:0.95rem;">
+                    Buna <strong>Bayes Yanılgısı (Yalancı Pozitiflik Paradoksu)</strong> denir.<br>Hastalık toplumda ne kadar nadirse, testin pozitif çıkmasına rağmen sağlam olma ihtimaliniz o kadar yüksektir! (Kazanım 10.7.2)
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const slPrev = document.getElementById('slPrev');
+        const slSens = document.getElementById('slSens');
+        const slSpec = document.getElementById('slSpec');
+        
+        const valPrev = document.getElementById('valPrev');
+        const valSens = document.getElementById('valSens');
+        const valSpec = document.getElementById('valSpec');
+        
+        const popGrid = document.getElementById('popGrid');
+        const btnTest = document.getElementById('btnTest');
+        const btnReset = document.getElementById('btnReset');
+        const resPanel = document.getElementById('resPanel');
+        const mathFormula = document.getElementById('mathFormula');
+        
+        const POP_SIZE = 1000;
+        let dots = [];
+        let debounceTimer;
+
+        // Initialize 1000 dots
+        for(let i=0; i<POP_SIZE; i++) {
+            let d = document.createElement('div');
+            d.className = 'dot';
+            popGrid.appendChild(d);
+            dots.push(d);
+        }
+
+        function updateLabels() {
+            valPrev.innerText = `%${slPrev.value}`;
+            valSens.innerText = `%${slSens.value}`;
+            valSpec.innerText = `%${slSpec.value}`;
+        }
+
+        function renderPopulation() {
+            let prev = parseInt(slPrev.value) / 100;
+            let sickCount = Math.round(POP_SIZE * prev);
+            
+            dots.forEach((dot, index) => {
+                dot.className = 'dot'; // reset
+                if(index < sickCount) {
+                    dot.classList.add('sick');
+                }
+            });
+            resPanel.style.display = 'none';
+        }
+
+        function runTest() {
+            btnTest.style.display = 'none';
+            btnReset.style.display = 'block';
+            
+            // Disable sliders during test
+            slPrev.disabled = true; slSens.disabled = true; slSpec.disabled = true;
+            
+            let prev = parseInt(slPrev.value) / 100;
+            let sens = parseInt(slSens.value) / 100; // P(+|H)
+            let spec = parseInt(slSpec.value) / 100; // P(-|S)
+            let fpr = 1 - spec; // P(+|S) False Positive Rate
+            
+            let sickCount = Math.round(POP_SIZE * prev);
+            let healthyCount = POP_SIZE - sickCount;
+            
+            let truePositives = Math.round(sickCount * sens);
+            let falsePositives = Math.round(healthyCount * fpr);
+            
+            let totalPositives = truePositives + falsePositives;
+            let probSickIfPos = totalPositives > 0 ? (truePositives / totalPositives) * 100 : 0;
+            
+            // Animate marking
+            let sCount = 0; let hCount = 0;
+            dots.forEach((dot, index) => {
+                if(index < sickCount) {
+                    // It's sick. Will it test positive?
+                    if(sCount < truePositives) {
+                        setTimeout(() => dot.classList.add('tested-pos'), Math.random() * 1500);
+                        sCount++;
+                    }
+                } else {
+                    // It's healthy. Will it test positive? (False positive)
+                    if(hCount < falsePositives) {
+                        setTimeout(() => dot.classList.add('tested-pos'), Math.random() * 1500);
+                        hCount++;
+                    }
+                }
+            });
+            
+            // Show results after animation
+            setTimeout(() => {
+                document.getElementById('resPosCount').innerText = totalPositives;
+                document.getElementById('resRealProb').innerText = `%${probSickIfPos.toFixed(1)}`;
+                resPanel.style.display = 'block';
+                resPanel.scrollIntoView({behavior: "smooth", block: "end"});
+                
+                // Update MathJax
+                let p_H = prev; let p_S = 1 - prev;
+                let p_pos_H = sens; let p_pos_S = fpr;
+                let num = p_pos_H * p_H;
+                let den = num + (p_pos_S * p_S);
+                let pFinal = num / den;
+                
+                let tex = `\\( P(Hasta | Pozitif) = \\frac{${p_pos_H.toFixed(2)} \\cdot ${p_H.toFixed(2)}}{(${p_pos_H.toFixed(2)} \\cdot ${p_H.toFixed(2)}) + (${p_pos_S.toFixed(2)} \\cdot ${p_S.toFixed(2)})} \\approx \\%${(pFinal*100).toFixed(1)} \\)`;
+                
+                mathFormula.innerHTML = tex;
+                MathJax.typesetPromise([mathFormula]);
+                
+            }, 1800);
+        }
+
+        function resetSim() {
+            btnTest.style.display = 'block';
+            btnReset.style.display = 'none';
+            slPrev.disabled = false; slSens.disabled = false; slSpec.disabled = false;
+            
+            renderPopulation();
+            
+            let tex = `\\( P(H|+) = \\frac{P(+|H) \\cdot P(H)}{P(+|H)P(H) + P(+|S)P(S)} \\)`;
+            mathFormula.innerHTML = tex;
+            MathJax.typesetPromise([mathFormula]);
+        }
+
+        slPrev.addEventListener('input', () => { updateLabels(); renderPopulation(); });
+        slSens.addEventListener('input', updateLabels);
+        slSpec.addEventListener('input', updateLabels);
+        
+        btnTest.addEventListener('click', runTest);
+        btnReset.addEventListener('click', resetSim);
+
+        window.onload = () => { updateLabels(); renderPopulation(); };
+    </script>
+</body>
+</html>

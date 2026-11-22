@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10.2.4 - Parabol (Atış) Animasyonu</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --panel-bg: #1e293b;
+            --primary: #ef4444; /* Red */
+            --secondary: #f59e0b; /* Amber */
+            --accent: #3b82f6; /* Blue */
+            --text-main: #f8fafc;
+            --grid-color: rgba(255,255,255,0.05);
+            --axis-color: rgba(255,255,255,0.3);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+        
+        body { background-color: var(--bg-color); color: var(--text-main); display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; }
+
+        .header { width: 100%; max-width: 1000px; display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background: var(--panel-bg); border-radius: 12px; margin-bottom: 20px; border: 1px solid rgba(239, 68, 68, 0.3); }
+        .header-left { display: flex; align-items: center; gap: 15px; font-weight: 800; color: var(--primary); font-size: 1.2rem; }
+        .kazanim { background: rgba(239, 68, 68, 0.1); padding: 5px 15px; border-radius: 6px; color: var(--primary); }
+
+        h1 { font-size: 2.2rem; margin-bottom: 10px; text-align: center; }
+        .subtitle { color: #94a3b8; font-size: 1.05rem; margin-bottom: 30px; text-align: center; max-width: 800px; }
+
+        .container { display: flex; flex-direction: row; gap: 20px; width: 100%; max-width: 1000px; }
+        @media(max-width: 800px) { .container { flex-direction: column; } }
+
+        .controls { flex: 1; background: var(--panel-bg); padding: 25px; border-radius: 12px; display: flex; flex-direction: column; gap: 20px; border: 1px solid rgba(255,255,255,0.05); }
+
+        .slider-group label { display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 8px; font-size: 0.95rem; }
+        input[type=range] { width: 100%; accent-color: var(--primary); }
+        .val-badge { color: var(--primary); font-weight: 800; background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 4px; }
+
+        .btn { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; font-size: 1.1rem; font-weight: 800; cursor: pointer; transition: 0.2s; }
+        .btn:hover { filter: brightness(1.2); }
+        
+        .math-eq { text-align: center; font-size: 1.1rem; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px;}
+
+        .graph-container {
+            flex: 2; background: linear-gradient(180deg, #0f172a 0%, #1e293b 80%, #166534 80%, #14532d 100%);
+            border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.3);
+            position: relative; overflow: hidden; min-height: 450px;
+        }
+
+        svg { width: 100%; height: 100%; display: block; position: absolute; top:0; left:0; }
+        .grid-line { stroke: var(--grid-color); stroke-width: 1; }
+        .axis-line { stroke: var(--axis-color); stroke-width: 2; }
+        .axis-label { fill: var(--axis-color); font-size: 12px; font-weight: 600; }
+        
+        .trajectory-path { stroke: rgba(255,255,255,0.3); stroke-width: 2; fill: none; stroke-dasharray: 5,5; }
+        .live-path { stroke: var(--primary); stroke-width: 4; fill: none; filter: drop-shadow(0 0 5px var(--primary)); }
+        
+        .cannon {
+            position: absolute; bottom: 20%; left: 5%; width: 40px; height: 30px;
+            background: #475569; border-radius: 5px; transform-origin: 20px 15px;
+            border: 2px solid #94a3b8; display: flex; justify-content: flex-end; align-items: center;
+        }
+        .cannon::after { content: ''; width: 20px; height: 15px; background: #334155; position: absolute; right: -15px; border-radius: 0 5px 5px 0; }
+        .cannon-wheel { position: absolute; bottom: -10px; left: 10px; width: 20px; height: 20px; background: #0f172a; border-radius: 50%; border: 3px solid #64748b; }
+        
+        .ball {
+            position: absolute; width: 16px; height: 16px; background: var(--secondary);
+            border-radius: 50%; box-shadow: 0 0 10px var(--secondary); display: none;
+            transform: translate(-50%, 50%); /* Center the ball */
+        }
+        
+        .stat-box { position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; font-family: monospace; font-size: 1.1rem; }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left"><span>@mufithocailematematik</span></div>
+        <div class="kazanim">MAT.10.2.4. İkinci Dereceden Fonksiyonlar (Animasyon)</div>
+    </div>
+    
+    <h1>Serbest Düşüş ve Atış Simülasyonu</h1>
+    <p class="subtitle">Yerçekimi altında fırlatılan bir cismin izlediği yol her zaman bir paraboldür. Fırlatma açısı ve hızını değiştirerek parabolün tepe noktasının (k) ve menzilinin nasıl değiştiğini görün.</p>
+    
+    <div class="container">
+        
+        <div class="controls">
+            
+            <div class="slider-group">
+                <label>Fırlatma Hızı (v) <span class="val-badge" id="valV">20 m/s</span></label>
+                <input type="range" id="slV" min="10" max="30" step="1" value="20">
+            </div>
+            
+            <div class="slider-group">
+                <label>Fırlatma Açısı (θ) <span class="val-badge" id="valA">45°</span></label>
+                <input type="range" id="slA" min="15" max="85" step="1" value="45">
+            </div>
+            
+            <button class="btn" id="btnFire">Ateşle 🚀</button>
+            
+            <div class="math-eq" id="mathEq">
+                Yörünge Denklemi
+            </div>
+            
+        </div>
+        
+        <div class="graph-container" id="gCont">
+            <svg viewBox="0 0 100 100" preserveAspectRatio="none" id="graphSvg">
+                <!-- 0,0 is bottom-left, y goes up -->
+                <g transform="scale(1, -1) translate(0, -100)">
+                    <g id="gridGroup"></g>
+                    <!-- Axes inside SVG space -->
+                    <line x1="5" y1="20" x2="100" y2="20" class="axis-line" />
+                    <line x1="5" y1="20" x2="5" y2="100" class="axis-line" />
+                    
+                    <path id="trajPath" class="trajectory-path" d="" />
+                    <path id="livePath" class="live-path" d="" />
+                </g>
+                <g id="labelsGroup"></g>
+            </svg>
+            
+            <div class="cannon" id="cannon"><div class="cannon-wheel"></div></div>
+            <div class="ball" id="ball"></div>
+            
+            <div class="stat-box" id="statBox">Yükseklik: 0 m<br>Mesafe: 0 m</div>
+        </div>
+
+    </div>
+
+    <script>
+        const slV = document.getElementById('slV');
+        const slA = document.getElementById('slA');
+        const valV = document.getElementById('valV');
+        const valA = document.getElementById('valA');
+        const cannon = document.getElementById('cannon');
+        const ball = document.getElementById('ball');
+        const trajPath = document.getElementById('trajPath');
+        const livePath = document.getElementById('livePath');
+        const statBox = document.getElementById('statBox');
+        const btnFire = document.getElementById('btnFire');
+        const gCont = document.getElementById('gCont');
+        
+        let v = 20, thetaDeg = 45;
+        const g = 9.81;
+        let isAnim = false;
+        let animFrame;
+        let t = 0;
+        let max_x = 0;
+        
+        // Physics constants mapping to screen
+        // Let's say 1m = 1% of SVG width/height for simplicity.
+        // Screen represents 100m x 100m.
+        // Base is at y=20 (20% from bottom).
+        // Cannon at x=5%
+        
+        function updateParams() {
+            if(isAnim) return;
+            v = parseFloat(slV.value);
+            thetaDeg = parseFloat(slA.value);
+            valV.innerText = `${v} m/s`;
+            valA.innerText = `${thetaDeg}°`;
+            
+            cannon.style.transform = `rotate(-${thetaDeg}deg)`;
+            
+            drawTrajectoryPreview();
+        }
+        
+        function drawGrid() {
+            let gridHtml = ''; let labelHtml = '';
+            for(let x=5; x<=100; x+=10) {
+                gridHtml += `<line x1="${x}" y1="20" x2="${x}" y2="100" class="grid-line" />`;
+                if(x>5) labelHtml += `<text x="${x}" y="83" class="axis-label" text-anchor="middle">${x-5}m</text>`;
+            }
+            for(let y=20; y<=100; y+=10) {
+                gridHtml += `<line x1="5" y1="${y}" x2="100" y2="${y}" class="grid-line" />`;
+                if(y>20) labelHtml += `<text x="4" y="${100-y}" class="axis-label" text-anchor="end" dominant-baseline="middle">${y-20}m</text>`;
+            }
+            document.getElementById('gridGroup').innerHTML = gridHtml;
+            document.getElementById('labelsGroup').innerHTML = labelHtml;
+        }
+
+        function drawTrajectoryPreview() {
+            let thetaRad = thetaDeg * Math.PI / 180;
+            let vx = v * Math.cos(thetaRad);
+            let vy = v * Math.sin(thetaRad);
+            
+            // max flight time: t = 2*vy / g
+            let t_flight = (2 * vy) / g;
+            max_x = vx * t_flight;
+            
+            let d = '';
+            for(let time=0; time <= t_flight; time += 0.05) {
+                let x = vx * time;
+                let y = vy * time - 0.5 * g * time * time;
+                
+                // mapped coords
+                let sx = 5 + x;
+                let sy = 20 + y;
+                
+                if(time === 0) d += `M ${sx} ${sy} `;
+                else d += `L ${sx} ${sy} `;
+            }
+            trajPath.setAttribute('d', d);
+            livePath.setAttribute('d', '');
+            
+            // Equation formatting y = ax^2 + bx + c
+            // x = vx*t => t = x/vx
+            // y = vy*(x/vx) - 0.5*g*(x/vx)^2 = tan(theta)*x - (g / (2*vx^2))*x^2
+            let a_coef = -g / (2 * vx * vx);
+            let b_coef = Math.tan(thetaRad);
+            
+            document.getElementById('mathEq').innerHTML = `\\( y = ${a_coef.toFixed(3)}x^2 + ${b_coef.toFixed(3)}x \\)`;
+            MathJax.typesetPromise([document.getElementById('mathEq')]);
+        }
+
+        function animate() {
+            let thetaRad = thetaDeg * Math.PI / 180;
+            let vx = v * Math.cos(thetaRad);
+            let vy = v * Math.sin(thetaRad);
+            
+            t += 0.03; // speed of simulation
+            
+            let x = vx * t;
+            let y = vy * t - 0.5 * g * t * t;
+            
+            if(y < 0) {
+                y = 0;
+                isAnim = false;
+                btnFire.innerText = "Yeniden Ateşle";
+                btnFire.disabled = false;
+                cancelAnimationFrame(animFrame);
+            } else {
+                animFrame = requestAnimationFrame(animate);
+            }
+            
+            let sx = 5 + x;
+            let sy = 20 + y;
+            
+            // Update ball pos (use % for absolute positioning over SVG)
+            ball.style.display = 'block';
+            ball.style.left = `${sx}%`;
+            ball.style.bottom = `${sy}%`;
+            
+            // Update path
+            let d = livePath.getAttribute('d');
+            if(d === '') d = `M 5 20`;
+            d += ` L ${sx} ${sy}`;
+            livePath.setAttribute('d', d);
+            
+            statBox.innerHTML = `Yükseklik: ${y.toFixed(1)} m<br>Mesafe: ${x.toFixed(1)} m`;
+        }
+
+        btnFire.addEventListener('click', () => {
+            if(isAnim) return;
+            isAnim = true;
+            btnFire.disabled = true;
+            btnFire.innerText = "Ateşlendi!";
+            t = 0;
+            livePath.setAttribute('d', '');
+            animate();
+        });
+
+        slV.addEventListener('input', updateParams);
+        slA.addEventListener('input', updateParams);
+
+        window.onload = () => { drawGrid(); updateParams(); };
+    </script>
+</body>
+</html>
