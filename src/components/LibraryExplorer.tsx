@@ -244,7 +244,7 @@ export function LibraryExplorer({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Konu, kavram veya MAT.8.3.4 ara..."
-                className="w-full rounded-xl border border-[var(--border-strong)] bg-[var(--bg-canvas)]/70 py-2.5 pr-20 pl-11 text-sm font-medium text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[var(--accent-cobalt)] focus:bg-[var(--bg-surface)] focus:outline-none"
+                className="w-full rounded-xl border border-[var(--border-strong)] bg-[var(--bg-canvas)]/70 py-2.5 pr-9 pl-11 text-sm font-medium text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[var(--accent-cobalt)] focus:bg-[var(--bg-surface)] focus:outline-none sm:pr-20"
               />
               {searchQuery ? (
                 <button
