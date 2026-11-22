@@ -17,6 +17,7 @@ import {
   MessageCircle,
 } from 'lucide-react';
 import type { AppVariant, TopicModule } from '../types/studio';
+import { fitModalIframeOnMobile } from '../utils/iframePreview';
 import {
   copyTextToClipboard,
   downloadStandaloneHtml,
@@ -459,7 +460,12 @@ export function StudioPlayerModal({
                 key={rawUrl}
                 src={rawUrl}
                 title={title}
-                onLoad={() => setIsLoading(false)}
+                onLoad={(e) => {
+                  setIsLoading(false);
+                  if (!target.customUrl?.startsWith('http') && window.innerWidth < 768) {
+                    fitModalIframeOnMobile(e.currentTarget);
+                  }
+                }}
                 className="h-full w-full border-0"
                 allow="fullscreen"
               />

@@ -8,6 +8,8 @@ import {
   Clock,
   ArrowDown,
   Play,
+  Menu,
+  X,
 } from 'lucide-react';
 import { BRAND_CONFIG, STUDIO_PRODUCTS } from '../data/products';
 import type { GradeLevel, TopicModule } from '../types/studio';
@@ -41,6 +43,7 @@ export function Navbar({
 }: NavbarProps) {
   const logoSrc = `${import.meta.env.BASE_URL}logo.png`;
   const [openMenu, setOpenMenu] = useState<'anim' | 'products' | null>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [hoverGrade, setHoverGrade] = useState<GradeLevel>(5);
   const closeTimerRef = useRef<number | null>(null);
   const navRef = useRef<HTMLElement>(null);
@@ -52,7 +55,10 @@ export function Navbar({
       }
     };
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpenMenu(null);
+      if (e.key === 'Escape') {
+        setOpenMenu(null);
+        setMobileOpen(false);
+      }
     };
     document.addEventListener('mousedown', onDocClick);
     window.addEventListener('keydown', onKeyDown);
@@ -96,38 +102,46 @@ export function Navbar({
 
   const jumpToLibraryGrade = (grade: 'all' | GradeLevel) => {
     setOpenMenu(null);
+    setMobileOpen(false);
     onSelectGrade(grade);
     document.getElementById('kutuphane')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const jumpToProductsSection = () => {
     setOpenMenu(null);
+    setMobileOpen(false);
     document.getElementById('urunler')?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const jumpToSection = (id: string) => {
+    setOpenMenu(null);
+    setMobileOpen(false);
+    document.querySelector(id)?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
-    <header className="sticky top-0 z-40 border-b border-[var(--border-warm)] bg-[var(--bg-canvas)]/90 backdrop-blur-md">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-40 border-b border-[var(--border-warm)] bg-[var(--bg-canvas)]/95 backdrop-blur-md">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-4 py-2.5 sm:gap-4 sm:px-6 sm:py-3 lg:px-8">
         {/* Brand Stamp */}
-        <a href="#ust" className="group flex items-center gap-3 focus:outline-none">
-          <div className="h-11 w-11 shrink-0 overflow-hidden rounded-full border border-[var(--border-strong)] bg-[#14171d] shadow-sm transition-transform duration-300 group-hover:scale-105">
+        <a href="#ust" className="group flex min-w-0 items-center gap-2.5 focus:outline-none sm:gap-3">
+          <div className="h-9 w-9 shrink-0 overflow-hidden rounded-full border border-[var(--border-strong)] bg-[#14171d] shadow-sm transition-transform duration-300 group-hover:scale-105 sm:h-11 sm:w-11">
             <img
               src={logoSrc}
               alt="Müfit Hoca ile Matematik Logosu"
               className="h-full w-full object-cover"
             />
           </div>
-          <div className="flex flex-col">
-            <span className="text-base font-extrabold tracking-tight text-[var(--text-primary)] sm:text-lg">
+          <div className="flex min-w-0 flex-col">
+            <span className="truncate text-sm font-extrabold tracking-tight text-[var(--text-primary)] sm:text-lg">
               {BRAND_CONFIG.name}
             </span>
-            <span className="text-xs font-semibold text-[var(--text-secondary)]">
+            <span className="truncate text-[11px] font-semibold text-[var(--text-secondary)] sm:text-xs">
               {BRAND_CONFIG.tagline} • 5–11. Sınıf
             </span>
           </div>
         </a>
 
-        {/* Navigation Links */}
+        {/* Desktop Navigation Links */}
         <nav ref={navRef} className="hidden items-center gap-1 md:flex" aria-label="Ana menü">
           <a
             href="#ust"
@@ -420,45 +434,155 @@ export function Navbar({
         </nav>
 
         {/* Right Actions */}
-        <div className="flex items-center gap-2">
-          {/* Mobile Quick Jump to Arşiv & Uygulamalar */}
-          <a
-            href="#kutuphane"
-            className="inline-flex items-center gap-1 rounded-full border border-[var(--border-warm)] bg-[var(--bg-surface)] px-2.5 py-1.5 text-xs font-bold text-[var(--text-primary)] md:hidden"
-          >
-            <span>Arşiv</span>
-          </a>
-          <a
-            href="#urunler"
-            className="inline-flex items-center gap-1 rounded-full border border-[var(--border-warm)] bg-[var(--bg-surface)] px-2.5 py-1.5 text-xs font-bold text-[var(--text-primary)] md:hidden"
-          >
-            <span>Uygulamalar</span>
-          </a>
-
+        <div className="flex shrink-0 items-center gap-2">
           {favoritesCount > 0 && (
             <button
               type="button"
-              onClick={onJumpToFavorites}
+              onClick={() => {
+                setMobileOpen(false);
+                onJumpToFavorites();
+              }}
               title="Favori konuları göster"
-              className="inline-flex items-center gap-1.5 rounded-full border border-amber-600/30 bg-amber-500/10 px-3 py-1.5 text-xs font-bold text-amber-800 transition hover:bg-amber-500/20"
+              className="inline-flex items-center gap-1 rounded-full border border-amber-600/30 bg-amber-500/10 px-2.5 py-1.5 text-xs font-bold text-amber-800 transition hover:bg-amber-500/20"
             >
               <Star className="h-3.5 w-3.5 fill-amber-600 text-amber-600" />
-              <span>{favoritesCount} Favori</span>
+              <span>{favoritesCount}</span>
+              <span className="hidden sm:inline">Favori</span>
             </button>
           )}
 
+          {/* Desktop Instagram Pill */}
           <a
             href={BRAND_CONFIG.instagramUrl}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border-strong)] bg-[var(--bg-surface)] px-3.5 py-2 text-xs font-bold text-[var(--text-primary)] shadow-xs transition hover:border-[var(--text-primary)]"
+            className="hidden items-center gap-1.5 rounded-full border border-[var(--border-strong)] bg-[var(--bg-surface)] px-3.5 py-2 text-xs font-bold text-[var(--text-primary)] shadow-xs transition hover:border-[var(--text-primary)] md:inline-flex"
           >
-            <span className="hidden sm:inline">{BRAND_CONFIG.handle}</span>
-            <span className="sm:hidden">Instagram</span>
+            <span>{BRAND_CONFIG.handle}</span>
             <ArrowUpRight className="h-3.5 w-3.5 text-[var(--accent-terracotta)]" />
           </a>
+
+          {/* Mobile Hamburger Menu Button */}
+          <button
+            type="button"
+            onClick={() => setMobileOpen((v) => !v)}
+            aria-label={mobileOpen ? 'Menüyü kapat' : 'Menüyü aç'}
+            aria-expanded={mobileOpen}
+            className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-[var(--border-strong)] bg-[var(--bg-surface)] px-3 text-xs font-bold text-[var(--text-primary)] shadow-xs md:hidden"
+          >
+            {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            <span>Menü</span>
+          </button>
         </div>
       </div>
+
+      {/* Mobile Drawer */}
+      {mobileOpen && (
+        <div className="max-h-[82vh] overflow-y-auto border-t border-[var(--border-warm)] bg-[var(--bg-surface)] px-4 py-4 shadow-xl md:hidden">
+          <div className="space-y-4">
+            {/* Quick Grade Jump */}
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-[11px] font-extrabold tracking-wider text-[var(--text-muted)] uppercase">
+                  Animasyon &amp; Etkinlikler
+                </span>
+                <button
+                  type="button"
+                  onClick={() => jumpToLibraryGrade('all')}
+                  className="text-xs font-bold text-[var(--accent-cobalt)]"
+                >
+                  Tüm Arşiv ({topics.length})
+                </button>
+              </div>
+              <div className="grid grid-cols-4 gap-1.5">
+                {GRADES.map(({ grade }) => (
+                  <button
+                    key={grade}
+                    type="button"
+                    onClick={() => jumpToLibraryGrade(grade)}
+                    className="rounded-lg border border-[var(--border-warm)] bg-[var(--bg-canvas)] px-2 py-2 text-xs font-bold text-[var(--text-primary)] active:bg-[var(--bg-ink)] active:text-white"
+                  >
+                    {grade}. Sınıf
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Uygulamalar & Ürünler */}
+            <div className="border-t border-[var(--border-warm)] pt-3">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-[11px] font-extrabold tracking-wider text-[var(--text-muted)] uppercase">
+                  Uygulamalar &amp; Ürünler
+                </span>
+                <button
+                  type="button"
+                  onClick={jumpToProductsSection}
+                  className="text-xs font-bold text-[var(--accent-cobalt)]"
+                >
+                  Vitrini Gör
+                </button>
+              </div>
+              <div className="space-y-1.5">
+                {STUDIO_PRODUCTS.map((product) =>
+                  product.status === 'coming-soon' || !product.href ? (
+                    <div
+                      key={product.id}
+                      className="flex items-center justify-between rounded-xl border border-dashed border-[var(--border-warm)] px-3 py-2 text-xs text-[var(--text-secondary)]"
+                    >
+                      <span className="truncate font-bold">{product.title}</span>
+                      <span className="shrink-0 rounded-full bg-amber-700/12 px-2 py-0.5 text-[10px] font-bold text-amber-800">
+                        {product.badge}
+                      </span>
+                    </div>
+                  ) : (
+                    <a
+                      key={product.id}
+                      href={product.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={() => setMobileOpen(false)}
+                      className="flex items-center justify-between gap-2 rounded-xl border border-[var(--border-warm)] bg-[var(--bg-canvas)] px-3 py-2.5 text-xs font-bold text-[var(--text-primary)]"
+                    >
+                      <span className="truncate">{product.title}</span>
+                      <ExternalLink className="h-3.5 w-3.5 shrink-0 text-[var(--accent-cobalt)]" />
+                    </a>
+                  )
+                )}
+              </div>
+            </div>
+
+            {/* Section Links & Instagram */}
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--border-warm)] pt-3">
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => jumpToSection('#ust')}
+                  className="rounded-lg border border-[var(--border-warm)] px-3 py-2 text-xs font-bold text-[var(--text-primary)]"
+                >
+                  Canlı Vitrin
+                </button>
+                <button
+                  type="button"
+                  onClick={() => jumpToSection('#kullanim-amaci')}
+                  className="rounded-lg border border-[var(--border-warm)] px-3 py-2 text-xs font-bold text-[var(--text-primary)]"
+                >
+                  Kullanım Amacı
+                </button>
+              </div>
+
+              <a
+                href={BRAND_CONFIG.instagramUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 rounded-full bg-[var(--bg-ink)] px-3.5 py-2 text-xs font-bold text-[#FFFDF8]"
+              >
+                <span>{BRAND_CONFIG.handle}</span>
+                <ArrowUpRight className="h-3.5 w-3.5" />
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

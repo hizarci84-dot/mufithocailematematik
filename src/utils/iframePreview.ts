@@ -102,3 +102,87 @@ export function fitHeroSandboxIframe(
     // Ignore cross-frame safely
   }
 }
+
+export function fitModalIframeOnMobile(iframe: HTMLIFrameElement | null): void {
+  if (!iframe) return;
+  try {
+    const doc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!doc || !doc.head || !doc.body) return;
+
+    const styleId = 'studio-modal-mobile-fit';
+    if (!doc.getElementById(styleId)) {
+      const style = doc.createElement('style');
+      style.id = styleId;
+      style.textContent = `
+        @media (max-width: 767px) {
+          html, body {
+            max-width: 100% !important;
+            overflow-x: hidden !important;
+          }
+          body {
+            padding: 10px 10px 16px !important;
+            justify-content: flex-start !important;
+          }
+          .header, header {
+            width: 100% !important;
+            max-width: 100% !important;
+            flex-wrap: wrap !important;
+            gap: 6px 10px !important;
+            padding: 8px 10px !important;
+            margin-bottom: 8px !important;
+          }
+          .brand, .kazanim {
+            max-width: 100% !important;
+            font-size: 0.74rem !important;
+            line-height: 1.25 !important;
+            white-space: normal !important;
+            word-break: break-word !important;
+          }
+          .title-area, h1 {
+            font-size: 1.15rem !important;
+            line-height: 1.25 !important;
+            margin-top: 4px !important;
+            margin-bottom: 4px !important;
+          }
+          .subtitle {
+            font-size: 0.82rem !important;
+            line-height: 1.35 !important;
+            margin-bottom: 8px !important;
+          }
+          .canvas-area {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-height: 250px !important;
+            height: 290px !important;
+            padding: 10px !important;
+          }
+          .anim-container {
+            width: 100% !important;
+            max-width: 100% !important;
+            height: 270px !important;
+            flex-direction: column !important;
+            gap: 10px !important;
+          }
+          .canvas-area svg, .canvas-area canvas {
+            max-width: 100% !important;
+            max-height: 270px !important;
+            object-fit: contain;
+          }
+          .controls, .btn-row, .button-group {
+            flex-wrap: wrap !important;
+            gap: 8px !important;
+            justify-content: center !important;
+          }
+          .btn-play, .btn-start, .btn-action {
+            margin-top: 10px !important;
+            padding: 10px 22px !important;
+            font-size: 0.95rem !important;
+          }
+        }
+      `;
+      doc.head.appendChild(style);
+    }
+  } catch {
+    // Ignore cross-frame safely
+  }
+}

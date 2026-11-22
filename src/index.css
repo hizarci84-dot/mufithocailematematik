@@ -23,11 +23,13 @@
     background-color: var(--bg-canvas);
     color: var(--text-primary);
     -webkit-font-smoothing: antialiased;
+    overflow-x: clip;
   }
 
   body {
     background-color: var(--bg-canvas);
     color: var(--text-primary);
+    overflow-x: clip;
   }
 
   .font-serif-editorial {

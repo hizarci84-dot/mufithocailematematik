@@ -196,7 +196,16 @@ export function TopicCard({
                 previewActive ? 'animate-pulse bg-white' : 'bg-white/75'
               }`}
             />
-            {previewActive ? 'CANLI OYNATILIYOR' : isHovered ? 'YÜKLENİYOR...' : 'OYNATMAK İÇİN ÜZERİNE GEL'}
+            {previewActive ? (
+              'CANLI OYNATILIYOR'
+            ) : isHovered ? (
+              'YÜKLENİYOR...'
+            ) : (
+              <>
+                <span className="sm:hidden">AÇMAK İÇİN DOKUN</span>
+                <span className="hidden sm:inline">OYNATMAK İÇİN ÜZERİNE GEL</span>
+              </>
+            )}
           </span>
 
           <button
@@ -261,9 +270,9 @@ export function TopicCard({
             <button
               type="button"
               onClick={() => onOpen(topic, 'animation')}
-              className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[var(--bg-ink)] px-3 py-2 text-xs font-bold text-[#FFFDF8] transition hover:bg-[var(--accent-cobalt)]"
+              className="inline-flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl bg-[var(--bg-ink)] px-2.5 py-2 text-xs font-bold text-[#FFFDF8] transition hover:bg-[var(--accent-cobalt)] sm:px-3"
             >
-              <Play className="h-3.5 w-3.5 fill-current" />
+              <Play className="h-3.5 w-3.5 shrink-0 fill-current" />
               <span>{readyAnims.length > 1 ? `${readyAnims.length} Animasyon` : 'Animasyon'}</span>
             </button>
           ) : (
@@ -272,9 +281,9 @@ export function TopicCard({
               <button
                 type="button"
                 onClick={() => onOpen(topic, 'animation')}
-                className="inline-flex flex-1 items-center justify-center gap-1 rounded-xl border border-dashed border-[var(--border-strong)] px-2.5 py-2 text-[11px] font-bold text-[var(--accent-amber)]"
+                className="inline-flex flex-1 items-center justify-center gap-1 whitespace-nowrap rounded-xl border border-dashed border-[var(--border-strong)] px-2.5 py-2 text-[11px] font-bold text-[var(--accent-amber)]"
               >
-                <Clock className="h-3.5 w-3.5" />
+                <Clock className="h-3.5 w-3.5 shrink-0" />
                 <span>Yakında</span>
               </button>
             )
@@ -284,9 +293,9 @@ export function TopicCard({
             <button
               type="button"
               onClick={() => onOpen(topic, 'lab')}
-              className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-[var(--border-strong)] bg-[var(--bg-linen)]/80 px-3 py-2 text-xs font-bold text-[var(--text-primary)] transition hover:border-[var(--accent-teal)] hover:bg-[var(--accent-teal)] hover:text-white"
+              className="inline-flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-[var(--border-strong)] bg-[var(--bg-linen)]/80 px-2.5 py-2 text-xs font-bold text-[var(--text-primary)] transition hover:border-[var(--accent-teal)] hover:bg-[var(--accent-teal)] hover:text-white sm:px-3"
             >
-              <FlaskConical className="h-3.5 w-3.5" />
+              <FlaskConical className="h-3.5 w-3.5 shrink-0" />
               <span>Etkinlik</span>
             </button>
           ) : (

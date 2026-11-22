@@ -40,7 +40,7 @@ export function Hero({
   const [activeIdx, setActiveIdx] = useState(0);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [virtualSize, setVirtualSize] = useState({ w: 1120, h: 700 });
-  const [containerWidth, setContainerWidth] = useState(700);
+  const [containerWidth, setContainerWidth] = useState(340);
   const viewportRef = useRef<HTMLDivElement>(null);
 
   const activeEntry = showcaseTopics[activeIdx] || (topics[0] ? { topic: topics[0], shortLabel: topics[0].title } : null);
