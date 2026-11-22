@@ -17,7 +17,7 @@ import {
   MessageCircle,
 } from 'lucide-react';
 import type { AppVariant, TopicModule } from '../types/studio';
-import { fitModalIframeOnMobile } from '../utils/iframePreview';
+import { activateAnimationAutoPlay, fitModalIframeOnMobile } from '../utils/iframePreview';
 import {
   copyTextToClipboard,
   downloadStandaloneHtml,
@@ -462,8 +462,16 @@ export function StudioPlayerModal({
                 title={title}
                 onLoad={(e) => {
                   setIsLoading(false);
-                  if (!target.customUrl?.startsWith('http') && window.innerWidth < 768) {
-                    fitModalIframeOnMobile(e.currentTarget);
+                  if (!target.customUrl?.startsWith('http')) {
+                    if (activeMode === 'animation') {
+                      activateAnimationAutoPlay(e.currentTarget, {
+                        hideControls: true,
+                        autoLoop: true,
+                      });
+                    }
+                    if (window.innerWidth < 768) {
+                      fitModalIframeOnMobile(e.currentTarget);
+                    }
                   }
                 }}
                 className="h-full w-full border-0"

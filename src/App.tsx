@@ -9,6 +9,13 @@ import { ProductsShowcase } from './components/ProductsShowcase';
 import { UsageGuideModal, UsageGuideSection } from './components/UsageGuideSection';
 import { AboutFooter } from './components/AboutFooter';
 import { StudioPlayerModal, type PlayerTarget } from './components/StudioPlayerModal';
+import {
+  buildShowcaseTabs,
+  getHeroShowcasePool,
+  pickRandomShowcaseTopic,
+  readLastShowcaseId,
+  saveLastShowcaseId,
+} from './utils/showcase';
 
 const FAV_STORAGE_KEY = 'mufithoca_favorites';
 
@@ -45,6 +52,46 @@ export function App() {
     getInitialTargetFromUrl()
   );
   const [isUsageModalOpen, setIsUsageModalOpen] = useState(false);
+
+  const showcasePool = useMemo(() => getHeroShowcasePool(CATALOG_TOPICS), []);
+  const [showcaseState, setShowcaseState] = useState<{
+    topic: TopicModule | null;
+    tabs: TopicModule[];
+    nonce: number;
+  }>(() => {
+    const pool = getHeroShowcasePool(CATALOG_TOPICS);
+    const picked = pickRandomShowcaseTopic(pool, readLastShowcaseId());
+    if (picked) saveLastShowcaseId(picked.id);
+    return {
+      topic: picked,
+      tabs: buildShowcaseTabs(pool, picked),
+      nonce: 0,
+    };
+  });
+
+  const handleOpenLiveShowcase = (scrollToTop = true) => {
+    setShowcaseState((prev) => {
+      const nextTopic = pickRandomShowcaseTopic(showcasePool, prev.topic?.id);
+      if (nextTopic) saveLastShowcaseId(nextTopic.id);
+      return {
+        topic: nextTopic,
+        tabs: buildShowcaseTabs(showcasePool, nextTopic),
+        nonce: prev.nonce + 1,
+      };
+    });
+    if (scrollToTop) {
+      document.getElementById('ust')?.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const handleSelectShowcaseTopic = (topic: TopicModule) => {
+    saveLastShowcaseId(topic.id);
+    setShowcaseState((prev) => ({
+      ...prev,
+      topic,
+      nonce: prev.nonce + 1,
+    }));
+  };
 
   useEffect(() => {
     document.title = `${BRAND_CONFIG.name} — ${BRAND_CONFIG.tagline}`;
@@ -145,6 +192,7 @@ export function App() {
           setPlayerTarget({ customTitle: title, customUrl: url, mode: 'animation' })
         }
         onOpenUsageModal={() => setIsUsageModalOpen(true)}
+        onOpenLiveShowcase={() => handleOpenLiveShowcase(true)}
       />
 
       <main>
@@ -152,6 +200,11 @@ export function App() {
           topics={CATALOG_TOPICS}
           totalTopics={stats.totalTopics}
           totalApps={stats.totalApps}
+          showcaseTopic={showcaseState.topic}
+          showcaseTabs={showcaseState.tabs}
+          showcaseNonce={showcaseState.nonce}
+          onSelectShowcaseTopic={handleSelectShowcaseTopic}
+          onShuffleShowcase={() => handleOpenLiveShowcase(false)}
           onSelectGrade={jumpToGrade}
           onOpenTopic={(topic: TopicModule, mode: 'animation' | 'lab') =>
             setPlayerTarget({ topic, mode })
@@ -183,6 +236,7 @@ export function App() {
       <AboutFooter
         onSelectGrade={jumpToGrade}
         onOpenUsageModal={() => setIsUsageModalOpen(true)}
+        onOpenLiveShowcase={() => handleOpenLiveShowcase(true)}
       />
 
       <UsageGuideModal

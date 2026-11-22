@@ -5,11 +5,16 @@ import type { GradeLevel } from '../types/studio';
 interface AboutFooterProps {
   onSelectGrade: (grade: GradeLevel) => void;
   onOpenUsageModal: () => void;
+  onOpenLiveShowcase: () => void;
 }
 
 const FOOTER_GRADES: GradeLevel[] = [5, 6, 7, 8, 9, 10, 11];
 
-export function AboutFooter({ onSelectGrade, onOpenUsageModal }: AboutFooterProps) {
+export function AboutFooter({
+  onSelectGrade,
+  onOpenUsageModal,
+  onOpenLiveShowcase,
+}: AboutFooterProps) {
   const logoSrc = `${import.meta.env.BASE_URL}logo.png`;
 
   return (
@@ -80,9 +85,13 @@ export function AboutFooter({ onSelectGrade, onOpenUsageModal }: AboutFooterProp
             </h4>
             <ul className="mt-3 space-y-2 text-xs font-semibold text-[var(--text-secondary)]">
               <li>
-                <a href="#ust" className="transition hover:text-[var(--accent-cobalt)]">
+                <button
+                  type="button"
+                  onClick={onOpenLiveShowcase}
+                  className="text-left transition hover:text-[var(--accent-cobalt)]"
+                >
                   Canlı Vitrin
-                </a>
+                </button>
               </li>
               <li>
                 <a href="#kutuphane" className="transition hover:text-[var(--accent-cobalt)]">

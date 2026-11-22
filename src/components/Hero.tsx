@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowDown, Download, Maximize2, Share2, Check } from 'lucide-react';
+import { ArrowDown, Download, Maximize2, Share2, Check, RefreshCw } from 'lucide-react';
 import type { GradeLevel, TopicModule } from '../types/studio';
 import { BRAND_CONFIG } from '../data/products';
 import { fitHeroSandboxIframe } from '../utils/iframePreview';
@@ -13,38 +13,36 @@ interface HeroProps {
   topics: TopicModule[];
   totalTopics: number;
   totalApps: number;
+  showcaseTopic: TopicModule | null;
+  showcaseTabs: TopicModule[];
+  showcaseNonce: number;
+  onSelectShowcaseTopic: (topic: TopicModule) => void;
+  onShuffleShowcase: () => void;
   onSelectGrade: (grade: GradeLevel) => void;
   onOpenTopic: (topic: TopicModule, mode: 'animation' | 'lab') => void;
 }
 
 const QUICK_GRADES: GradeLevel[] = [5, 6, 7, 8, 9, 10, 11];
-const SHOWCASE_ITEMS: { id: string; shortLabel: string }[] = [
-  { id: 'mat-8-3-4', shortLabel: '8.3 Pisagor' },
-  { id: 'mat-11-1-1', shortLabel: '11.1 Dönme Dolap' },
-  { id: 'mat-10-4-2', shortLabel: '10.4 Üçgen Merkezleri' },
-  { id: 'mat-9-4-4', shortLabel: '9.4 Birim Çember' },
-];
 
 export function Hero({
   topics,
   totalTopics,
   totalApps,
+  showcaseTopic,
+  showcaseTabs,
+  showcaseNonce,
+  onSelectShowcaseTopic,
+  onShuffleShowcase,
   onSelectGrade,
   onOpenTopic,
 }: HeroProps) {
-  const showcaseTopics = SHOWCASE_ITEMS.map((item) => {
-    const topic = topics.find((t) => t.id === item.id);
-    return topic ? { topic, shortLabel: item.shortLabel } : null;
-  }).filter((x): x is { topic: TopicModule; shortLabel: string } => Boolean(x));
-
-  const [activeIdx, setActiveIdx] = useState(0);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [virtualSize, setVirtualSize] = useState({ w: 1120, h: 700 });
   const [containerWidth, setContainerWidth] = useState(340);
   const viewportRef = useRef<HTMLDivElement>(null);
 
-  const activeEntry = showcaseTopics[activeIdx] || (topics[0] ? { topic: topics[0], shortLabel: topics[0].title } : null);
-  const activeTopic = activeEntry?.topic;
+  const activeTopic = showcaseTopic || topics[0];
+  const visibleTabs = showcaseTabs.length > 0 ? showcaseTabs : activeTopic ? [activeTopic] : [];
   const activeVariant =
     activeTopic?.animations.find((a) => !a.isDraft) || activeTopic?.labs.find((l) => !l.isDraft);
   const iframeSrc = activeVariant ? `${import.meta.env.BASE_URL}${activeVariant.url}` : '';
@@ -164,23 +162,33 @@ export function Hero({
             {/* Showcase Tab Header */}
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border-warm)] bg-[var(--bg-linen)]/75 px-3.5 py-2.5">
               <div className="flex flex-wrap items-center gap-1">
-                {showcaseTopics.map((item, idx) => {
-                  const active = idx === activeIdx;
+                {visibleTabs.map((item) => {
+                  const active = activeTopic?.id === item.id;
                   return (
                     <button
-                      key={item.topic.id}
+                      key={item.id}
                       type="button"
-                      onClick={() => setActiveIdx(idx)}
-                      className={`rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition ${
+                      onClick={() => onSelectShowcaseTopic(item)}
+                      title={`${item.code} — ${item.title}`}
+                      className={`font-mono-code rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition ${
                         active
                           ? 'bg-[var(--bg-ink)] text-[#FFFDF8] shadow-xs'
                           : 'text-[var(--text-secondary)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)]'
                       }`}
                     >
-                      {item.shortLabel}
+                      {item.code}
                     </button>
                   );
                 })}
+                <button
+                  type="button"
+                  onClick={onShuffleShowcase}
+                  title="Farklı bir animasyon vitrine getir"
+                  className="inline-flex items-center gap-1 rounded-lg border border-[var(--border-strong)] bg-[var(--bg-surface)] px-2.5 py-1.5 text-[11px] font-bold text-[var(--accent-terracotta)] transition hover:border-[var(--accent-terracotta)] hover:bg-[var(--accent-terracotta)] hover:text-white"
+                >
+                  <RefreshCw className="h-3 w-3" />
+                  <span>Değiştir</span>
+                </button>
               </div>
 
               {activeTopic && (
@@ -236,7 +244,7 @@ export function Hero({
             >
               {iframeSrc && (
                 <iframe
-                  key={iframeSrc}
+                  key={`${iframeSrc}-${showcaseNonce}`}
                   src={iframeSrc}
                   title={activeTopic?.title || 'Canlı Matematik Önizleme'}
                   scrolling="no"
@@ -260,14 +268,17 @@ export function Hero({
             {/* Bottom Caption Bar */}
             {activeTopic && (
               <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--border-warm)] bg-[var(--bg-surface)] px-4 py-2.5 text-xs">
-                <div className="flex items-center gap-2">
-                  <span className="font-mono-code rounded bg-[var(--bg-linen)] px-2 py-0.5 font-bold text-[var(--text-primary)]">
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="font-mono-code shrink-0 rounded bg-[var(--bg-linen)] px-2 py-0.5 font-bold text-[var(--text-primary)]">
                     {activeTopic.code}
                   </span>
-                  <span className="font-bold text-[var(--text-primary)]">{activeTopic.title}</span>
+                  <span className="truncate font-bold text-[var(--text-primary)]">
+                    {activeTopic.title}
+                  </span>
                 </div>
-                <span className="text-[var(--text-secondary)]">
-                  Tek karede canlı etkileşimli sahne
+                <span className="inline-flex items-center gap-1.5 font-semibold text-[var(--accent-teal)]">
+                  <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
+                  <span>Otomatik Oynatılıyor</span>
                 </span>
               </div>
             )}

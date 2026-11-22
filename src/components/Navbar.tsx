@@ -22,6 +22,7 @@ interface NavbarProps {
   onOpenTopic: (topic: TopicModule, mode: 'animation' | 'lab') => void;
   onOpenAppUrl: (title: string, url: string) => void;
   onOpenUsageModal: () => void;
+  onOpenLiveShowcase: () => void;
 }
 
 const GRADES: { grade: GradeLevel; group: 'Ortaokul' | 'Lise' }[] = [
@@ -42,6 +43,7 @@ export function Navbar({
   onOpenTopic,
   onOpenAppUrl,
   onOpenUsageModal,
+  onOpenLiveShowcase,
 }: NavbarProps) {
   const logoSrc = `${import.meta.env.BASE_URL}logo.png`;
   const [openMenu, setOpenMenu] = useState<'anim' | 'products' | null>(null);
@@ -115,10 +117,10 @@ export function Navbar({
     document.getElementById('urunler')?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const jumpToSection = (id: string) => {
+  const triggerLiveShowcase = () => {
     setOpenMenu(null);
     setMobileOpen(false);
-    document.querySelector(id)?.scrollIntoView({ behavior: 'smooth' });
+    onOpenLiveShowcase();
   };
 
   return (
@@ -145,12 +147,13 @@ export function Navbar({
 
         {/* Desktop Navigation Links */}
         <nav ref={navRef} className="hidden items-center gap-1 md:flex" aria-label="Ana menü">
-          <a
-            href="#ust"
+          <button
+            type="button"
+            onClick={triggerLiveShowcase}
             className="rounded-lg px-3.5 py-2 text-sm font-semibold text-[var(--text-secondary)] transition hover:bg-[var(--bg-linen)] hover:text-[var(--text-primary)]"
           >
             Canlı Vitrin
-          </a>
+          </button>
 
           {/* Dropdown Menu Trigger: Animasyon & Etkinlikler */}
           <div
@@ -563,7 +566,7 @@ export function Navbar({
               <div className="flex gap-2">
                 <button
                   type="button"
-                  onClick={() => jumpToSection('#ust')}
+                  onClick={triggerLiveShowcase}
                   className="rounded-lg border border-[var(--border-warm)] px-3 py-2 text-xs font-bold text-[var(--text-primary)]"
                 >
                   Canlı Vitrin

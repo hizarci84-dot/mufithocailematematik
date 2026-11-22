@@ -1,19 +1,168 @@
+const PLAY_TRIGGER_SELECTOR =
+  '#btnPlay, #startBtn, #btnRun, #btnAnim, #btnFire, .btn-play, .btn-action, .btn-run, .btn-start';
+const REPLAY_SELECTOR = '#replayBtn';
+
+const iframeCleanupMap = new WeakMap<HTMLIFrameElement, () => void>();
+
+interface AutoPlayOptions {
+  hideControls?: boolean;
+  autoLoop?: boolean;
+}
+
+/**
+ * Aynı kökendeki animasyon HTML dosyası yüklendiğinde:
+ * 1) Olası alert/confirm pencerelerini susturur,
+ * 2) Başlatma düğmesini otomatik tetikleyip tekil kontrol düğmelerini gizler,
+ * 3) Sonlu animasyonlarda akış tamamlanınca otomatik yeniden başlatır.
+ */
+export function activateAnimationAutoPlay(
+  iframe: HTMLIFrameElement | null,
+  options: AutoPlayOptions = {}
+): void {
+  if (!iframe) return;
+  const { hideControls = true, autoLoop = true } = options;
+
+  iframeCleanupMap.get(iframe)?.();
+
+  try {
+    const win = iframe.contentWindow as
+      | (Window & { alert?: () => void; confirm?: () => boolean })
+      | null;
+    const doc = iframe.contentDocument || win?.document;
+    if (!doc || !win) return;
+
+    win.alert = () => {};
+    win.confirm = () => true;
+
+    const allButtons = doc.querySelectorAll('button');
+    const isSingleControlScene = allButtons.length <= 1;
+
+    if (hideControls && isSingleControlScene && !doc.getElementById('studio-autoplay-only-style')) {
+      const style = doc.createElement('style');
+      style.id = 'studio-autoplay-only-style';
+      style.textContent = `
+        ${PLAY_TRIGGER_SELECTOR}, ${REPLAY_SELECTOR} {
+          display: none !important;
+        }
+      `;
+      doc.head?.appendChild(style);
+    }
+
+    const timers: number[] = [];
+    let observer: MutationObserver | null = null;
+    let triggeredAt = Date.now();
+    let hadDisplayNoneAtStart = false;
+    let pendingReplayScheduled = false;
+
+    const cleanup = () => {
+      for (const id of timers) window.clearTimeout(id);
+      observer?.disconnect();
+    };
+    iframeCleanupMap.set(iframe, cleanup);
+
+    const scheduleTimer = (fn: () => void, ms: number) => {
+      const id = window.setTimeout(() => {
+        if (!iframe.isConnected || !iframe.contentWindow) return;
+        fn();
+      }, ms);
+      timers.push(id);
+    };
+
+    const startOrTrigger = () => {
+      try {
+        const btn = doc.querySelector<HTMLElement>(PLAY_TRIGGER_SELECTOR);
+        if (!btn) return;
+        const label = (btn.textContent || '').trim();
+        const isPauseOrStop = /durdur|duraklat|pause|stop|sıfırla|reset|temizle/i.test(label);
+        const isDisabled = Boolean((btn as HTMLButtonElement).disabled);
+        if (!isPauseOrStop && !isDisabled) {
+          triggeredAt = Date.now();
+          btn.click();
+          scheduleTimer(() => {
+            hadDisplayNoneAtStart = btn.style.display === 'none';
+          }, 90);
+        }
+      } catch {
+        // Ignore cross-frame or internal script errors
+      }
+    };
+
+    scheduleTimer(startOrTrigger, 160);
+
+    if (autoLoop && doc.body) {
+      const checkCompletion = () => {
+        if (pendingReplayScheduled || Date.now() - triggeredAt < 1800) return;
+
+        const replayBtn = doc.querySelector<HTMLElement>(REPLAY_SELECTOR);
+        const startBtn = doc.querySelector<HTMLElement>(PLAY_TRIGGER_SELECTOR);
+        const startLabel = (startBtn?.textContent || '').trim();
+        const isStartDisabled = Boolean((startBtn as HTMLButtonElement | null)?.disabled);
+
+        if (replayBtn?.classList.contains('visible')) {
+          pendingReplayScheduled = true;
+          scheduleTimer(() => {
+            pendingReplayScheduled = false;
+            triggeredAt = Date.now();
+            try {
+              replayBtn.click();
+            } catch {
+              // Ignore replay error
+            }
+          }, 2800);
+          return;
+        }
+
+        if (startBtn && /tekrar|yeniden/i.test(startLabel) && !isStartDisabled) {
+          pendingReplayScheduled = true;
+          scheduleTimer(() => {
+            pendingReplayScheduled = false;
+            triggeredAt = Date.now();
+            try {
+              startBtn.click();
+            } catch {
+              // Ignore replay error
+            }
+          }, 2800);
+          return;
+        }
+
+        if (startBtn && !hadDisplayNoneAtStart && startBtn.style.display === 'none') {
+          pendingReplayScheduled = true;
+          scheduleTimer(() => {
+            try {
+              win.location.reload();
+            } catch {
+              // Ignore reload error
+            }
+          }, 3400);
+        }
+      };
+
+      observer = new MutationObserver(checkCompletion);
+      observer.observe(doc.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'disabled'],
+        childList: true,
+        characterData: true,
+        subtree: true,
+      });
+    }
+  } catch {
+    // Ignore safely if iframe hasn't finished navigating
+  }
+}
+
 /**
  * Kart üzerindeki canlı önizleme iframe'i yüklendiğinde:
  * 1) Mini sahnede tekrar eden üst başlık çubuğunu gizler,
- * 2) Olası alert() çağrılarını önizleme modunda susturur,
- * 3) Animasyon başlatma düğmesi varsa otomatik tetikler.
+ * 2) Olası alert() çağrılarını susturur ve animasyonu otomatik oynatır.
  */
 export function activateIframeHoverPreview(iframe: HTMLIFrameElement | null): void {
   if (!iframe) return;
   try {
-    const win = iframe.contentWindow as (Window & { alert?: () => void; confirm?: () => boolean }) | null;
+    const win = iframe.contentWindow;
     const doc = iframe.contentDocument || win?.document;
     if (!doc || !win) return;
-
-    // Prevent blocking alerts during mini hover preview
-    win.alert = () => {};
-    win.confirm = () => true;
 
     if (!doc.getElementById('studio-mini-preview-style')) {
       const style = doc.createElement('style');
@@ -32,20 +181,7 @@ export function activateIframeHoverPreview(iframe: HTMLIFrameElement | null): vo
       doc.head?.appendChild(style);
     }
 
-    // Auto-start the animation smoothly once loaded (avoid pausing already-playing toggle buttons)
-    window.setTimeout(() => {
-      try {
-        const btn = doc.querySelector<HTMLElement>(
-          '#btnPlay, #btnRun, #btnAnim, #btnFire, #startBtn, #replayBtn, .btn-play, .btn-action, .btn-run, .btn-start'
-        );
-        const label = (btn?.textContent || '').trim();
-        if (btn && !/durdur|duraklat|pause|stop/i.test(label)) {
-          btn.click();
-        }
-      } catch {
-        // Ignore cross-frame or internal script errors
-      }
-    }, 160);
+    activateAnimationAutoPlay(iframe, { hideControls: true, autoLoop: true });
   } catch {
     // Ignore safely if iframe hasn't finished navigating
   }
@@ -53,7 +189,7 @@ export function activateIframeHoverPreview(iframe: HTMLIFrameElement | null): vo
 
 /**
  * Hero canlı vitrin penceresindeki iframe'in iç içeriğini tek kareye sığdırır,
- * kaydırma çubuklarını kaldırır ve gerçek içerik yüksekliğini döndürür.
+ * kaydırma çubuklarını kaldırır, animasyonu sadece otomatik oynatır ve gerçek boyutu döndürür.
  */
 export function fitHeroSandboxIframe(
   iframe: HTMLIFrameElement | null,
@@ -79,13 +215,15 @@ export function fitHeroSandboxIframe(
         }
         h1 { margin-bottom: 6px !important; }
         .subtitle { margin-bottom: 14px !important; }
-        .btn-play, .btn-start, .btn-action { margin-top: 14px !important; }
       `;
       doc.head?.appendChild(style);
     }
 
+    activateAnimationAutoPlay(iframe, { hideControls: true, autoLoop: true });
+
     const measure = () => {
       try {
+        if (!iframe.isConnected) return;
         const contentH = Math.max(doc.body?.scrollHeight || 0, doc.documentElement?.scrollHeight || 0);
         const contentW = Math.max(doc.body?.scrollWidth || 0, doc.documentElement?.scrollWidth || 0);
         const targetH = Math.max(700, contentH + 16);
@@ -97,7 +235,7 @@ export function fitHeroSandboxIframe(
     };
 
     measure();
-    window.setTimeout(measure, 180);
+    window.setTimeout(measure, 220);
   } catch {
     // Ignore cross-frame safely
   }
