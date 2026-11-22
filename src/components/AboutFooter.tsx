@@ -4,11 +4,12 @@ import type { GradeLevel } from '../types/studio';
 
 interface AboutFooterProps {
   onSelectGrade: (grade: GradeLevel) => void;
+  onOpenUsageModal: () => void;
 }
 
 const FOOTER_GRADES: GradeLevel[] = [5, 6, 7, 8, 9, 10, 11];
 
-export function AboutFooter({ onSelectGrade }: AboutFooterProps) {
+export function AboutFooter({ onSelectGrade, onOpenUsageModal }: AboutFooterProps) {
   const logoSrc = `${import.meta.env.BASE_URL}logo.png`;
 
   return (
@@ -94,9 +95,13 @@ export function AboutFooter({ onSelectGrade }: AboutFooterProps) {
                 </a>
               </li>
               <li>
-                <a href="#kullanim-amaci" className="transition hover:text-[var(--accent-cobalt)]">
+                <button
+                  type="button"
+                  onClick={onOpenUsageModal}
+                  className="text-left transition hover:text-[var(--accent-cobalt)]"
+                >
                   Kullanım Amacı &amp; İlkeler
-                </a>
+                </button>
               </li>
             </ul>
           </div>

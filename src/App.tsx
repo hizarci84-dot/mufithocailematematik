@@ -6,7 +6,7 @@ import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { LibraryExplorer } from './components/LibraryExplorer';
 import { ProductsShowcase } from './components/ProductsShowcase';
-import { UsageGuideSection } from './components/UsageGuideSection';
+import { UsageGuideModal, UsageGuideSection } from './components/UsageGuideSection';
 import { AboutFooter } from './components/AboutFooter';
 import { StudioPlayerModal, type PlayerTarget } from './components/StudioPlayerModal';
 
@@ -44,6 +44,7 @@ export function App() {
   const [playerTarget, setPlayerTarget] = useState<PlayerTarget | null>(() =>
     getInitialTargetFromUrl()
   );
+  const [isUsageModalOpen, setIsUsageModalOpen] = useState(false);
 
   useEffect(() => {
     document.title = `${BRAND_CONFIG.name} — ${BRAND_CONFIG.tagline}`;
@@ -143,6 +144,7 @@ export function App() {
         onOpenAppUrl={(title, url) =>
           setPlayerTarget({ customTitle: title, customUrl: url, mode: 'animation' })
         }
+        onOpenUsageModal={() => setIsUsageModalOpen(true)}
       />
 
       <main>
@@ -178,7 +180,15 @@ export function App() {
         <UsageGuideSection />
       </main>
 
-      <AboutFooter onSelectGrade={jumpToGrade} />
+      <AboutFooter
+        onSelectGrade={jumpToGrade}
+        onOpenUsageModal={() => setIsUsageModalOpen(true)}
+      />
+
+      <UsageGuideModal
+        isOpen={isUsageModalOpen}
+        onClose={() => setIsUsageModalOpen(false)}
+      />
 
       <StudioPlayerModal
         target={playerTarget}

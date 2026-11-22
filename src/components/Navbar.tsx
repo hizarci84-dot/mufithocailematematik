@@ -21,6 +21,7 @@ interface NavbarProps {
   onSelectGrade: (grade: 'all' | GradeLevel) => void;
   onOpenTopic: (topic: TopicModule, mode: 'animation' | 'lab') => void;
   onOpenAppUrl: (title: string, url: string) => void;
+  onOpenUsageModal: () => void;
 }
 
 const GRADES: { grade: GradeLevel; group: 'Ortaokul' | 'Lise' }[] = [
@@ -40,6 +41,7 @@ export function Navbar({
   onSelectGrade,
   onOpenTopic,
   onOpenAppUrl,
+  onOpenUsageModal,
 }: NavbarProps) {
   const logoSrc = `${import.meta.env.BASE_URL}logo.png`;
   const [openMenu, setOpenMenu] = useState<'anim' | 'products' | null>(null);
@@ -425,12 +427,17 @@ export function Navbar({
             )}
           </div>
 
-          <a
-            href="#kullanim-amaci"
+          <button
+            type="button"
+            onClick={() => {
+              setOpenMenu(null);
+              setMobileOpen(false);
+              onOpenUsageModal();
+            }}
             className="rounded-lg px-3.5 py-2 text-sm font-semibold text-[var(--text-secondary)] transition hover:bg-[var(--bg-linen)] hover:text-[var(--text-primary)]"
           >
             Kullanım Amacı
-          </a>
+          </button>
         </nav>
 
         {/* Right Actions */}
@@ -563,7 +570,10 @@ export function Navbar({
                 </button>
                 <button
                   type="button"
-                  onClick={() => jumpToSection('#kullanim-amaci')}
+                  onClick={() => {
+                    setMobileOpen(false);
+                    onOpenUsageModal();
+                  }}
                   className="rounded-lg border border-[var(--border-warm)] px-3 py-2 text-xs font-bold text-[var(--text-primary)]"
                 >
                   Kullanım Amacı
