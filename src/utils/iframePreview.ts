@@ -131,41 +131,57 @@ export function fitModalIframeOnMobile(iframe: HTMLIFrameElement | null): void {
             padding: 8px 10px !important;
             margin-bottom: 8px !important;
           }
+          .header-left {
+            gap: 8px !important;
+            font-size: 0.92rem !important;
+          }
+          .header-left img {
+            width: 32px !important;
+            height: 32px !important;
+          }
           .brand, .kazanim {
             max-width: 100% !important;
-            font-size: 0.74rem !important;
+            font-size: 0.72rem !important;
             line-height: 1.25 !important;
+            padding: 4px 10px !important;
             white-space: normal !important;
             word-break: break-word !important;
           }
           .title-area, h1 {
-            font-size: 1.15rem !important;
-            line-height: 1.25 !important;
-            margin-top: 4px !important;
+            font-size: 1.12rem !important;
+            line-height: 1.2 !important;
+            margin-top: 2px !important;
             margin-bottom: 4px !important;
           }
           .subtitle {
-            font-size: 0.82rem !important;
-            line-height: 1.35 !important;
+            font-size: 0.8rem !important;
+            line-height: 1.3 !important;
+            margin-bottom: 6px !important;
+          }
+          .expl-text, .narrative-box, .step-box {
+            padding: 8px 12px !important;
+            font-size: 0.9rem !important;
+            line-height: 1.3 !important;
             margin-bottom: 8px !important;
           }
           .canvas-area {
             width: 100% !important;
             max-width: 100% !important;
-            min-height: 250px !important;
-            height: 290px !important;
-            padding: 10px !important;
+            min-height: 220px !important;
+            height: 250px !important;
+            padding: 8px !important;
           }
           .anim-container {
             width: 100% !important;
             max-width: 100% !important;
-            height: 270px !important;
+            height: 235px !important;
             flex-direction: column !important;
-            gap: 10px !important;
+            gap: 8px !important;
           }
           .canvas-area svg, .canvas-area canvas {
+            margin-top: 0 !important;
             max-width: 100% !important;
-            max-height: 270px !important;
+            max-height: 225px !important;
             object-fit: contain;
           }
           .controls, .btn-row, .button-group {
