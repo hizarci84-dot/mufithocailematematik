@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="studio-responsive" content="true" />
   <title>Türkçe Geometri &amp; Pergel–Cetvel Stüdyosu | @mufithocailematematik</title>
+  <link rel="icon" type="image/png" href="../../logo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
@@ -449,13 +450,20 @@
 
     /* Mobile Responsive Layout */
     @media (max-width: 767px) {
-      .topbar { padding: 6px 8px; gap: 8px; }
+      .topbar {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 6px 8px;
+        gap: 6px;
+      }
+      .brand img { width: 26px; height: 26px; }
+      .brand-title { font-size: 0.82rem; }
       .brand-sub { display: none; }
       .top-actions {
         flex-wrap: nowrap;
         overflow-x: auto;
         scrollbar-width: none;
-        flex: 1;
+        width: 100%;
         justify-content: flex-start;
       }
       .top-actions::-webkit-scrollbar { display: none; }
@@ -1546,16 +1554,18 @@
         ctx.fill();
         ctx.stroke();
 
-        // Top cm / mm ticks along measuring edge (y = -W/2)
-        const totalMm = 150;
+        // Top cm / mm ticks along measuring edge (y = -W/2) with clean end margin
+        const maxCm = Math.max(4, Math.floor((L - 30) / PX_PER_CM));
+        const totalMm = maxCm * 10;
         const pxPerMm = PX_PER_CM / 10;
+        const startX = -(totalMm * pxPerMm) / 2;
         ctx.strokeStyle = '#1E3A8A';
         ctx.fillStyle = '#1E3A8A';
         ctx.font = '700 12px "JetBrains Mono", monospace';
         ctx.textAlign = 'center';
 
         for (let mm = 0; mm <= totalMm; mm++) {
-          const x = -L / 2 + mm * pxPerMm;
+          const x = startX + mm * pxPerMm;
           const isCm = mm % 10 === 0;
           const isHalf = mm % 5 === 0;
           const tickLen = isCm ? 20 : isHalf ? 14 : 8;
@@ -1573,7 +1583,7 @@
         // Turkish subtle label
         ctx.font = '700 10px "Plus Jakarta Sans", sans-serif';
         ctx.fillStyle = 'rgba(30, 58, 138, 0.75)';
-        ctx.fillText('CETVEL (cm) • Gövdeden taşı, uçlardan döndür', 0, W / 2 - 10);
+        ctx.fillText(L < 480 ? 'CETVEL (cm)' : 'CETVEL (cm) • Gövdeden taşı, uçlardan döndür', 0, W / 2 - 10);
 
         // Rotate knobs at ends
         for (const rx of [-L / 2 + 28, L / 2 - 28]) {
@@ -1886,7 +1896,7 @@
       btnToggleRuler.addEventListener('click', () => {
         ruler.visible = !ruler.visible;
         if (ruler.visible) {
-          ruler.length = Math.min(750, Math.max(350, cssW - 60));
+          ruler.length = Math.min(780, Math.max(330, cssW - 44));
           ruler.x = cssW / 2;
           ruler.y = Math.min(cssH * 0.65, cssH - 70);
         }
