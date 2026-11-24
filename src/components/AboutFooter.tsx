@@ -1,6 +1,7 @@
 import { ArrowUpRight } from 'lucide-react';
 import { BRAND_CONFIG } from '../data/products';
 import type { GradeLevel } from '../types/studio';
+import { trackSocialClick, trackUsageModal } from '../utils/analytics';
 
 interface AboutFooterProps {
   onSelectGrade: (grade: GradeLevel) => void;
@@ -50,6 +51,7 @@ export function AboutFooter({
                 href={BRAND_CONFIG.instagramUrl}
                 target="_blank"
                 rel="noreferrer"
+                onClick={() => trackSocialClick('instagram', 'footer')}
                 className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border-strong)] bg-[var(--bg-canvas)] px-4 py-2 text-xs font-bold text-[var(--text-primary)] transition hover:border-[var(--text-primary)]"
               >
                 <span>Instagram: {BRAND_CONFIG.handle}</span>
@@ -106,7 +108,10 @@ export function AboutFooter({
               <li>
                 <button
                   type="button"
-                  onClick={onOpenUsageModal}
+                  onClick={() => {
+                    trackUsageModal('footer');
+                    onOpenUsageModal();
+                  }}
                   className="text-left transition hover:text-[var(--accent-cobalt)]"
                 >
                   Kullanım Amacı &amp; İlkeler

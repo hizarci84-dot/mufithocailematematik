@@ -4,6 +4,11 @@ import type { GradeLevel, TopicModule } from '../types/studio';
 import { BRAND_CONFIG } from '../data/products';
 import { fitHeroSandboxIframe } from '../utils/iframePreview';
 import {
+  trackHtmlDownload,
+  trackShareAction,
+  trackTopicOpen,
+} from '../utils/analytics';
+import {
   copyTextToClipboard,
   downloadStandaloneHtml,
   getTopicShareUrl,
@@ -69,6 +74,7 @@ export function Hero({
     if (!activeTopic) return;
     const ok = await copyTextToClipboard(getTopicShareUrl(activeTopic.id, 'animation'));
     if (ok) {
+      trackShareAction(activeTopic.code, 'konu_linki', 'hero');
       setCopiedId(activeTopic.id);
       window.setTimeout(() => setCopiedId(null), 2000);
     }
@@ -215,7 +221,12 @@ export function Hero({
                   {activeVariant && (
                     <button
                       type="button"
-                      onClick={() => downloadStandaloneHtml(activeVariant.url, activeVariant.file)}
+                      onClick={() => {
+                        if (activeTopic) {
+                          trackHtmlDownload(activeTopic.code, activeVariant.file, 'hero');
+                        }
+                        downloadStandaloneHtml(activeVariant.url, activeVariant.file);
+                      }}
                       title="Çevrimdışı HTML olarak indir"
                       className="inline-flex items-center gap-1 rounded-lg border border-[var(--border-strong)] bg-[var(--bg-surface)] px-2.5 py-1.5 text-[11px] font-bold text-[var(--text-primary)] transition hover:border-[var(--text-primary)]"
                     >
@@ -226,7 +237,10 @@ export function Hero({
 
                   <button
                     type="button"
-                    onClick={() => onOpenTopic(activeTopic, 'animation')}
+                    onClick={() => {
+                      trackTopicOpen(activeTopic, 'animation', 'hero');
+                      onOpenTopic(activeTopic, 'animation');
+                    }}
                     title="Tam ekranda büyüt"
                     className="inline-flex items-center gap-1 rounded-lg bg-[var(--accent-cobalt)] px-2.5 py-1.5 text-[11px] font-bold text-white transition hover:opacity-90"
                   >

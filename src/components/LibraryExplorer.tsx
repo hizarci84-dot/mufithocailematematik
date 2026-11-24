@@ -17,6 +17,12 @@ import type { GradeLevel, TopicModule } from '../types/studio';
 import { normalizeTurkish } from '../utils/turkishSearch';
 import { TopicCard } from './TopicCard';
 import {
+  trackFilterChange,
+  trackHtmlDownload,
+  trackShareAction,
+  trackTopicOpen,
+} from '../utils/analytics';
+import {
   copyTextToClipboard,
   downloadStandaloneHtml,
   getTopicShareUrl,
@@ -80,6 +86,15 @@ export function LibraryExplorer({
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
+
+  useEffect(() => {
+    const trimmed = searchQuery.trim();
+    if (trimmed.length < 2) return;
+    const id = window.setTimeout(() => {
+      trackFilterChange('arama', trimmed);
+    }, 750);
+    return () => window.clearTimeout(id);
+  }, [searchQuery]);
 
   const availableThemes = useMemo(() => {
     const set = new Set<string>();
@@ -212,7 +227,10 @@ export function LibraryExplorer({
                 <button
                   key={String(value)}
                   type="button"
-                  onClick={() => onChangeGrade(value)}
+                  onClick={() => {
+                    trackFilterChange('sinif', String(value));
+                    onChangeGrade(value);
+                  }}
                   className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition sm:text-sm ${
                     active
                       ? 'bg-[var(--bg-ink)] text-[#FFFDF8] shadow-sm'
@@ -266,7 +284,11 @@ export function LibraryExplorer({
               <select
                 aria-label="İçerik türü filtresi"
                 value={contentMode}
-                onChange={(e) => setContentMode(e.target.value as typeof contentMode)}
+                onChange={(e) => {
+                  const val = e.target.value as typeof contentMode;
+                  trackFilterChange('icerik', val);
+                  setContentMode(val);
+                }}
                 className="rounded-xl border border-[var(--border-strong)] bg-[var(--bg-canvas)]/70 px-3.5 py-2.5 text-xs font-bold text-[var(--text-primary)] focus:border-[var(--accent-cobalt)] focus:outline-none"
               >
                 <option value="all">Tüm İçerikler</option>
@@ -277,7 +299,10 @@ export function LibraryExplorer({
 
               <button
                 type="button"
-                onClick={() => onToggleOnlyFavorites(!onlyFavorites)}
+                onClick={() => {
+                  if (!onlyFavorites) trackFilterChange('favoriler', 'ac');
+                  onToggleOnlyFavorites(!onlyFavorites);
+                }}
                 className={`inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2.5 text-xs font-bold transition ${
                   onlyFavorites
                     ? 'border-amber-600/50 bg-amber-500/15 text-amber-800'
@@ -297,7 +322,10 @@ export function LibraryExplorer({
             </span>
             <button
               type="button"
-              onClick={() => setSelectedTheme('all')}
+              onClick={() => {
+                trackFilterChange('tema', 'all');
+                setSelectedTheme('all');
+              }}
               className={`rounded-lg px-2.5 py-1 text-xs font-bold transition ${
                 selectedTheme === 'all'
                   ? 'bg-[var(--accent-cobalt)] text-white'
@@ -310,7 +338,10 @@ export function LibraryExplorer({
               <button
                 key={theme}
                 type="button"
-                onClick={() => setSelectedTheme(theme)}
+                onClick={() => {
+                  trackFilterChange('tema', theme);
+                  setSelectedTheme(theme);
+                }}
                 className={`rounded-lg px-2.5 py-1 text-xs font-bold transition ${
                   selectedTheme === theme
                     ? 'bg-[var(--accent-cobalt)] text-white'
@@ -418,7 +449,10 @@ export function LibraryExplorer({
                           {readyAnims.length > 0 ? (
                             <button
                               type="button"
-                              onClick={() => onOpenTopic(topic, 'animation')}
+                              onClick={() => {
+                                trackTopicOpen(topic, 'animation', 'liste');
+                                onOpenTopic(topic, 'animation');
+                              }}
                               className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--bg-ink)] px-3 py-2 text-xs font-bold text-[#FFFDF8] transition hover:bg-[var(--accent-cobalt)]"
                             >
                               <Play className="h-3.5 w-3.5 fill-current" />
@@ -436,7 +470,10 @@ export function LibraryExplorer({
                           {readyLabs.length > 0 && (
                             <button
                               type="button"
-                              onClick={() => onOpenTopic(topic, 'lab')}
+                              onClick={() => {
+                                trackTopicOpen(topic, 'lab', 'liste');
+                                onOpenTopic(topic, 'lab');
+                              }}
                               className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-strong)] bg-[var(--bg-linen)] px-3 py-2 text-xs font-bold text-[var(--text-primary)] transition hover:bg-[var(--accent-teal)] hover:text-white"
                             >
                               <FlaskConical className="h-3.5 w-3.5" />
@@ -451,6 +488,7 @@ export function LibraryExplorer({
                                 getTopicShareUrl(topic.id, readyAnims.length > 0 ? 'animation' : 'lab')
                               );
                               if (ok) {
+                                trackShareAction(topic.code, 'konu_linki', 'liste');
                                 setCopiedId(topic.id);
                                 window.setTimeout(() => setCopiedId(null), 1500);
                               }
@@ -464,7 +502,10 @@ export function LibraryExplorer({
                           {primary && (
                             <button
                               type="button"
-                              onClick={() => downloadStandaloneHtml(primary.url, primary.file)}
+                              onClick={() => {
+                                trackHtmlDownload(topic.code, primary.file, 'liste');
+                                downloadStandaloneHtml(primary.url, primary.file);
+                              }}
                               title="Çevrimdışı HTML indir"
                               className="rounded-lg border border-[var(--border-warm)] p-2 text-[var(--text-secondary)] transition hover:border-[var(--accent-terracotta)] hover:text-[var(--accent-terracotta)]"
                             >

@@ -14,6 +14,11 @@ import type { TopicModule } from '../types/studio';
 import { MathThumbArtwork } from './MathThumbArtwork';
 import { activateIframeHoverPreview } from '../utils/iframePreview';
 import {
+  trackHtmlDownload,
+  trackShareAction,
+  trackTopicOpen,
+} from '../utils/analytics';
+import {
   copyTextToClipboard,
   downloadStandaloneHtml,
   getDirectHtmlUrl,
@@ -94,6 +99,11 @@ export function TopicCard({
     setPreviewActive(false);
   };
 
+  const openFromCard = (mode: 'animation' | 'lab') => {
+    trackTopicOpen(topic, mode, 'kart');
+    onOpen(topic, mode);
+  };
+
   const handleCopy = async (kind: 'topic' | 'html') => {
     const text =
       kind === 'topic'
@@ -104,6 +114,7 @@ export function TopicCard({
 
     const ok = await copyTextToClipboard(text);
     if (ok) {
+      trackShareAction(topic.code, kind === 'topic' ? 'konu_linki' : 'html_linki', 'kart');
       setCopiedType(kind);
       window.setTimeout(() => setCopiedType(null), 1800);
     }
@@ -111,6 +122,7 @@ export function TopicCard({
 
   const handleDownload = async () => {
     if (!primaryAnim || downloading) return;
+    trackHtmlDownload(topic.code, primaryAnim.file, 'kart');
     setDownloading(true);
     try {
       await downloadStandaloneHtml(primaryAnim.url, primaryAnim.file);
@@ -132,13 +144,13 @@ export function TopicCard({
         ref={stageRef}
         onMouseEnter={handleStageEnter}
         onMouseLeave={handleStageLeave}
-        onClick={() => onOpen(topic, defaultMode)}
+        onClick={() => openFromCard(defaultMode)}
         role="button"
         tabIndex={0}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            onOpen(topic, defaultMode);
+            openFromCard(defaultMode);
           }
         }}
         aria-label={`${topic.title} önizlemesini aç`}
@@ -253,7 +265,7 @@ export function TopicCard({
 
         <button
           type="button"
-          onClick={() => onOpen(topic, defaultMode)}
+          onClick={() => openFromCard(defaultMode)}
           className="mt-2.5 flex-1 text-left focus:outline-none"
         >
           <h3 className="text-lg font-extrabold leading-snug text-[var(--text-primary)] transition group-hover:text-[var(--accent-cobalt)]">
@@ -269,7 +281,7 @@ export function TopicCard({
           {readyAnims.length > 0 ? (
             <button
               type="button"
-              onClick={() => onOpen(topic, 'animation')}
+              onClick={() => openFromCard('animation')}
               className="inline-flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl bg-[var(--bg-ink)] px-2.5 py-2 text-xs font-bold text-[#FFFDF8] transition hover:bg-[var(--accent-cobalt)] sm:px-3"
             >
               <Play className="h-3.5 w-3.5 shrink-0 fill-current" />
@@ -280,7 +292,7 @@ export function TopicCard({
             showDrafts && (
               <button
                 type="button"
-                onClick={() => onOpen(topic, 'animation')}
+                onClick={() => openFromCard('animation')}
                 className="inline-flex flex-1 items-center justify-center gap-1 whitespace-nowrap rounded-xl border border-dashed border-[var(--border-strong)] px-2.5 py-2 text-[11px] font-bold text-[var(--accent-amber)]"
               >
                 <Clock className="h-3.5 w-3.5 shrink-0" />
@@ -292,7 +304,7 @@ export function TopicCard({
           {readyLabs.length > 0 ? (
             <button
               type="button"
-              onClick={() => onOpen(topic, 'lab')}
+              onClick={() => openFromCard('lab')}
               className="inline-flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-[var(--border-strong)] bg-[var(--bg-linen)]/80 px-2.5 py-2 text-xs font-bold text-[var(--text-primary)] transition hover:border-[var(--accent-teal)] hover:bg-[var(--accent-teal)] hover:text-white sm:px-3"
             >
               <FlaskConical className="h-3.5 w-3.5 shrink-0" />
@@ -303,7 +315,7 @@ export function TopicCard({
             showDrafts && (
               <button
                 type="button"
-                onClick={() => onOpen(topic, 'lab')}
+                onClick={() => openFromCard('lab')}
                 className="inline-flex flex-1 items-center justify-center gap-1 rounded-xl border border-dashed border-[var(--border-strong)] px-2.5 py-2 text-[11px] font-bold text-[var(--accent-amber)]"
               >
                 <Clock className="h-3.5 w-3.5" />
@@ -377,6 +389,7 @@ export function TopicCard({
                 href={getWhatsAppShareUrl(topic.title, getTopicShareUrl(topic.id, defaultMode))}
                 target="_blank"
                 rel="noreferrer"
+                onClick={() => trackShareAction(topic.code, 'whatsapp', 'kart')}
                 className="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left text-xs font-semibold text-[var(--text-primary)] transition hover:bg-[var(--bg-linen)]"
               >
                 <MessageCircle className="h-3.5 w-3.5 text-emerald-700" />

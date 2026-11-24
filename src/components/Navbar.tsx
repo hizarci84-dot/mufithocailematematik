@@ -13,6 +13,12 @@ import {
 } from 'lucide-react';
 import { BRAND_CONFIG, STUDIO_PRODUCTS } from '../data/products';
 import type { GradeLevel, TopicModule } from '../types/studio';
+import {
+  trackPortalClick,
+  trackSocialClick,
+  trackTopicOpen,
+  trackUsageModal,
+} from '../utils/analytics';
 
 interface NavbarProps {
   topics: TopicModule[];
@@ -256,6 +262,7 @@ export function Navbar({
                               type="button"
                               onClick={() => {
                                 setOpenMenu(null);
+                                trackTopicOpen(topic, mode, 'menu');
                                 onOpenTopic(topic, mode);
                               }}
                               className="group/topic flex w-full items-center justify-between gap-2 rounded-xl border border-[var(--border-warm)] bg-[var(--bg-canvas)]/60 px-2.5 py-2 text-left transition hover:border-[var(--border-strong)] hover:bg-[var(--bg-linen)]"
@@ -378,7 +385,10 @@ export function Navbar({
                               href={product.href}
                               target="_blank"
                               rel="noreferrer"
-                              onClick={() => setOpenMenu(null)}
+                              onClick={() => {
+                                setOpenMenu(null);
+                                trackPortalClick(product.title, 'portal_ac', 'menu');
+                              }}
                               className="group/item min-w-0 flex-1"
                             >
                               <div className="flex items-center gap-2">
@@ -401,6 +411,7 @@ export function Navbar({
                                   type="button"
                                   onClick={() => {
                                     setOpenMenu(null);
+                                    trackPortalClick(product.title, 'onizleme', 'menu');
                                     onOpenAppUrl(product.title, product.href!);
                                   }}
                                   title="Site içi pencerede önizle"
@@ -413,7 +424,10 @@ export function Navbar({
                                 href={product.href}
                                 target="_blank"
                                 rel="noreferrer"
-                                onClick={() => setOpenMenu(null)}
+                                onClick={() => {
+                                  setOpenMenu(null);
+                                  trackPortalClick(product.title, 'portal_ac', 'menu');
+                                }}
                                 title="Yeni sekmede aç"
                                 className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--bg-ink)] text-[#FFFDF8] transition hover:bg-[var(--accent-cobalt)]"
                               >
@@ -435,6 +449,7 @@ export function Navbar({
             onClick={() => {
               setOpenMenu(null);
               setMobileOpen(false);
+              trackUsageModal('menu');
               onOpenUsageModal();
             }}
             className="rounded-lg px-3.5 py-2 text-sm font-semibold text-[var(--text-secondary)] transition hover:bg-[var(--bg-linen)] hover:text-[var(--text-primary)]"
@@ -466,6 +481,7 @@ export function Navbar({
             href={BRAND_CONFIG.instagramUrl}
             target="_blank"
             rel="noreferrer"
+            onClick={() => trackSocialClick('instagram', 'navbar')}
             className="hidden items-center gap-1.5 rounded-full border border-[var(--border-strong)] bg-[var(--bg-surface)] px-3.5 py-2 text-xs font-bold text-[var(--text-primary)] shadow-xs transition hover:border-[var(--text-primary)] md:inline-flex"
           >
             <span>{BRAND_CONFIG.handle}</span>
@@ -550,7 +566,10 @@ export function Navbar({
                       href={product.href}
                       target="_blank"
                       rel="noreferrer"
-                      onClick={() => setMobileOpen(false)}
+                      onClick={() => {
+                        setMobileOpen(false);
+                        trackPortalClick(product.title, 'portal_ac', 'mobil_menu');
+                      }}
                       className="flex items-center justify-between gap-2 rounded-xl border border-[var(--border-warm)] bg-[var(--bg-canvas)] px-3 py-2.5 text-xs font-bold text-[var(--text-primary)]"
                     >
                       <span className="truncate">{product.title}</span>
@@ -575,6 +594,7 @@ export function Navbar({
                   type="button"
                   onClick={() => {
                     setMobileOpen(false);
+                    trackUsageModal('mobil_menu');
                     onOpenUsageModal();
                   }}
                   className="rounded-lg border border-[var(--border-warm)] px-3 py-2 text-xs font-bold text-[var(--text-primary)]"
@@ -587,6 +607,7 @@ export function Navbar({
                 href={BRAND_CONFIG.instagramUrl}
                 target="_blank"
                 rel="noreferrer"
+                onClick={() => trackSocialClick('instagram', 'mobil_menu')}
                 className="inline-flex items-center gap-1 rounded-full bg-[var(--bg-ink)] px-3.5 py-2 text-xs font-bold text-[#FFFDF8]"
               >
                 <span>{BRAND_CONFIG.handle}</span>

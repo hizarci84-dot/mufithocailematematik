@@ -19,6 +19,11 @@ import {
 import type { AppVariant, TopicModule } from '../types/studio';
 import { activateAnimationAutoPlay, fitModalIframeOnMobile } from '../utils/iframePreview';
 import {
+  trackHtmlDownload,
+  trackShareAction,
+  trackTopicOpen,
+} from '../utils/analytics';
+import {
   copyTextToClipboard,
   downloadStandaloneHtml,
   getDirectHtmlUrl,
@@ -142,6 +147,7 @@ export function StudioPlayerModal({
           : window.location.href;
     const ok = await copyTextToClipboard(text);
     if (ok) {
+      trackShareAction(topic?.code || title, kind === 'topic' ? 'konu_linki' : 'html_linki', 'modal');
       setCopiedKind(kind);
       window.setTimeout(() => setCopiedKind(null), 1800);
     }
@@ -149,6 +155,7 @@ export function StudioPlayerModal({
 
   const handleDownload = async () => {
     if (!activeVariant || isDraft || downloading) return;
+    trackHtmlDownload(topic?.code || title, activeVariant.file, 'modal');
     setDownloading(true);
     try {
       await downloadStandaloneHtml(activeVariant.url, activeVariant.file);
@@ -196,6 +203,9 @@ export function StudioPlayerModal({
                 <button
                   type="button"
                   onClick={() => {
+                    if (activeMode !== 'animation') {
+                      trackTopicOpen(topic, 'animation', 'modal_sekme');
+                    }
                     setActiveMode('animation');
                     setSelectedVariantIdx(0);
                     setIsLoading(true);
@@ -217,6 +227,9 @@ export function StudioPlayerModal({
                 <button
                   type="button"
                   onClick={() => {
+                    if (activeMode !== 'lab') {
+                      trackTopicOpen(topic, 'lab', 'modal_sekme');
+                    }
                     setActiveMode('lab');
                     setSelectedVariantIdx(0);
                     setIsLoading(true);
@@ -306,6 +319,7 @@ export function StudioPlayerModal({
                       href={getWhatsAppShareUrl(topic.title, getTopicShareUrl(topic.id, activeMode))}
                       target="_blank"
                       rel="noreferrer"
+                      onClick={() => trackShareAction(topic.code, 'whatsapp', 'modal')}
                       className="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-linen)]"
                     >
                       <MessageCircle className="h-3.5 w-3.5 text-emerald-700" />

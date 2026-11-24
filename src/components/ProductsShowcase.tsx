@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { STUDIO_PRODUCTS } from '../data/products';
 import type { ProductCategory, StudioProduct } from '../types/studio';
+import { trackPortalClick, trackShareAction } from '../utils/analytics';
 import { copyTextToClipboard } from '../utils/shareAndDownload';
 
 interface ProductsShowcaseProps {
@@ -39,13 +40,16 @@ export function ProductsShowcase({ onOpenAppUrl }: ProductsShowcaseProps) {
   const handleAction = (product: StudioProduct) => {
     if (!product.href) return;
     if (product.openInPlayer) {
+      trackPortalClick(product.title, 'onizleme', 'urunler');
       onOpenAppUrl(product.title, product.href);
       return;
     }
     if (product.href.startsWith('#')) {
+      trackPortalClick(product.title, 'kutuphane_atlama', 'urunler');
       document.querySelector(product.href)?.scrollIntoView({ behavior: 'smooth' });
       return;
     }
+    trackPortalClick(product.title, 'portal_ac', 'urunler');
     window.open(product.href, '_blank', 'noopener,noreferrer');
   };
 
@@ -56,6 +60,7 @@ export function ProductsShowcase({ onOpenAppUrl }: ProductsShowcaseProps) {
       : product.href;
     const ok = await copyTextToClipboard(url);
     if (ok) {
+      trackShareAction(product.title, 'portal_linki', 'urunler');
       setCopiedId(product.id);
       window.setTimeout(() => setCopiedId(null), 1800);
     }
@@ -180,7 +185,10 @@ export function ProductsShowcase({ onOpenAppUrl }: ProductsShowcaseProps) {
                       {product.allowModalPreview && product.href && (
                         <button
                           type="button"
-                          onClick={() => onOpenAppUrl(product.title, product.href!)}
+                          onClick={() => {
+                            trackPortalClick(product.title, 'onizleme', 'urunler');
+                            onOpenAppUrl(product.title, product.href!);
+                          }}
                           title="Site içi pencerede önizle"
                           className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--border-strong)] bg-[var(--bg-canvas)] text-[var(--text-primary)] transition hover:border-[var(--accent-cobalt)] hover:text-[var(--accent-cobalt)]"
                         >

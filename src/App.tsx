@@ -16,6 +16,11 @@ import {
   readLastShowcaseId,
   saveLastShowcaseId,
 } from './utils/showcase';
+import {
+  trackFilterChange,
+  trackShowcaseAction,
+  trackTopicOpen,
+} from './utils/analytics';
 
 const FAV_STORAGE_KEY = 'mufithoca_favorites';
 
@@ -69,16 +74,20 @@ export function App() {
     };
   });
 
-  const handleOpenLiveShowcase = (scrollToTop = true) => {
-    setShowcaseState((prev) => {
-      const nextTopic = pickRandomShowcaseTopic(showcasePool, prev.topic?.id);
-      if (nextTopic) saveLastShowcaseId(nextTopic.id);
-      return {
-        topic: nextTopic,
-        tabs: buildShowcaseTabs(showcasePool, nextTopic),
-        nonce: prev.nonce + 1,
-      };
-    });
+  const handleOpenLiveShowcase = (
+    scrollToTop = true,
+    source: 'menu' | 'degistir' = 'menu'
+  ) => {
+    const nextTopic = pickRandomShowcaseTopic(showcasePool, showcaseState.topic?.id);
+    if (nextTopic) {
+      saveLastShowcaseId(nextTopic.id);
+      trackShowcaseAction(source, nextTopic.code);
+    }
+    setShowcaseState((prev) => ({
+      topic: nextTopic,
+      tabs: buildShowcaseTabs(showcasePool, nextTopic),
+      nonce: prev.nonce + 1,
+    }));
     if (scrollToTop) {
       document.getElementById('ust')?.scrollIntoView({ behavior: 'smooth' });
     }
@@ -86,6 +95,7 @@ export function App() {
 
   const handleSelectShowcaseTopic = (topic: TopicModule) => {
     saveLastShowcaseId(topic.id);
+    trackShowcaseAction('sekme', topic.code);
     setShowcaseState((prev) => ({
       ...prev,
       topic,
@@ -95,6 +105,11 @@ export function App() {
 
   useEffect(() => {
     document.title = `${BRAND_CONFIG.name} — ${BRAND_CONFIG.tagline}`;
+    if (playerTarget?.topic) {
+      trackTopicOpen(playerTarget.topic, playerTarget.mode, 'dogrudan_link');
+    }
+    // Sadece ilk açılışta ?konu=... bağlantısından gelen girişleri ölç
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Sync URL query params for easy link sharing
@@ -145,6 +160,7 @@ export function App() {
   };
 
   const jumpToGrade = (grade: GradeLevel) => {
+    trackFilterChange('sinif', String(grade));
     setOnlyFavorites(false);
     setSelectedGrade(grade);
     document.getElementById('kutuphane')?.scrollIntoView({ behavior: 'smooth' });
@@ -175,6 +191,7 @@ export function App() {
           ? 'lab'
           : 'animation';
 
+    trackTopicOpen(nextTopic, nextMode, 'modal_gecis');
     setPlayerTarget({ topic: nextTopic, mode: nextMode });
   };
 
@@ -192,7 +209,7 @@ export function App() {
           setPlayerTarget({ customTitle: title, customUrl: url, mode: 'animation' })
         }
         onOpenUsageModal={() => setIsUsageModalOpen(true)}
-        onOpenLiveShowcase={() => handleOpenLiveShowcase(true)}
+        onOpenLiveShowcase={() => handleOpenLiveShowcase(true, 'menu')}
       />
 
       <main>
@@ -204,7 +221,7 @@ export function App() {
           showcaseTabs={showcaseState.tabs}
           showcaseNonce={showcaseState.nonce}
           onSelectShowcaseTopic={handleSelectShowcaseTopic}
-          onShuffleShowcase={() => handleOpenLiveShowcase(false)}
+          onShuffleShowcase={() => handleOpenLiveShowcase(false, 'degistir')}
           onSelectGrade={jumpToGrade}
           onOpenTopic={(topic: TopicModule, mode: 'animation' | 'lab') =>
             setPlayerTarget({ topic, mode })
@@ -236,7 +253,7 @@ export function App() {
       <AboutFooter
         onSelectGrade={jumpToGrade}
         onOpenUsageModal={() => setIsUsageModalOpen(true)}
-        onOpenLiveShowcase={() => handleOpenLiveShowcase(true)}
+        onOpenLiveShowcase={() => handleOpenLiveShowcase(true, 'menu')}
       />
 
       <UsageGuideModal
