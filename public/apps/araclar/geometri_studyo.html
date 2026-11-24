@@ -1,0 +1,2111 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="studio-responsive" content="true" />
+  <title>Türkçe Geometri &amp; Pergel–Cetvel Stüdyosu | @mufithocailematematik</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-paper: #FFFDF8;
+      --ui-surface: #FFFFFF;
+      --ui-warm: #F5F1E8;
+      --ui-linen: #EDE7DA;
+      --ui-border: #DDD4C3;
+      --ink: #191A1E;
+      --muted: #666158;
+      --cobalt: #1D4ED8;
+      --terracotta: #D94E34;
+      --teal: #0F766E;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      background: var(--ui-warm);
+      color: var(--ink);
+      user-select: none;
+    }
+
+    .app-shell {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Top Compact Brand & Utility Bar */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--ui-surface);
+      border-bottom: 1px solid var(--ui-border);
+      flex-shrink: 0;
+      z-index: 20;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-width: 0;
+    }
+
+    .brand img {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid var(--ui-border);
+      background: #14171d;
+      flex-shrink: 0;
+    }
+
+    .brand-text {
+      min-width: 0;
+    }
+
+    .brand-title {
+      font-size: 0.92rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .brand-sub {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--terracotta);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .btn-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      height: 32px;
+      padding: 0 10px;
+      border-radius: 9px;
+      border: 1px solid var(--ui-border);
+      background: var(--ui-warm);
+      color: var(--ink);
+      font-family: inherit;
+      font-size: 0.74rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      white-space: nowrap;
+    }
+
+    .btn-pill:hover {
+      background: var(--ui-linen);
+      border-color: #bfb49f;
+    }
+
+    .btn-pill.active {
+      background: var(--ink);
+      color: #FFFDF8;
+      border-color: var(--ink);
+    }
+
+    .btn-pill.primary {
+      background: var(--cobalt);
+      color: #fff;
+      border-color: var(--cobalt);
+    }
+
+    .btn-pill.primary:hover {
+      opacity: 0.92;
+    }
+
+    .btn-pill.danger:hover {
+      background: #fee2e2;
+      color: #b91c1c;
+      border-color: #fca5a5;
+    }
+
+    .btn-pill:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* Main Workspace */
+    .workspace {
+      position: relative;
+      flex: 1;
+      display: flex;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    /* Tool Dock (Left on desktop, bottom bar on mobile) */
+    .dock {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      width: 84px;
+      padding: 8px 6px;
+      background: var(--ui-surface);
+      border-right: 1px solid var(--ui-border);
+      overflow-y: auto;
+      scrollbar-width: none;
+      flex-shrink: 0;
+      z-index: 15;
+    }
+    .dock::-webkit-scrollbar { display: none; }
+
+    .dock-group-label {
+      font-size: 0.6rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 2px;
+    }
+
+    .tool-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      padding: 7px 4px;
+      border-radius: 11px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--ink);
+      font-family: inherit;
+      font-size: 0.67rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.14s ease;
+      line-height: 1.1;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .tool-btn svg {
+      width: 19px;
+      height: 19px;
+      flex-shrink: 0;
+    }
+
+    .tool-btn:hover {
+      background: var(--ui-warm);
+      border-color: var(--ui-border);
+    }
+
+    .tool-btn.active {
+      background: var(--ink);
+      color: #FFFDF8;
+      box-shadow: 0 4px 12px -4px rgba(25, 26, 30, 0.35);
+    }
+
+    .tool-btn.inst-active {
+      background: #EFF6FF;
+      color: var(--cobalt);
+      border-color: #93C5FD;
+    }
+
+    .divider {
+      height: 1px;
+      width: 100%;
+      background: var(--ui-border);
+      margin: 2px 0;
+      flex-shrink: 0;
+    }
+
+    /* Color Swatches inside dock */
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 5px;
+      padding: 2px 6px;
+    }
+
+    .swatch {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.22);
+      cursor: pointer;
+      margin: 0 auto;
+      transition: transform 0.12s;
+    }
+
+    .swatch:hover { transform: scale(1.1); }
+    .swatch.active {
+      box-shadow: 0 0 0 2px var(--ink), 0 0 0 4px rgba(29, 78, 216, 0.3);
+      transform: scale(1.08);
+    }
+
+    /* Canvas Stage */
+    .stage {
+      position: relative;
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+      background: var(--bg-paper);
+    }
+
+    canvas#geoCanvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: crosshair;
+    }
+
+    /* Floating Context Controls (Top-Right, Bottom-Right) */
+    .floating-status {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .status-chip {
+      background: rgba(255, 253, 248, 0.92);
+      border: 1px solid var(--ui-border);
+      backdrop-filter: blur(6px);
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 0.73rem;
+      font-weight: 700;
+      color: var(--ink);
+      box-shadow: 0 4px 12px rgba(25, 26, 30, 0.08);
+      pointer-events: auto;
+    }
+
+    .status-chip.dark-mode-chip {
+      background: rgba(24, 28, 38, 0.9);
+      border-color: rgba(255, 255, 255, 0.18);
+      color: #F8FAFC;
+    }
+
+    .floating-panels {
+      position: absolute;
+      right: 12px;
+      bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+      z-index: 12;
+      max-width: calc(100% - 24px);
+    }
+
+    .mini-panel {
+      background: rgba(255, 253, 248, 0.96);
+      border: 1px solid var(--ui-border);
+      border-radius: 14px;
+      padding: 9px 12px;
+      box-shadow: 0 10px 26px -8px rgba(25, 26, 30, 0.2);
+      backdrop-filter: blur(8px);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 220px;
+    }
+
+    .mini-panel-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 0.74rem;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .mini-panel-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .mini-panel input[type="range"] {
+      flex: 1;
+      accent-color: var(--cobalt);
+      cursor: pointer;
+    }
+
+    .mini-btn {
+      padding: 4px 9px;
+      border-radius: 8px;
+      border: 1px solid var(--ui-border);
+      background: var(--ui-warm);
+      color: var(--ink);
+      font-family: inherit;
+      font-size: 0.7rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .mini-btn.on {
+      background: var(--terracotta);
+      border-color: var(--terracotta);
+      color: #fff;
+    }
+
+    .mini-btn.cobalt {
+      background: var(--cobalt);
+      border-color: var(--cobalt);
+      color: #fff;
+    }
+
+    /* Help Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 19, 27, 0.65);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+      z-index: 50;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .help-card {
+      background: var(--ui-surface);
+      border: 1px solid var(--ui-border);
+      border-radius: 20px;
+      max-width: 560px;
+      width: 100%;
+      padding: 20px;
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.25);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .help-card h2 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+
+    .help-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      font-size: 0.82rem;
+      line-height: 1.45;
+      color: var(--muted);
+    }
+
+    .help-list li strong {
+      color: var(--ink);
+    }
+
+    .help-footer {
+      margin-top: 16px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    /* Mobile Responsive Layout */
+    @media (max-width: 767px) {
+      .topbar { padding: 6px 8px; gap: 8px; }
+      .brand-sub { display: none; }
+      .top-actions {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
+        flex: 1;
+        justify-content: flex-start;
+      }
+      .top-actions::-webkit-scrollbar { display: none; }
+      .workspace {
+        flex-direction: column;
+      }
+      .dock {
+        order: 2;
+        flex-direction: row;
+        width: 100%;
+        height: auto;
+        border-right: none;
+        border-top: 1px solid var(--ui-border);
+        padding: 6px 8px;
+        gap: 4px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        align-items: center;
+      }
+      .dock-group-label, .divider {
+        display: none;
+      }
+      .tool-btn {
+        min-width: 58px;
+        padding: 6px 5px;
+        font-size: 0.62rem;
+      }
+      .color-grid {
+        display: flex;
+        gap: 5px;
+        padding: 0 4px;
+        flex-shrink: 0;
+      }
+      .mini-panel {
+        min-width: 195px;
+        padding: 7px 9px;
+      }
+      .floating-status {
+        max-width: calc(100% - 20px);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Top Bar -->
+    <header class="topbar">
+      <div class="brand">
+        <img
+          src="../../logo.png"
+          alt="Müfit Hoca ile Matematik"
+          onerror="this.src='../../logom.png'"
+        />
+        <div class="brand-text">
+          <div class="brand-title">Geometri &amp; Pergel–Cetvel Stüdyosu</div>
+          <div class="brand-sub">@mufithocailematematik • Türkçe Çizim Aracı</div>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <button type="button" class="btn-pill" id="btnSnap" title="Kesişim ve uç noktalara otomatik yakala">
+          <span>Yakala: Açık</span>
+        </button>
+        <button type="button" class="btn-pill" id="btnStrokeWidth" title="Çizgi kalınlığını değiştir">
+          <span>Kalınlık: Orta</span>
+        </button>
+        <button type="button" class="btn-pill" id="btnDashed" title="Düz veya kesikli çizgi seç">
+          <span>Kesikli</span>
+        </button>
+        <button type="button" class="btn-pill" id="btnPaper" title="Arka plan kağıt türünü değiştir">
+          <span>Zemin: Kareli</span>
+        </button>
+        <button type="button" class="btn-pill" id="btnUploadImg" title="Soru görseli veya fotoğraf yükle">
+          <span>Resim Ekle</span>
+        </button>
+        <input type="file" id="imgInput" accept="image/*" hidden />
+        <button type="button" class="btn-pill" id="btnUndo" title="Geri Al (Ctrl+Z)">
+          <span>Geri Al</span>
+        </button>
+        <button type="button" class="btn-pill" id="btnRedo" title="Yinele (Ctrl+Y)">
+          <span>Yinele</span>
+        </button>
+        <button type="button" class="btn-pill danger" id="btnClear" title="Tüm çizimleri temizle">
+          <span>Temizle</span>
+        </button>
+        <button type="button" class="btn-pill primary" id="btnSavePng" title="Çizimi PNG görseli olarak indir">
+          <span>PNG İndir</span>
+        </button>
+        <button type="button" class="btn-pill" id="btnHelp" title="Kullanım kılavuzu">
+          <span>Yardım</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <div class="workspace">
+      <aside class="dock" aria-label="Çizim araçları">
+        <span class="dock-group-label">Çizim</span>
+        <button type="button" class="tool-btn" data-tool="select" title="Aletleri ve etiketleri taşı">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l14 9-6 1.8L9.5 20z"/></svg>
+          <span>Seç / Taşı</span>
+        </button>
+        <button type="button" class="tool-btn active" data-tool="line" title="İki nokta arası doğru parçası çiz">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="20" x2="20" y2="4"/><circle cx="4" cy="20" r="2" fill="currentColor"/><circle cx="20" cy="4" r="2" fill="currentColor"/></svg>
+          <span>Doğru Parçası</span>
+        </button>
+        <button type="button" class="tool-btn" data-tool="pen" title="Serbest el kalemi">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          <span>Kalem</span>
+        </button>
+        <button type="button" class="tool-btn" data-tool="point" title="Nokta ve harf etiketi koy (A, B, C...)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4" fill="currentColor"/><path d="M16 7l3-3"/></svg>
+          <span>Nokta / Harf</span>
+        </button>
+        <button type="button" class="tool-btn" data-tool="eraser" title="Seçili çizgi veya yayı sil">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg>
+          <span>Silgi</span>
+        </button>
+
+        <div class="divider"></div>
+        <span class="dock-group-label">Aletler</span>
+        <button type="button" class="tool-btn" id="btnToggleCompass" title="Pergeli aç veya kapat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3"/><circle cx="12" cy="8" r="2"/><path d="M10.8 9.7 5.5 21"/><path d="M13.2 9.7 18.5 21"/><path d="M7.5 16a8 8 0 0 0 9 0"/></svg>
+          <span>Pergel</span>
+        </button>
+        <button type="button" class="tool-btn" id="btnToggleRuler" title="Cetveli aç veya kapat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="8" rx="1.5" transform="rotate(-25 12 12)"/><path d="M8 10.5l1.2 2.4M11.5 8.8l1.2 2.4M15 7.2l1.2 2.4"/></svg>
+          <span>Cetvel</span>
+        </button>
+        <button type="button" class="tool-btn" id="btnToggleProtractor" title="Açıölçeri (iletki) aç veya kapat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17a9 9 0 0 1 18 0Z"/><path d="M8 17a4 4 0 0 1 8 0"/><path d="M12 8v2.5M6.5 11l1.7 1.7M17.5 11l-1.7 1.7"/></svg>
+          <span>Açıölçer</span>
+        </button>
+
+        <div class="divider"></div>
+        <span class="dock-group-label">Renkler</span>
+        <div class="color-grid" id="colorGrid"></div>
+      </aside>
+
+      <main class="stage" id="stageContainer">
+        <canvas id="geoCanvas"></canvas>
+
+        <!-- Status Chips -->
+        <div class="floating-status">
+          <div class="status-chip" id="hintChip">
+            Doğru Parçası: Sürükleyerek çiz • Cetvel kenarına otomatik yaslanır
+          </div>
+          <div class="status-chip" id="measureChip" style="display:none; font-family:'JetBrains Mono', monospace;"></div>
+        </div>
+
+        <!-- Contextual Floating Panels -->
+        <div class="floating-panels" id="floatingPanels">
+          <div class="mini-panel" id="compassPanel" style="display:none;">
+            <div class="mini-panel-title">
+              <span>Pergel Kontrolü</span>
+              <span id="compassRadiusReadout" style="font-family:'JetBrains Mono',monospace; color:var(--cobalt);">r = 3.0 cm</span>
+            </div>
+            <div class="mini-panel-row">
+              <span>Yarıçap</span>
+              <input type="range" id="compassRadiusSlider" min="35" max="360" value="150" />
+            </div>
+            <div class="mini-panel-row">
+              <button type="button" class="mini-btn cobalt" id="btnCompassFullCircle">Tam Çember Çiz</button>
+              <button type="button" class="mini-btn" id="btnCompassCenterMark">Merkez İşareti: Açık</button>
+            </div>
+          </div>
+
+          <div class="mini-panel" id="protractorPanel" style="display:none;">
+            <div class="mini-panel-title">
+              <span>Açıölçer (İletki)</span>
+              <span id="protractorAngleReadout" style="font-family:'JetBrains Mono',monospace; color:var(--cobalt);">0°</span>
+            </div>
+            <div class="mini-panel-row">
+              <span>Boyut</span>
+              <input type="range" id="protractorSizeSlider" min="150" max="380" value="230" />
+            </div>
+            <div class="mini-panel-row">
+              <button type="button" class="mini-btn on" id="btnProtractorNumbers">Sayılar: Açık</button>
+              <button type="button" class="mini-btn" id="btnProtractorResetAngle">0° Yap</button>
+            </div>
+          </div>
+
+          <div class="mini-panel" id="bgImagePanel" style="display:none;">
+            <div class="mini-panel-title">
+              <span>Arka Plan Soru Görseli</span>
+              <button type="button" class="mini-btn" id="btnRemoveBgImg" style="color:#b91c1c;">Kaldır</button>
+            </div>
+            <div class="mini-panel-row">
+              <span>Ölçek</span>
+              <input type="range" id="bgImgScaleSlider" min="0.2" max="2.0" step="0.05" value="1" />
+            </div>
+            <div class="mini-panel-row">
+              <span>Saydamlık</span>
+              <input type="range" id="bgImgAlphaSlider" min="0.15" max="1" step="0.05" value="0.85" />
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Turkish Usage Guide Modal -->
+  <div class="modal-backdrop" id="helpModal" role="dialog" aria-modal="true" aria-label="Kullanım Kılavuzu">
+    <div class="help-card">
+      <h2>Geometri &amp; Pergel–Cetvel Stüdyosu — Nasıl Kullanılır?</h2>
+      <ul class="help-list">
+        <li><strong>Pergel Kullanımı:</strong> Mavi <strong>iğne halkasından</strong> tutarak pergelin merkezini taşıyın (nokta ve kesişimlere yapışır). Kırmızı <strong>kalem ucundan</strong> yarıçapı açıp kapatın; üstteki <strong>yay çizme başlığını</strong> sürükleyerek çember yayı çizin veya panelden tek tıkla <strong>Tam Çember Çiz</strong> deyin.</li>
+        <li><strong>Cetvel Kullanımı:</strong> Cetveli gövdesinden sürükleyip iki ucundaki yuvarlak tutamaçlardan döndürün. <strong>Doğru Parçası</strong> veya <strong>Kalem</strong> ile cetvelin dereceli üst kenarına yaklaştığınızda çizgi cetvel kenarına mıknatıslanır ve uzunluğu cm cinsinden gösterir.</li>
+        <li><strong>Açıölçer (İletki):</strong> Merkez artısını ölçmek istediğiniz açının köşesine yerleştirin, dış kenardaki tutamaçla hizalayın. Sağ alttaki panelden iletkiyi büyütüp küçültebilir ve sayıları açıp kapatabilirsiniz.</li>
+        <li><strong>Akıllı Kesişim Yakalama:</strong> Yayların birbirini veya doğruları kestiği gerçek kesişim noktalarına hem nokta koyabilir hem de doğru parçası ve pergel iğnesini tam isabetle oturtabilirsiniz.</li>
+        <li><strong>Soru Görseli &amp; İndirme:</strong> Bilgisayar veya telefondan soru fotoğrafı yükleyip (ya da tuvale sürükleyip bırakarak) doğrudan üzerinde ölçüm yapabilir, bitince <strong>PNG İndir</strong> ile kaydedebilirsiniz.</li>
+      </ul>
+      <div class="help-footer">
+        <button type="button" class="btn-pill active" id="btnCloseHelp">Anladım, Kapat</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const PX_PER_CM = 50; // 50px = 1 cm on screen ruler & compass readout
+      const SNAP_DIST = 14;
+      const COLORS = ['#191A1E', '#64748B', '#1D4ED8', '#D94E34', '#0F766E', '#9333EA', '#D97706', '#FFFFFF'];
+      const LABELS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      const STROKE_OPTIONS = [
+        { label: 'İnce', width: 2 },
+        { label: 'Orta', width: 3.5 },
+        { label: 'Kalın', width: 5.5 },
+      ];
+      const PAPER_OPTIONS = [
+        { id: 'grid', label: 'Zemin: Kareli', dark: false },
+        { id: 'dot', label: 'Zemin: Noktalı', dark: false },
+        { id: 'blank', label: 'Zemin: Düz', dark: false },
+        { id: 'dark', label: 'Zemin: Koyu Tahta', dark: true },
+      ];
+
+      const canvas = document.getElementById('geoCanvas');
+      const ctx = canvas.getContext('2d');
+      const stage = document.getElementById('stageContainer');
+
+      // State
+      let cssW = 800;
+      let cssH = 560;
+      let dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+      let activeTool = 'line'; // select | line | pen | point | eraser
+      let activeColor = COLORS[0];
+      let strokeIdx = 1;
+      let dashed = false;
+      let snapOn = true;
+      let paperIdx = 0;
+
+      let items = []; // { type: 'line'|'arc'|'pen'|'point', ... }
+      let undoStack = [];
+      let redoStack = [];
+      let labelCounter = 0;
+
+      let bgImage = {
+        img: null,
+        src: null,
+        x: 0,
+        y: 0,
+        scale: 1,
+        alpha: 0.85,
+      };
+
+      const compass = {
+        visible: false,
+        x: 340,
+        y: 280,
+        radius: 150,
+        armAngle: -0.35,
+        markCenter: true,
+      };
+
+      const ruler = {
+        visible: false,
+        x: 420,
+        y: 380,
+        length: 750, // 15 cm * 50px
+        width: 76,
+        angle: 0,
+      };
+
+      const protractor = {
+        visible: false,
+        x: 480,
+        y: 390,
+        radius: 230,
+        angle: 0,
+        numbers: true,
+      };
+
+      // Active interaction
+      let dragState = null;
+      let hoverSnap = null;
+      let cachedIntersections = [];
+
+      // UI Elements
+      const hintChip = document.getElementById('hintChip');
+      const measureChip = document.getElementById('measureChip');
+      const compassPanel = document.getElementById('compassPanel');
+      const compassRadiusReadout = document.getElementById('compassRadiusReadout');
+      const compassRadiusSlider = document.getElementById('compassRadiusSlider');
+      const protractorPanel = document.getElementById('protractorPanel');
+      const protractorAngleReadout = document.getElementById('protractorAngleReadout');
+      const protractorSizeSlider = document.getElementById('protractorSizeSlider');
+      const bgImagePanel = document.getElementById('bgImagePanel');
+
+      function pushUndo() {
+        undoStack.push(JSON.stringify({ items, labelCounter }));
+        if (undoStack.length > 60) undoStack.shift();
+        redoStack = [];
+        syncUndoButtons();
+      }
+
+      function syncUndoButtons() {
+        document.getElementById('btnUndo').disabled = undoStack.length === 0;
+        document.getElementById('btnRedo').disabled = redoStack.length === 0;
+      }
+
+      function undo() {
+        if (undoStack.length === 0) return;
+        redoStack.push(JSON.stringify({ items, labelCounter }));
+        const prev = JSON.parse(undoStack.pop());
+        items = prev.items;
+        labelCounter = prev.labelCounter;
+        recomputeIntersections();
+        syncUndoButtons();
+        render();
+      }
+
+      function redo() {
+        if (redoStack.length === 0) return;
+        undoStack.push(JSON.stringify({ items, labelCounter }));
+        const next = JSON.parse(redoStack.pop());
+        items = next.items;
+        labelCounter = next.labelCounter;
+        recomputeIntersections();
+        syncUndoButtons();
+        render();
+      }
+
+      function resizeCanvas() {
+        const rect = stage.getBoundingClientRect();
+        cssW = Math.max(200, Math.round(rect.width));
+        cssH = Math.max(200, Math.round(rect.height));
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.round(cssW * dpr);
+        canvas.height = Math.round(cssH * dpr);
+        render();
+      }
+
+      // Utility geometry
+      function dist(ax, ay, bx, by) {
+        return Math.hypot(bx - ax, by - ay);
+      }
+
+      function clamp(v, lo, hi) {
+        return Math.max(lo, Math.min(hi, v));
+      }
+
+      function normAngle(a) {
+        while (a <= -Math.PI) a += Math.PI * 2;
+        while (a > Math.PI) a -= Math.PI * 2;
+        return a;
+      }
+
+      function isAngleOnArc(theta, startAngle, endAngle, fullCircle) {
+        if (fullCircle) return true;
+        const span = Math.abs(endAngle - startAngle);
+        if (span >= Math.PI * 2 - 0.001) return true;
+        const ccw = endAngle >= startAngle;
+        const s = ccw ? startAngle : endAngle;
+        const e = ccw ? endAngle : startAngle;
+        let t = theta;
+        while (t < s) t += Math.PI * 2;
+        while (t - Math.PI * 2 >= s) t -= Math.PI * 2;
+        return t >= s - 0.01 && t <= e + 0.01;
+      }
+
+      function recomputeIntersections() {
+        const pts = [];
+        const lines = items.filter((it) => it.type === 'line');
+        const arcs = items.filter((it) => it.type === 'arc');
+
+        // Line - Line
+        for (let i = 0; i < lines.length; i++) {
+          for (let j = i + 1; j < lines.length; j++) {
+            const a = lines[i], b = lines[j];
+            const denom = (a.x1 - a.x2) * (b.y1 - b.y2) - (a.y1 - a.y2) * (b.x1 - b.x2);
+            if (Math.abs(denom) < 1e-6) continue;
+            const t = ((a.x1 - b.x1) * (b.y1 - b.y2) - (a.y1 - b.y1) * (b.x1 - b.x2)) / denom;
+            const u = -((a.x1 - a.x2) * (a.y1 - b.y1) - (a.y1 - a.y2) * (a.x1 - b.x1)) / denom;
+            if (t >= -0.001 && t <= 1.001 && u >= -0.001 && u <= 1.001) {
+              pts.push({ x: a.x1 + t * (a.x2 - a.x1), y: a.y1 + t * (a.y2 - a.y1), kind: 'Kesişim' });
+            }
+          }
+        }
+
+        // Line - Arc
+        for (const ln of lines) {
+          for (const ar of arcs) {
+            const dx = ln.x2 - ln.x1, dy = ln.y2 - ln.y1;
+            const fx = ln.x1 - ar.cx, fy = ln.y1 - ar.cy;
+            const A = dx * dx + dy * dy;
+            if (A < 1e-6) continue;
+            const B = 2 * (fx * dx + fy * dy);
+            const C = fx * fx + fy * fy - ar.r * ar.r;
+            let disc = B * B - 4 * A * C;
+            if (disc < -1e-4) continue;
+            disc = Math.max(0, disc);
+            const sqrtD = Math.sqrt(disc);
+            for (const t of [(-B - sqrtD) / (2 * A), (-B + sqrtD) / (2 * A)]) {
+              if (t >= -0.001 && t <= 1.001) {
+                const px = ln.x1 + t * dx, py = ln.y1 + t * dy;
+                const ang = Math.atan2(py - ar.cy, px - ar.cx);
+                if (isAngleOnArc(ang, ar.startAngle, ar.endAngle, ar.fullCircle)) {
+                  pts.push({ x: px, y: py, kind: 'Kesişim' });
+                }
+              }
+            }
+          }
+        }
+
+        // Arc - Arc
+        for (let i = 0; i < arcs.length; i++) {
+          for (let j = i + 1; j < arcs.length; j++) {
+            const c1 = arcs[i], c2 = arcs[j];
+            const d = dist(c1.cx, c1.cy, c2.cx, c2.cy);
+            if (d < 1e-3 || d > c1.r + c2.r + 0.5 || d < Math.abs(c1.r - c2.r) - 0.5) continue;
+            const a = (c1.r * c1.r - c2.r * c2.r + d * d) / (2 * d);
+            const h2 = Math.max(0, c1.r * c1.r - a * a);
+            const h = Math.sqrt(h2);
+            const xm = c1.cx + (a * (c2.cx - c1.cx)) / d;
+            const ym = c1.cy + (a * (c2.cy - c1.cy)) / d;
+            const rx = -(c2.cy - c1.cy) * (h / d);
+            const ry = (c2.cx - c1.cx) * (h / d);
+            const candidates = h < 1e-3 ? [{ x: xm, y: ym }] : [{ x: xm + rx, y: ym + ry }, { x: xm - rx, y: ym - ry }];
+            for (const p of candidates) {
+              const a1 = Math.atan2(p.y - c1.cy, p.x - c1.cx);
+              const a2 = Math.atan2(p.y - c2.cy, p.x - c2.cx);
+              if (isAngleOnArc(a1, c1.startAngle, c1.endAngle, c1.fullCircle) && isAngleOnArc(a2, c2.startAngle, c2.endAngle, c2.fullCircle)) {
+                pts.push({ x: p.x, y: p.y, kind: 'Kesişim' });
+              }
+            }
+          }
+        }
+
+        cachedIntersections = pts;
+      }
+
+      function snapPoint(x, y, options = { allowRulerEdge: true }) {
+        if (!snapOn) return { x, y, label: null };
+        let best = { x, y, d: SNAP_DIST, label: null };
+
+        // Points & Line endpoints & Arc centers
+        for (const it of items) {
+          if (it.type === 'point') {
+            const d = dist(x, y, it.x, it.y);
+            if (d < best.d) best = { x: it.x, y: it.y, d, label: `${it.label} Noktası` };
+          } else if (it.type === 'line') {
+            const d1 = dist(x, y, it.x1, it.y1);
+            if (d1 < best.d) best = { x: it.x1, y: it.y1, d: d1, label: 'Uç Nokta' };
+            const d2 = dist(x, y, it.x2, it.y2);
+            if (d2 < best.d) best = { x: it.x2, y: it.y2, d: d2, label: 'Uç Nokta' };
+            const mx = (it.x1 + it.x2) / 2, my = (it.y1 + it.y2) / 2;
+            const dm = dist(x, y, mx, my);
+            if (dm < best.d * 0.75) best = { x: mx, y: my, d: dm, label: 'Orta Nokta' };
+          } else if (it.type === 'arc') {
+            const dc = dist(x, y, it.cx, it.cy);
+            if (dc < best.d) best = { x: it.cx, y: it.cy, d: dc, label: 'Yay Merkezi' };
+          }
+        }
+
+        // Real intersections
+        for (const pt of cachedIntersections) {
+          const d = dist(x, y, pt.x, pt.y);
+          if (d < best.d) best = { x: pt.x, y: pt.y, d, label: 'Kesişim' };
+        }
+
+        if (best.label) return { x: best.x, y: best.y, label: best.label };
+
+        // Ruler magnetic top edge snap
+        if (options.allowRulerEdge && ruler.visible) {
+          const cosA = Math.cos(ruler.angle);
+          const sinA = Math.sin(ruler.angle);
+          const edgeCx = ruler.x + (ruler.width / 2) * sinA;
+          const edgeCy = ruler.y - (ruler.width / 2) * cosA;
+          const along = (x - edgeCx) * cosA + (y - edgeCy) * sinA;
+          const perp = (x - edgeCx) * (-sinA) + (y - edgeCy) * cosA;
+          if (along >= -ruler.length / 2 - 12 && along <= ruler.length / 2 + 12 && Math.abs(perp) <= 15) {
+            const clampedAlong = clamp(along, -ruler.length / 2, ruler.length / 2);
+            return {
+              x: edgeCx + clampedAlong * cosA,
+              y: edgeCy + clampedAlong * sinA,
+              label: 'Cetvel Kenarı',
+            };
+          }
+        }
+
+        return { x, y, label: null };
+      }
+
+      // Ruler & Protractor geometry hit testing
+      function getRulerHandles() {
+        const cosA = Math.cos(ruler.angle);
+        const sinA = Math.sin(ruler.angle);
+        const off = ruler.length / 2 - 28;
+        return {
+          leftRot: { x: ruler.x - off * cosA, y: ruler.y - off * sinA },
+          rightRot: { x: ruler.x + off * cosA, y: ruler.y + off * sinA },
+        };
+      }
+
+      function pointInRuler(px, py) {
+        const dx = px - ruler.x;
+        const dy = py - ruler.y;
+        const cosA = Math.cos(-ruler.angle);
+        const sinA = Math.sin(-ruler.angle);
+        const lx = dx * cosA - dy * sinA;
+        const ly = dx * sinA + dy * cosA;
+        return Math.abs(lx) <= ruler.length / 2 && Math.abs(ly) <= ruler.width / 2;
+      }
+
+      function getProtractorRotateHandle() {
+        const r = protractor.radius + 22;
+        const rad = protractor.angle - Math.PI / 2;
+        return { x: protractor.x + r * Math.cos(rad), y: protractor.y + r * Math.sin(rad) };
+      }
+
+      function pointInProtractor(px, py) {
+        const dx = px - protractor.x;
+        const dy = py - protractor.y;
+        const cosA = Math.cos(-protractor.angle);
+        const sinA = Math.sin(-protractor.angle);
+        const lx = dx * cosA - dy * sinA;
+        const ly = dx * sinA + dy * cosA;
+        const r = Math.hypot(lx, ly);
+        return r <= protractor.radius + 4 && ly <= 16 && ly >= -protractor.radius - 4;
+      }
+
+      function getCompassGeometry() {
+        const px = compass.x + compass.radius * Math.cos(compass.armAngle);
+        const py = compass.y + compass.radius * Math.sin(compass.armAngle);
+        const midX = (compass.x + px) / 2;
+        const midY = (compass.y + py) / 2;
+        // Perpendicular upward vector for top hinge crown
+        let nx = -(py - compass.y) / (compass.radius || 1);
+        let ny = (px - compass.x) / (compass.radius || 1);
+        if (ny > 0) { nx = -nx; ny = -ny; }
+        const legH = Math.max(105, Math.min(165, compass.radius * 0.72 + 58));
+        const hingeX = midX + nx * legH;
+        const hingeY = midY + ny * legH;
+        const crownX = hingeX + nx * 24;
+        const crownY = hingeY + ny * 24;
+        return { px, py, hingeX, hingeY, crownX, crownY };
+      }
+
+      function hitInstrument(x, y) {
+        // 1. Compass handles first
+        if (compass.visible) {
+          const cg = getCompassGeometry();
+          if (dist(x, y, cg.crownX, cg.crownY) <= 18) return { kind: 'compass-draw' };
+          if (dist(x, y, cg.px, cg.py) <= 18) return { kind: 'compass-radius' };
+          if (dist(x, y, compass.x, compass.y) <= 18) return { kind: 'compass-move' };
+          if (dist(x, y, cg.hingeX, cg.hingeY) <= 22) return { kind: 'compass-move' };
+        }
+
+        // 2. Protractor
+        if (protractor.visible) {
+          const rot = getProtractorRotateHandle();
+          if (dist(x, y, rot.x, rot.y) <= 18) return { kind: 'protractor-rotate' };
+          if (dist(x, y, protractor.x, protractor.y) <= 18) return { kind: 'protractor-move' };
+          if (pointInProtractor(x, y)) {
+            if (activeTool === 'select' || (activeTool !== 'line' && activeTool !== 'pen')) {
+              return { kind: 'protractor-move' };
+            }
+          }
+        }
+
+        // 3. Ruler
+        if (ruler.visible) {
+          const rh = getRulerHandles();
+          if (dist(x, y, rh.leftRot.x, rh.leftRot.y) <= 18) return { kind: 'ruler-rotate', side: -1 };
+          if (dist(x, y, rh.rightRot.x, rh.rightRot.y) <= 18) return { kind: 'ruler-rotate', side: 1 };
+          if (pointInRuler(x, y)) {
+            // Allow drawing right along top 14px margin if using line/pen!
+            const s = snapPoint(x, y, { allowRulerEdge: true });
+            if ((activeTool === 'line' || activeTool === 'pen') && s.label === 'Cetvel Kenarı') {
+              return null;
+            }
+            return { kind: 'ruler-move' };
+          }
+        }
+
+        return null;
+      }
+
+      function distPointToSeg(px, py, x1, y1, x2, y2) {
+        const dx = x2 - x1, dy = y2 - y1;
+        const len2 = dx * dx + dy * dy;
+        if (len2 < 1e-6) return dist(px, py, x1, y1);
+        const t = clamp(((px - x1) * dx + (py - y1) * dy) / len2, 0, 1);
+        return dist(px, py, x1 + t * dx, y1 + t * dy);
+      }
+
+      function findItemIndexAt(x, y) {
+        for (let i = items.length - 1; i >= 0; i--) {
+          const it = items[i];
+          if (it.type === 'point') {
+            if (dist(x, y, it.x, it.y) <= 16) return i;
+          } else if (it.type === 'line') {
+            if (distPointToSeg(x, y, it.x1, it.y1, it.x2, it.y2) <= 11) return i;
+          } else if (it.type === 'arc') {
+            const r = dist(x, y, it.cx, it.cy);
+            if (Math.abs(r - it.r) <= 11) {
+              const ang = Math.atan2(y - it.cy, x - it.cx);
+              if (isAngleOnArc(ang, it.startAngle, it.endAngle, it.fullCircle)) return i;
+            }
+            if (it.showCenter && dist(x, y, it.cx, it.cy) <= 10) return i;
+          } else if (it.type === 'pen') {
+            for (let k = 1; k < it.pts.length; k++) {
+              if (distPointToSeg(x, y, it.pts[k - 1].x, it.pts[k - 1].y, it.pts[k].x, it.pts[k].y) <= 11) {
+                return i;
+              }
+            }
+          }
+        }
+        return -1;
+      }
+
+      function getCanvasPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+      }
+
+      function updateHints() {
+        const isDark = PAPER_OPTIONS[paperIdx].dark;
+        hintChip.classList.toggle('dark-mode-chip', isDark);
+        measureChip.classList.toggle('dark-mode-chip', isDark);
+
+        const msgs = {
+          select: 'Seç / Taşı: Pergel, cetvel, açıölçer veya harf noktalarını sürükleyin',
+          line: 'Doğru Parçası: İki nokta arası sürükleyin (Cetvel kenarına otomatik yaslanır)',
+          pen: 'Kalem: Serbest çizim yapın veya cetvel kenarından çizgi çekin',
+          point: 'Nokta / Harf: Kesişimlere, uçlara veya boşluğa tıklayarak adlandırılmış nokta koyun',
+          eraser: 'Silgi: Silmek istediğiniz çizgi, yay veya noktanın üzerine dokunun',
+        };
+        hintChip.textContent = msgs[activeTool] || '';
+      }
+
+      // Pointer Events
+      canvas.addEventListener('pointerdown', (e) => {
+        if (e.button !== 0 && e.pointerType === 'mouse') return;
+        const pos = getCanvasPos(e);
+        canvas.setPointerCapture(e.pointerId);
+
+        // 1. Check instruments first
+        const instHit = hitInstrument(pos.x, pos.y);
+        if (instHit) {
+          if (instHit.kind === 'compass-move') {
+            dragState = { ...instHit, ox: pos.x - compass.x, oy: pos.y - compass.y };
+          } else if (instHit.kind === 'compass-radius') {
+            dragState = { ...instHit };
+          } else if (instHit.kind === 'compass-draw') {
+            const startA = compass.armAngle;
+            dragState = {
+              kind: 'compass-draw',
+              startAngle: startA,
+              lastRawAngle: Math.atan2(pos.y - compass.y, pos.x - compass.x),
+              sweep: 0,
+            };
+          } else if (instHit.kind === 'ruler-move') {
+            dragState = { ...instHit, ox: pos.x - ruler.x, oy: pos.y - ruler.y };
+          } else if (instHit.kind === 'ruler-rotate') {
+            dragState = { ...instHit, baseAngle: Math.atan2(pos.y - ruler.y, pos.x - ruler.x), startRulerAngle: ruler.angle };
+          } else if (instHit.kind === 'protractor-move') {
+            dragState = { ...instHit, ox: pos.x - protractor.x, oy: pos.y - protractor.y };
+          } else if (instHit.kind === 'protractor-rotate') {
+            dragState = { ...instHit, baseAngle: Math.atan2(pos.y - protractor.y, pos.x - protractor.x), startProtAngle: protractor.angle };
+          }
+          render();
+          return;
+        }
+
+        // 2. Canvas tool interaction
+        if (activeTool === 'select') {
+          for (let i = items.length - 1; i >= 0; i--) {
+            if (items[i].type === 'point' && dist(pos.x, pos.y, items[i].x, items[i].y) <= 18) {
+              pushUndo();
+              dragState = { kind: 'move-point', idx: i };
+              return;
+            }
+          }
+          if (bgImage.img) {
+            dragState = { kind: 'move-bg', ox: pos.x - bgImage.x, oy: pos.y - bgImage.y };
+          }
+          return;
+        }
+
+        if (activeTool === 'eraser') {
+          const idx = findItemIndexAt(pos.x, pos.y);
+          if (idx !== -1) {
+            pushUndo();
+            items.splice(idx, 1);
+            recomputeIntersections();
+            render();
+          }
+          return;
+        }
+
+        if (activeTool === 'point') {
+          const snapped = snapPoint(pos.x, pos.y);
+          const ch = LABELS[labelCounter % LABELS.length] + (labelCounter >= LABELS.length ? Math.floor(labelCounter / LABELS.length) : '');
+          labelCounter++;
+          pushUndo();
+          items.push({
+            type: 'point',
+            x: snapped.x,
+            y: snapped.y,
+            label: ch,
+            color: activeColor,
+          });
+          recomputeIntersections();
+          render();
+          return;
+        }
+
+        if (activeTool === 'line') {
+          const snapped = snapPoint(pos.x, pos.y);
+          dragState = {
+            kind: 'draw-line',
+            x1: snapped.x,
+            y1: snapped.y,
+            x2: snapped.x,
+            y2: snapped.y,
+          };
+          render();
+          return;
+        }
+
+        if (activeTool === 'pen') {
+          const snapped = snapPoint(pos.x, pos.y);
+          dragState = {
+            kind: 'draw-pen',
+            pts: [{ x: snapped.x, y: snapped.y }],
+          };
+          render();
+        }
+      });
+
+      canvas.addEventListener('pointermove', (e) => {
+        const pos = getCanvasPos(e);
+
+        if (!dragState) {
+          hoverSnap = snapPoint(pos.x, pos.y);
+          const instHit = hitInstrument(pos.x, pos.y);
+          canvas.style.cursor = instHit
+            ? (instHit.kind.includes('rotate') || instHit.kind === 'compass-draw' ? 'grab' : 'move')
+            : (activeTool === 'select' ? 'default' : 'crosshair');
+          render();
+          return;
+        }
+
+        if (dragState.kind === 'compass-move') {
+          const rawX = pos.x - dragState.ox;
+          const rawY = pos.y - dragState.oy;
+          const snapped = snapPoint(rawX, rawY, { allowRulerEdge: false });
+          compass.x = snapped.x;
+          compass.y = snapped.y;
+          hoverSnap = snapped.label ? snapped : null;
+          render();
+          return;
+        }
+
+        if (dragState.kind === 'compass-radius') {
+          const dx = pos.x - compass.x;
+          const dy = pos.y - compass.y;
+          compass.radius = clamp(Math.round(Math.hypot(dx, dy)), 35, 360);
+          compass.armAngle = Math.atan2(dy, dx);
+          compassRadiusSlider.value = compass.radius;
+          compassRadiusReadout.textContent = `r = ${(compass.radius / PX_PER_CM).toFixed(1)} cm`;
+          measureChip.style.display = 'block';
+          measureChip.textContent = `Pergel Yarıçapı: ${(compass.radius / PX_PER_CM).toFixed(1)} cm`;
+          render();
+          return;
+        }
+
+        if (dragState.kind === 'compass-draw') {
+          const rawAngle = Math.atan2(pos.y - compass.y, pos.x - compass.x);
+          const delta = normAngle(rawAngle - dragState.lastRawAngle);
+          dragState.sweep += delta;
+          dragState.lastRawAngle = rawAngle;
+          compass.armAngle = dragState.startAngle + dragState.sweep;
+          const deg = Math.round(Math.abs((dragState.sweep * 180) / Math.PI));
+          measureChip.style.display = 'block';
+          measureChip.textContent = `Yay Açısı: ${Math.min(360, deg)}° • r = ${(compass.radius / PX_PER_CM).toFixed(1)} cm`;
+          render();
+          return;
+        }
+
+        if (dragState.kind === 'ruler-move') {
+          ruler.x = pos.x - dragState.ox;
+          ruler.y = pos.y - dragState.oy;
+          render();
+          return;
+        }
+
+        if (dragState.kind === 'ruler-rotate') {
+          const a = Math.atan2(pos.y - ruler.y, pos.x - ruler.x);
+          let nextA = dragState.startRulerAngle + (a - dragState.baseAngle);
+          // Gentle magnetic snap near 0°, ±45°, ±90°
+          const snapTargets = [0, Math.PI / 4, Math.PI / 2, -Math.PI / 4, -Math.PI / 2, Math.PI, -Math.PI];
+          for (const st of snapTargets) {
+            if (Math.abs(normAngle(nextA - st)) < 0.03) { nextA = st; break; }
+          }
+          ruler.angle = nextA;
+          const deg = Math.round((nextA * 180) / Math.PI);
+          measureChip.style.display = 'block';
+          measureChip.textContent = `Cetvel Eğimi: ${deg}°`;
+          render();
+          return;
+        }
+
+        if (dragState.kind === 'protractor-move') {
+          const rawX = pos.x - dragState.ox;
+          const rawY = pos.y - dragState.oy;
+          const snapped = snapPoint(rawX, rawY, { allowRulerEdge: false });
+          protractor.x = snapped.x;
+          protractor.y = snapped.y;
+          hoverSnap = snapped.label ? snapped : null;
+          render();
+          return;
+        }
+
+        if (dragState.kind === 'protractor-rotate') {
+          const a = Math.atan2(pos.y - protractor.y, pos.x - protractor.x);
+          let nextA = dragState.startProtAngle + (a - dragState.baseAngle);
+          if (Math.abs(normAngle(nextA)) < 0.03) nextA = 0;
+          protractor.angle = nextA;
+          const deg = Math.round(((nextA * 180) / Math.PI + 360) % 360);
+          protractorAngleReadout.textContent = `${deg}°`;
+          measureChip.style.display = 'block';
+          measureChip.textContent = `Açıölçer Döndürme: ${deg}°`;
+          render();
+          return;
+        }
+
+        if (dragState.kind === 'move-point') {
+          const snapped = snapPoint(pos.x, pos.y);
+          items[dragState.idx].x = snapped.x;
+          items[dragState.idx].y = snapped.y;
+          hoverSnap = snapped.label ? snapped : null;
+          recomputeIntersections();
+          render();
+          return;
+        }
+
+        if (dragState.kind === 'move-bg') {
+          bgImage.x = pos.x - dragState.ox;
+          bgImage.y = pos.y - dragState.oy;
+          render();
+          return;
+        }
+
+        if (dragState.kind === 'draw-line') {
+          const snapped = snapPoint(pos.x, pos.y);
+          dragState.x2 = snapped.x;
+          dragState.y2 = snapped.y;
+          hoverSnap = snapped.label ? snapped : null;
+          const lenCm = (dist(dragState.x1, dragState.y1, dragState.x2, dragState.y2) / PX_PER_CM).toFixed(1);
+          const ang = Math.round(((-Math.atan2(dragState.y2 - dragState.y1, dragState.x2 - dragState.x1) * 180) / Math.PI + 360) % 360);
+          measureChip.style.display = 'block';
+          measureChip.textContent = `Uzunluk: ${lenCm} cm  •  Açı: ${ang}°`;
+          render();
+          return;
+        }
+
+        if (dragState.kind === 'draw-pen') {
+          const snapped = snapPoint(pos.x, pos.y);
+          const last = dragState.pts[dragState.pts.length - 1];
+          if (dist(last.x, last.y, snapped.x, snapped.y) >= 2.5) {
+            dragState.pts.push({ x: snapped.x, y: snapped.y });
+            render();
+          }
+        }
+      });
+
+      function finishDrag(e) {
+        if (!dragState) return;
+        try { canvas.releasePointerCapture(e.pointerId); } catch {}
+
+        if (dragState.kind === 'compass-draw') {
+          if (Math.abs(dragState.sweep) > 0.04) {
+            pushUndo();
+            const full = Math.abs(dragState.sweep) >= Math.PI * 1.94;
+            items.push({
+              type: 'arc',
+              cx: compass.x,
+              cy: compass.y,
+              r: compass.radius,
+              startAngle: dragState.startAngle,
+              endAngle: full ? dragState.startAngle + Math.PI * 2 : dragState.startAngle + dragState.sweep,
+              fullCircle: full,
+              showCenter: compass.markCenter,
+              color: activeColor,
+              width: STROKE_OPTIONS[strokeIdx].width,
+              dashed,
+            });
+            recomputeIntersections();
+          }
+        } else if (dragState.kind === 'draw-line') {
+          if (dist(dragState.x1, dragState.y1, dragState.x2, dragState.y2) >= 5) {
+            pushUndo();
+            items.push({
+              type: 'line',
+              x1: dragState.x1,
+              y1: dragState.y1,
+              x2: dragState.x2,
+              y2: dragState.y2,
+              color: activeColor,
+              width: STROKE_OPTIONS[strokeIdx].width,
+              dashed,
+            });
+            recomputeIntersections();
+          }
+        } else if (dragState.kind === 'draw-pen') {
+          if (dragState.pts.length >= 2) {
+            pushUndo();
+            items.push({
+              type: 'pen',
+              pts: dragState.pts,
+              color: activeColor,
+              width: STROKE_OPTIONS[strokeIdx].width,
+              dashed,
+            });
+          }
+        }
+
+        dragState = null;
+        measureChip.style.display = 'none';
+        render();
+      }
+
+      canvas.addEventListener('pointerup', finishDrag);
+      canvas.addEventListener('pointercancel', finishDrag);
+      canvas.addEventListener('pointerleave', () => {
+        if (!dragState) {
+          hoverSnap = null;
+          render();
+        }
+      });
+
+      // Render pipeline
+      function drawBackground(targetCtx, w, h, exportMode = false) {
+        const paper = PAPER_OPTIONS[paperIdx];
+        targetCtx.fillStyle = paper.dark ? '#0F131B' : (paper.id === 'blank' ? '#FFFFFF' : '#FFFDF8');
+        targetCtx.fillRect(0, 0, w, h);
+
+        if (paper.id === 'grid') {
+          targetCtx.strokeStyle = 'rgba(29, 78, 216, 0.08)';
+          targetCtx.lineWidth = 1;
+          for (let x = 0; x <= w; x += PX_PER_CM) {
+            targetCtx.beginPath(); targetCtx.moveTo(x + 0.5, 0); targetCtx.lineTo(x + 0.5, h); targetCtx.stroke();
+          }
+          for (let y = 0; y <= h; y += PX_PER_CM) {
+            targetCtx.beginPath(); targetCtx.moveTo(0, y + 0.5); targetCtx.lineTo(w, y + 0.5); targetCtx.stroke();
+          }
+        } else if (paper.id === 'dot') {
+          targetCtx.fillStyle = 'rgba(25, 26, 30, 0.22)';
+          for (let x = 25; x < w; x += 25) {
+            for (let y = 25; y < h; y += 25) {
+              targetCtx.beginPath();
+              targetCtx.arc(x, y, 1.3, 0, Math.PI * 2);
+              targetCtx.fill();
+            }
+          }
+        } else if (paper.dark) {
+          targetCtx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+          targetCtx.lineWidth = 1;
+          for (let x = 0; x <= w; x += PX_PER_CM) {
+            targetCtx.beginPath(); targetCtx.moveTo(x + 0.5, 0); targetCtx.lineTo(x + 0.5, h); targetCtx.stroke();
+          }
+          for (let y = 0; y <= h; y += PX_PER_CM) {
+            targetCtx.beginPath(); targetCtx.moveTo(0, y + 0.5); targetCtx.lineTo(w, y + 0.5); targetCtx.stroke();
+          }
+        }
+
+        if (bgImage.img) {
+          targetCtx.save();
+          targetCtx.globalAlpha = bgImage.alpha;
+          const iw = bgImage.img.naturalWidth * bgImage.scale;
+          const ih = bgImage.img.naturalHeight * bgImage.scale;
+          targetCtx.drawImage(bgImage.img, bgImage.x - iw / 2, bgImage.y - ih / 2, iw, ih);
+          targetCtx.restore();
+        }
+
+        if (exportMode) {
+          targetCtx.save();
+          targetCtx.font = '700 12px "Plus Jakarta Sans", sans-serif';
+          targetCtx.fillStyle = paper.dark ? 'rgba(255,255,255,0.45)' : 'rgba(25,26,30,0.45)';
+          targetCtx.textAlign = 'right';
+          targetCtx.fillText('@mufithocailematematik • Geometri Stüdyosu', w - 16, h - 14);
+          targetCtx.restore();
+        }
+      }
+
+      function drawItems(targetCtx) {
+        const isDark = PAPER_OPTIONS[paperIdx].dark;
+        for (const it of items) {
+          targetCtx.save();
+          const strokeCol = isDark && it.color === '#191A1E' ? '#F8FAFC' : it.color;
+          targetCtx.strokeStyle = strokeCol;
+          targetCtx.fillStyle = strokeCol;
+          targetCtx.lineCap = 'round';
+          targetCtx.lineJoin = 'round';
+
+          if (it.type === 'line') {
+            targetCtx.lineWidth = it.width;
+            targetCtx.setLineDash(it.dashed ? [8, 7] : []);
+            targetCtx.beginPath();
+            targetCtx.moveTo(it.x1, it.y1);
+            targetCtx.lineTo(it.x2, it.y2);
+            targetCtx.stroke();
+            targetCtx.setLineDash([]);
+            // crisp small endpoint ticks
+            targetCtx.beginPath();
+            targetCtx.arc(it.x1, it.y1, 2.5, 0, Math.PI * 2);
+            targetCtx.arc(it.x2, it.y2, 2.5, 0, Math.PI * 2);
+            targetCtx.fill();
+          } else if (it.type === 'arc') {
+            targetCtx.lineWidth = it.width;
+            targetCtx.setLineDash(it.dashed ? [8, 7] : []);
+            targetCtx.beginPath();
+            if (it.fullCircle) {
+              targetCtx.arc(it.cx, it.cy, it.r, 0, Math.PI * 2);
+            } else {
+              const ccw = it.endAngle < it.startAngle;
+              targetCtx.arc(it.cx, it.cy, it.r, it.startAngle, it.endAngle, ccw);
+            }
+            targetCtx.stroke();
+            targetCtx.setLineDash([]);
+            if (it.showCenter) {
+              targetCtx.beginPath();
+              targetCtx.arc(it.cx, it.cy, 3.2, 0, Math.PI * 2);
+              targetCtx.fill();
+            }
+          } else if (it.type === 'pen') {
+            targetCtx.lineWidth = it.width;
+            targetCtx.setLineDash(it.dashed ? [7, 6] : []);
+            targetCtx.beginPath();
+            targetCtx.moveTo(it.pts[0].x, it.pts[0].y);
+            for (let k = 1; k < it.pts.length; k++) {
+              const midX = (it.pts[k - 1].x + it.pts[k].x) / 2;
+              const midY = (it.pts[k - 1].y + it.pts[k].y) / 2;
+              targetCtx.quadraticCurveTo(it.pts[k - 1].x, it.pts[k - 1].y, midX, midY);
+            }
+            const last = it.pts[it.pts.length - 1];
+            targetCtx.lineTo(last.x, last.y);
+            targetCtx.stroke();
+          } else if (it.type === 'point') {
+            targetCtx.beginPath();
+            targetCtx.arc(it.x, it.y, 5, 0, Math.PI * 2);
+            targetCtx.fill();
+            targetCtx.strokeStyle = isDark ? '#0F131B' : '#FFFDF8';
+            targetCtx.lineWidth = 2;
+            targetCtx.stroke();
+            targetCtx.font = '800 16px "Plus Jakarta Sans", sans-serif';
+            targetCtx.fillStyle = strokeCol;
+            targetCtx.fillText(it.label, it.x + 9, it.y - 8);
+          }
+          targetCtx.restore();
+        }
+      }
+
+      function drawRulerOverlay() {
+        ctx.save();
+        ctx.translate(ruler.x, ruler.y);
+        ctx.rotate(ruler.angle);
+
+        const L = ruler.length, W = ruler.width;
+        ctx.fillStyle = 'rgba(219, 234, 254, 0.72)';
+        ctx.strokeStyle = '#1E40AF';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.roundRect(-L / 2, -W / 2, L, W, 6);
+        ctx.fill();
+        ctx.stroke();
+
+        // Top cm / mm ticks along measuring edge (y = -W/2)
+        const totalMm = 150;
+        const pxPerMm = PX_PER_CM / 10;
+        ctx.strokeStyle = '#1E3A8A';
+        ctx.fillStyle = '#1E3A8A';
+        ctx.font = '700 12px "JetBrains Mono", monospace';
+        ctx.textAlign = 'center';
+
+        for (let mm = 0; mm <= totalMm; mm++) {
+          const x = -L / 2 + mm * pxPerMm;
+          const isCm = mm % 10 === 0;
+          const isHalf = mm % 5 === 0;
+          const tickLen = isCm ? 20 : isHalf ? 14 : 8;
+          ctx.lineWidth = isCm ? 1.8 : 1;
+          ctx.beginPath();
+          ctx.moveTo(x, -W / 2);
+          ctx.lineTo(x, -W / 2 + tickLen);
+          ctx.stroke();
+
+          if (isCm) {
+            ctx.fillText(String(mm / 10), x, -W / 2 + 34);
+          }
+        }
+
+        // Turkish subtle label
+        ctx.font = '700 10px "Plus Jakarta Sans", sans-serif';
+        ctx.fillStyle = 'rgba(30, 58, 138, 0.75)';
+        ctx.fillText('CETVEL (cm) • Gövdeden taşı, uçlardan döndür', 0, W / 2 - 10);
+
+        // Rotate knobs at ends
+        for (const rx of [-L / 2 + 28, L / 2 - 28]) {
+          ctx.fillStyle = '#FFFFFF';
+          ctx.strokeStyle = '#1D4ED8';
+          ctx.lineWidth = 2.2;
+          ctx.beginPath();
+          ctx.arc(rx, 0, 10, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = '#1D4ED8';
+          ctx.beginPath();
+          ctx.arc(rx, 0, 3.2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      function drawProtractorOverlay() {
+        ctx.save();
+        ctx.translate(protractor.x, protractor.y);
+        ctx.rotate(protractor.angle);
+
+        const R = protractor.radius;
+        ctx.fillStyle = 'rgba(224, 242, 254, 0.62)';
+        ctx.strokeStyle = '#0369A1';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, 0, R, Math.PI, 0, false);
+        ctx.lineTo(R, 14);
+        ctx.lineTo(-R, 14);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Inner semi cutout
+        ctx.fillStyle = 'rgba(255, 253, 248, 0.35)';
+        ctx.beginPath();
+        ctx.arc(0, 0, R * 0.42, Math.PI, 0, false);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Degree ticks 0..180
+        ctx.strokeStyle = '#0C4A6E';
+        ctx.fillStyle = '#0C4A6E';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        for (let deg = 0; deg <= 180; deg++) {
+          const rad = -deg * (Math.PI / 180);
+          const isTen = deg % 10 === 0;
+          const isFive = deg % 5 === 0;
+          const len = isTen ? 16 : isFive ? 11 : 6;
+          ctx.lineWidth = isTen ? 1.6 : 0.85;
+          ctx.beginPath();
+          ctx.moveTo(R * Math.cos(rad), R * Math.sin(rad));
+          ctx.lineTo((R - len) * Math.cos(rad), (R - len) * Math.sin(rad));
+          ctx.stroke();
+
+          if (isTen && protractor.numbers) {
+            ctx.save();
+            ctx.translate((R - 29) * Math.cos(rad), (R - 29) * Math.sin(rad));
+            ctx.rotate(rad + Math.PI / 2);
+            ctx.font = '700 10.5px "JetBrains Mono", monospace';
+            ctx.fillText(String(deg), 0, 0);
+            ctx.restore();
+
+            if (deg > 0 && deg < 180) {
+              ctx.save();
+              ctx.translate((R - 47) * Math.cos(rad), (R - 47) * Math.sin(rad));
+              ctx.rotate(rad + Math.PI / 2);
+              ctx.font = '600 9.5px "JetBrains Mono", monospace';
+              ctx.fillStyle = '#0369A1';
+              ctx.fillText(String(180 - deg), 0, 0);
+              ctx.restore();
+            }
+          }
+        }
+
+        // Baseline & crosshair at center (0, 0)
+        ctx.strokeStyle = '#0369A1';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(-R, 0); ctx.lineTo(R, 0);
+        ctx.moveTo(0, -14); ctx.lineTo(0, 14);
+        ctx.stroke();
+
+        ctx.fillStyle = '#fff';
+        ctx.beginPath(); ctx.arc(0, 0, 6.5, 0, Math.PI * 2); ctx.fill();
+        ctx.stroke();
+
+        // Top rotate knob
+        ctx.beginPath();
+        ctx.moveTo(0, -R);
+        ctx.lineTo(0, -(R + 22));
+        ctx.stroke();
+        ctx.fillStyle = '#FFFFFF';
+        ctx.strokeStyle = '#0284C7';
+        ctx.lineWidth = 2.4;
+        ctx.beginPath();
+        ctx.arc(0, -(R + 22), 11, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = '#0284C7';
+        ctx.beginPath();
+        ctx.arc(0, -(R + 22), 3.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+      }
+
+      function drawCompassOverlay() {
+        const cg = getCompassGeometry();
+        ctx.save();
+
+        // Faint guide circle showing current compass radius
+        ctx.strokeStyle = 'rgba(29, 78, 216, 0.25)';
+        ctx.lineWidth = 1.3;
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        ctx.arc(compass.x, compass.y, compass.radius, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Compass legs
+        ctx.strokeStyle = '#334155';
+        ctx.lineWidth = 6;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(compass.x, compass.y);
+        ctx.lineTo(cg.hingeX, cg.hingeY);
+        ctx.lineTo(cg.px, cg.py);
+        ctx.stroke();
+
+        // Metallic inner highlight on legs
+        ctx.strokeStyle = '#94A3B8';
+        ctx.lineWidth = 2.4;
+        ctx.beginPath();
+        ctx.moveTo(compass.x, compass.y);
+        ctx.lineTo(cg.hingeX, cg.hingeY);
+        ctx.lineTo(cg.px, cg.py);
+        ctx.stroke();
+
+        // Needle handle (Blue - Move / Anchor)
+        ctx.fillStyle = '#1D4ED8';
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(compass.x, compass.y, 10, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Pencil tip handle (Terracotta - Adjust radius)
+        ctx.fillStyle = '#D94E34';
+        ctx.beginPath();
+        ctx.arc(cg.px, cg.py, 10, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Hinge pivot
+        ctx.fillStyle = '#191A1E';
+        ctx.beginPath();
+        ctx.arc(cg.hingeX, cg.hingeY, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Top Crown Handle (Emerald - Sweep / Draw Arc)
+        ctx.strokeStyle = '#0F766E';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(cg.hingeX, cg.hingeY);
+        ctx.lineTo(cg.crownX, cg.crownY);
+        ctx.stroke();
+
+        ctx.fillStyle = '#0F766E';
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(cg.crownX, cg.crownY, 13, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Crisp mini icon inside crown
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.arc(cg.crownX, cg.crownY, 6, -Math.PI * 0.85, Math.PI * 0.2);
+        ctx.stroke();
+
+        // Tiny Türkçe leg labels
+        ctx.font = '700 10.5px "Plus Jakarta Sans", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#0F766E';
+        ctx.fillText('Yay Çiz', cg.crownX, cg.crownY - 18);
+        ctx.fillStyle = '#1D4ED8';
+        ctx.fillText('İğne', compass.x, compass.y + 22);
+        ctx.fillStyle = '#D94E34';
+        ctx.fillText(`r=${(compass.radius / PX_PER_CM).toFixed(1)} cm`, cg.px, cg.py + 22);
+
+        ctx.restore();
+      }
+
+      function render() {
+        ctx.save();
+        ctx.scale(dpr, dpr);
+
+        drawBackground(ctx, cssW, cssH, false);
+        drawItems(ctx);
+
+        // Live drawing previews
+        const isDark = PAPER_OPTIONS[paperIdx].dark;
+        const previewCol = isDark && activeColor === '#191A1E' ? '#F8FAFC' : activeColor;
+
+        if (dragState?.kind === 'draw-line') {
+          ctx.save();
+          ctx.strokeStyle = previewCol;
+          ctx.lineWidth = STROKE_OPTIONS[strokeIdx].width;
+          ctx.setLineDash(dashed ? [8, 7] : []);
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.moveTo(dragState.x1, dragState.y1);
+          ctx.lineTo(dragState.x2, dragState.y2);
+          ctx.stroke();
+          ctx.restore();
+        } else if (dragState?.kind === 'draw-pen' && dragState.pts.length > 1) {
+          ctx.save();
+          ctx.strokeStyle = previewCol;
+          ctx.lineWidth = STROKE_OPTIONS[strokeIdx].width;
+          ctx.setLineDash(dashed ? [7, 6] : []);
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          ctx.beginPath();
+          ctx.moveTo(dragState.pts[0].x, dragState.pts[0].y);
+          for (let k = 1; k < dragState.pts.length; k++) {
+            ctx.lineTo(dragState.pts[k].x, dragState.pts[k].y);
+          }
+          ctx.stroke();
+          ctx.restore();
+        } else if (dragState?.kind === 'compass-draw' && Math.abs(dragState.sweep) > 0.02) {
+          ctx.save();
+          ctx.strokeStyle = previewCol;
+          ctx.lineWidth = STROKE_OPTIONS[strokeIdx].width;
+          ctx.setLineDash(dashed ? [8, 7] : []);
+          ctx.beginPath();
+          const full = Math.abs(dragState.sweep) >= Math.PI * 1.94;
+          if (full) {
+            ctx.arc(compass.x, compass.y, compass.radius, 0, Math.PI * 2);
+          } else {
+            const endA = dragState.startAngle + dragState.sweep;
+            ctx.arc(compass.x, compass.y, compass.radius, dragState.startAngle, endA, dragState.sweep < 0);
+          }
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        // Instrument Overlays (order: Ruler -> Protractor -> Compass)
+        if (ruler.visible) drawRulerOverlay();
+        if (protractor.visible) drawProtractorOverlay();
+        if (compass.visible) drawCompassOverlay();
+
+        // Snap Ring Feedback
+        if (hoverSnap?.label && !dragState?.kind?.includes('ruler')) {
+          ctx.save();
+          ctx.strokeStyle = '#D94E34';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(hoverSnap.x, hoverSnap.y, 7, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.fillStyle = 'rgba(25, 26, 30, 0.85)';
+          const textW = ctx.measureText(hoverSnap.label).width + 14;
+          ctx.beginPath();
+          ctx.roundRect(hoverSnap.x + 11, hoverSnap.y - 24, textW, 20, 6);
+          ctx.fill();
+          ctx.fillStyle = '#fff';
+          ctx.font = '700 10px "Plus Jakarta Sans", sans-serif';
+          ctx.fillText(hoverSnap.label, hoverSnap.x + 18, hoverSnap.y - 11);
+          ctx.restore();
+        }
+
+        ctx.restore();
+      }
+
+      // Dock tool selection
+      document.querySelectorAll('[data-tool]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          activeTool = btn.dataset.tool;
+          document.querySelectorAll('[data-tool]').forEach((b) => b.classList.toggle('active', b === btn));
+          updateHints();
+          render();
+        });
+      });
+
+      // Instrument Toggles
+      const btnToggleCompass = document.getElementById('btnToggleCompass');
+      const btnToggleRuler = document.getElementById('btnToggleRuler');
+      const btnToggleProtractor = document.getElementById('btnToggleProtractor');
+
+      btnToggleCompass.addEventListener('click', () => {
+        compass.visible = !compass.visible;
+        if (compass.visible) {
+          compass.x = clamp(compass.x, 80, cssW - 80);
+          compass.y = clamp(compass.y, 80, cssH - 80);
+        }
+        btnToggleCompass.classList.toggle('inst-active', compass.visible);
+        compassPanel.style.display = compass.visible ? 'flex' : 'none';
+        render();
+      });
+
+      btnToggleRuler.addEventListener('click', () => {
+        ruler.visible = !ruler.visible;
+        if (ruler.visible) {
+          ruler.length = Math.min(750, Math.max(350, cssW - 60));
+          ruler.x = cssW / 2;
+          ruler.y = Math.min(cssH * 0.65, cssH - 70);
+        }
+        btnToggleRuler.classList.toggle('inst-active', ruler.visible);
+        render();
+      });
+
+      btnToggleProtractor.addEventListener('click', () => {
+        protractor.visible = !protractor.visible;
+        if (protractor.visible) {
+          protractor.x = cssW / 2;
+          protractor.y = Math.min(cssH * 0.72, cssH - 50);
+          protractor.radius = Math.min(protractor.radius, Math.floor(cssW * 0.42));
+          protractorSizeSlider.value = protractor.radius;
+        }
+        btnToggleProtractor.classList.toggle('inst-active', protractor.visible);
+        protractorPanel.style.display = protractor.visible ? 'flex' : 'none';
+        render();
+      });
+
+      // Compass panel controls
+      compassRadiusSlider.addEventListener('input', () => {
+        compass.radius = Number(compassRadiusSlider.value);
+        compassRadiusReadout.textContent = `r = ${(compass.radius / PX_PER_CM).toFixed(1)} cm`;
+        render();
+      });
+
+      document.getElementById('btnCompassFullCircle').addEventListener('click', () => {
+        pushUndo();
+        items.push({
+          type: 'arc',
+          cx: compass.x,
+          cy: compass.y,
+          r: compass.radius,
+          startAngle: 0,
+          endAngle: Math.PI * 2,
+          fullCircle: true,
+          showCenter: compass.markCenter,
+          color: activeColor,
+          width: STROKE_OPTIONS[strokeIdx].width,
+          dashed,
+        });
+        recomputeIntersections();
+        render();
+      });
+
+      const btnCompassCenterMark = document.getElementById('btnCompassCenterMark');
+      btnCompassCenterMark.addEventListener('click', () => {
+        compass.markCenter = !compass.markCenter;
+        btnCompassCenterMark.textContent = `Merkez İşareti: ${compass.markCenter ? 'Açık' : 'Kapalı'}`;
+      });
+
+      // Protractor panel controls
+      protractorSizeSlider.addEventListener('input', () => {
+        protractor.radius = Number(protractorSizeSlider.value);
+        render();
+      });
+
+      const btnProtractorNumbers = document.getElementById('btnProtractorNumbers');
+      btnProtractorNumbers.addEventListener('click', () => {
+        protractor.numbers = !protractor.numbers;
+        btnProtractorNumbers.classList.toggle('on', protractor.numbers);
+        btnProtractorNumbers.textContent = `Sayılar: ${protractor.numbers ? 'Açık' : 'Kapalı'}`;
+        render();
+      });
+
+      document.getElementById('btnProtractorResetAngle').addEventListener('click', () => {
+        protractor.angle = 0;
+        protractorAngleReadout.textContent = '0°';
+        render();
+      });
+
+      // Top bar controls
+      const btnSnap = document.getElementById('btnSnap');
+      btnSnap.addEventListener('click', () => {
+        snapOn = !snapOn;
+        btnSnap.textContent = `Yakala: ${snapOn ? 'Açık' : 'Kapalı'}`;
+        btnSnap.classList.toggle('active', snapOn);
+        render();
+      });
+      btnSnap.classList.add('active');
+
+      const btnStrokeWidth = document.getElementById('btnStrokeWidth');
+      btnStrokeWidth.addEventListener('click', () => {
+        strokeIdx = (strokeIdx + 1) % STROKE_OPTIONS.length;
+        btnStrokeWidth.textContent = `Kalınlık: ${STROKE_OPTIONS[strokeIdx].label}`;
+      });
+
+      const btnDashed = document.getElementById('btnDashed');
+      btnDashed.addEventListener('click', () => {
+        dashed = !dashed;
+        btnDashed.classList.toggle('active', dashed);
+      });
+
+      const btnPaper = document.getElementById('btnPaper');
+      btnPaper.addEventListener('click', () => {
+        paperIdx = (paperIdx + 1) % PAPER_OPTIONS.length;
+        btnPaper.textContent = PAPER_OPTIONS[paperIdx].label;
+        updateHints();
+        render();
+      });
+
+      document.getElementById('btnUndo').addEventListener('click', undo);
+      document.getElementById('btnRedo').addEventListener('click', redo);
+      document.getElementById('btnClear').addEventListener('click', () => {
+        if (items.length === 0) return;
+        pushUndo();
+        items = [];
+        labelCounter = 0;
+        cachedIntersections = [];
+        render();
+      });
+
+      // Export PNG (without instrument overlays!)
+      document.getElementById('btnSavePng').addEventListener('click', () => {
+        const out = document.createElement('canvas');
+        out.width = cssW;
+        out.height = cssH;
+        const octx = out.getContext('2d');
+        drawBackground(octx, cssW, cssH, true);
+        drawItems(octx);
+        const link = document.createElement('a');
+        link.download = 'Geometri_Cizimi_MufitHoca.png';
+        link.href = out.toDataURL('image/png');
+        link.click();
+      });
+
+      // Color swatches
+      const colorGrid = document.getElementById('colorGrid');
+      COLORS.forEach((col, i) => {
+        const el = document.createElement('button');
+        el.type = 'button';
+        el.className = `swatch${i === 0 ? ' active' : ''}`;
+        el.style.backgroundColor = col;
+        el.title = 'Çizim rengini seç';
+        el.addEventListener('click', () => {
+          activeColor = col;
+          document.querySelectorAll('.swatch').forEach((s) => s.classList.remove('active'));
+          el.classList.add('active');
+        });
+        colorGrid.appendChild(el);
+      });
+
+      // Image upload & drag-drop onto stage
+      const imgInput = document.getElementById('imgInput');
+      function loadBackgroundImage(file) {
+        if (!file || !file.type.startsWith('image/')) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const im = new Image();
+          im.onload = () => {
+            bgImage.img = im;
+            bgImage.src = ev.target.result;
+            const fitScale = Math.min(1, (cssW * 0.72) / im.naturalWidth, (cssH * 0.72) / im.naturalHeight);
+            bgImage.scale = Math.max(0.2, Number(fitScale.toFixed(2)));
+            bgImage.x = cssW / 2;
+            bgImage.y = cssH / 2;
+            document.getElementById('bgImgScaleSlider').value = bgImage.scale;
+            bgImagePanel.style.display = 'flex';
+            render();
+          };
+          im.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+
+      document.getElementById('btnUploadImg').addEventListener('click', () => imgInput.click());
+      imgInput.addEventListener('change', (e) => {
+        if (e.target.files[0]) loadBackgroundImage(e.target.files[0]);
+        e.target.value = '';
+      });
+
+      stage.addEventListener('dragover', (e) => { e.preventDefault(); });
+      stage.addEventListener('drop', (e) => {
+        e.preventDefault();
+        if (e.dataTransfer.files?.[0]) loadBackgroundImage(e.dataTransfer.files[0]);
+      });
+
+      document.getElementById('bgImgScaleSlider').addEventListener('input', (e) => {
+        bgImage.scale = Number(e.target.value);
+        render();
+      });
+      document.getElementById('bgImgAlphaSlider').addEventListener('input', (e) => {
+        bgImage.alpha = Number(e.target.value);
+        render();
+      });
+      document.getElementById('btnRemoveBgImg').addEventListener('click', () => {
+        bgImage.img = null;
+        bgImage.src = null;
+        bgImagePanel.style.display = 'none';
+        render();
+      });
+
+      // Help modal
+      const helpModal = document.getElementById('helpModal');
+      document.getElementById('btnHelp').addEventListener('click', () => helpModal.classList.add('open'));
+      document.getElementById('btnCloseHelp').addEventListener('click', () => helpModal.classList.remove('open'));
+      helpModal.addEventListener('click', (e) => {
+        if (e.target === helpModal) helpModal.classList.remove('open');
+      });
+
+      // Keyboard shortcuts
+      window.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+          e.preventDefault();
+          if (e.shiftKey) redo(); else undo();
+        } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+          e.preventDefault();
+          redo();
+        } else if (e.key === 'Escape') {
+          helpModal.classList.remove('open');
+        }
+      });
+
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+      updateHints();
+      syncUndoButtons();
+    })();
+  </script>
+</body>
+</html>

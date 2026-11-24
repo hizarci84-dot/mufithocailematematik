@@ -11,10 +11,14 @@ import {
 import { STUDIO_PRODUCTS } from '../data/products';
 import type { ProductCategory, StudioProduct } from '../types/studio';
 import { trackPortalClick, trackShareAction } from '../utils/analytics';
-import { copyTextToClipboard } from '../utils/shareAndDownload';
+import {
+  copyTextToClipboard,
+  getProductShareUrl,
+  resolveStudioUrl,
+} from '../utils/shareAndDownload';
 
 interface ProductsShowcaseProps {
-  onOpenAppUrl: (title: string, url: string) => void;
+  onOpenAppUrl: (title: string, url: string, productId?: string) => void;
 }
 
 const CATEGORIES: ('Tümü' | ProductCategory)[] = [
@@ -41,7 +45,7 @@ export function ProductsShowcase({ onOpenAppUrl }: ProductsShowcaseProps) {
     if (!product.href) return;
     if (product.openInPlayer) {
       trackPortalClick(product.title, 'onizleme', 'urunler');
-      onOpenAppUrl(product.title, product.href);
+      onOpenAppUrl(product.title, product.href, product.id);
       return;
     }
     if (product.href.startsWith('#')) {
@@ -50,14 +54,14 @@ export function ProductsShowcase({ onOpenAppUrl }: ProductsShowcaseProps) {
       return;
     }
     trackPortalClick(product.title, 'portal_ac', 'urunler');
-    window.open(product.href, '_blank', 'noopener,noreferrer');
+    window.open(resolveStudioUrl(product.href), '_blank', 'noopener,noreferrer');
   };
 
   const handleCopyProductLink = async (product: StudioProduct) => {
     if (!product.href) return;
-    const url = product.href.startsWith('#')
-      ? `${window.location.origin}${window.location.pathname}${product.href}`
-      : product.href;
+    const url = product.href.startsWith('http')
+      ? product.href
+      : getProductShareUrl(product.id);
     const ok = await copyTextToClipboard(url);
     if (ok) {
       trackShareAction(product.title, 'portal_linki', 'urunler');
@@ -113,7 +117,10 @@ export function ProductsShowcase({ onOpenAppUrl }: ProductsShowcaseProps) {
         >
           {visibleProducts.map((product) => {
             const isComingSoon = product.status === 'coming-soon';
-            const isExternal = product.href?.startsWith('http');
+            const isExternal = Boolean(product.href?.startsWith('http'));
+            const isLocalApp = Boolean(
+              product.href && !isExternal && !product.href.startsWith('#')
+            );
 
             return (
               <article
@@ -182,12 +189,12 @@ export function ProductsShowcase({ onOpenAppUrl }: ProductsShowcaseProps) {
                         )}
                       </button>
 
-                      {product.allowModalPreview && product.href && (
+                      {product.allowModalPreview && product.href && !product.openInPlayer && (
                         <button
                           type="button"
                           onClick={() => {
                             trackPortalClick(product.title, 'onizleme', 'urunler');
-                            onOpenAppUrl(product.title, product.href!);
+                            onOpenAppUrl(product.title, product.href!, product.id);
                           }}
                           title="Site içi pencerede önizle"
                           className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--border-strong)] bg-[var(--bg-canvas)] text-[var(--text-primary)] transition hover:border-[var(--accent-cobalt)] hover:text-[var(--accent-cobalt)]"
@@ -196,7 +203,20 @@ export function ProductsShowcase({ onOpenAppUrl }: ProductsShowcaseProps) {
                         </button>
                       )}
 
-                      {isExternal && (
+                      {product.openInPlayer && isLocalApp && product.href && (
+                        <a
+                          href={resolveStudioUrl(product.href)}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={() => trackPortalClick(product.title, 'portal_ac', 'urunler')}
+                          title="Yeni sekmede tam sayfa aç"
+                          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--border-strong)] bg-[var(--bg-canvas)] text-[var(--text-primary)] transition hover:border-[var(--accent-cobalt)] hover:text-[var(--accent-cobalt)]"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </a>
+                      )}
+
+                      {(isExternal || isLocalApp) && (
                         <button
                           type="button"
                           onClick={() => handleCopyProductLink(product)}

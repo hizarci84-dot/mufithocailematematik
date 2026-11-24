@@ -27,6 +27,7 @@ import {
   copyTextToClipboard,
   downloadStandaloneHtml,
   getDirectHtmlUrl,
+  getProductShareUrl,
   getTopicShareUrl,
   getWhatsAppShareUrl,
 } from '../utils/shareAndDownload';
@@ -35,6 +36,7 @@ export interface PlayerTarget {
   topic?: TopicModule;
   customTitle?: string;
   customUrl?: string;
+  customProductId?: string;
   mode: 'animation' | 'lab';
 }
 
@@ -121,6 +123,10 @@ export function StudioPlayerModal({
   const isDraft = Boolean(activeVariant?.isDraft);
   const title = topic ? topic.title : target.customTitle || 'Uygulama';
   const isFav = topic ? favorites.includes(topic.id) : false;
+  const isLocalCustomApp = Boolean(target.customUrl && !target.customUrl.startsWith('http'));
+  const customDownloadFile = isLocalCustomApp && target.customUrl
+    ? target.customUrl.split('/').pop() || 'Geometri_Studyo.html'
+    : null;
 
   const readyAnimations = topic ? topic.animations.filter((a) => !a.isDraft) : [];
   const readyLabs = topic ? topic.labs.filter((l) => !l.isDraft) : [];
@@ -140,11 +146,17 @@ export function StudioPlayerModal({
 
   const handleCopy = async (kind: 'topic' | 'html') => {
     const text =
-      kind === 'topic' && topic
-        ? getTopicShareUrl(topic.id, activeMode)
+      kind === 'topic'
+        ? topic
+          ? getTopicShareUrl(topic.id, activeMode)
+          : target.customProductId
+            ? getProductShareUrl(target.customProductId)
+            : window.location.href
         : activeVariant
           ? getDirectHtmlUrl(activeVariant.url)
-          : window.location.href;
+          : isLocalCustomApp && target.customUrl
+            ? getDirectHtmlUrl(target.customUrl)
+            : window.location.href;
     const ok = await copyTextToClipboard(text);
     if (ok) {
       trackShareAction(topic?.code || title, kind === 'topic' ? 'konu_linki' : 'html_linki', 'modal');
@@ -154,13 +166,25 @@ export function StudioPlayerModal({
   };
 
   const handleDownload = async () => {
-    if (!activeVariant || isDraft || downloading) return;
-    trackHtmlDownload(topic?.code || title, activeVariant.file, 'modal');
-    setDownloading(true);
-    try {
-      await downloadStandaloneHtml(activeVariant.url, activeVariant.file);
-    } finally {
-      setDownloading(false);
+    if (downloading) return;
+    if (activeVariant && !isDraft) {
+      trackHtmlDownload(topic?.code || title, activeVariant.file, 'modal');
+      setDownloading(true);
+      try {
+        await downloadStandaloneHtml(activeVariant.url, activeVariant.file);
+      } finally {
+        setDownloading(false);
+      }
+      return;
+    }
+    if (isLocalCustomApp && target.customUrl && customDownloadFile) {
+      trackHtmlDownload(target.customProductId || title, customDownloadFile, 'modal');
+      setDownloading(true);
+      try {
+        await downloadStandaloneHtml(target.customUrl, customDownloadFile);
+      } finally {
+        setDownloading(false);
+      }
     }
   };
 
@@ -271,7 +295,7 @@ export function StudioPlayerModal({
             )}
 
             {/* Share Popover Trigger */}
-            {topic && (
+            {(topic || target.customProductId) && (
               <div className="relative">
                 <button
                   type="button"
@@ -296,10 +320,10 @@ export function StudioPlayerModal({
                         <Link2 className="h-3.5 w-3.5 text-[var(--accent-cobalt)]" />
                       )}
                       <span>
-                        {copiedKind === 'topic' ? 'Konu Linki Kopyalandı!' : 'Konu Linkini Kopyala'}
+                        {copiedKind === 'topic' ? 'Bağlantı Kopyalandı!' : 'Sayfa Linkini Kopyala'}
                       </span>
                     </button>
-                    {activeVariant && !isDraft && (
+                    {((activeVariant && !isDraft) || isLocalCustomApp) && (
                       <button
                         type="button"
                         onClick={() => handleCopy('html')}
@@ -316,10 +340,15 @@ export function StudioPlayerModal({
                       </button>
                     )}
                     <a
-                      href={getWhatsAppShareUrl(topic.title, getTopicShareUrl(topic.id, activeMode))}
+                      href={getWhatsAppShareUrl(
+                        title,
+                        topic
+                          ? getTopicShareUrl(topic.id, activeMode)
+                          : getProductShareUrl(target.customProductId!)
+                      )}
                       target="_blank"
                       rel="noreferrer"
-                      onClick={() => trackShareAction(topic.code, 'whatsapp', 'modal')}
+                      onClick={() => trackShareAction(topic?.code || title, 'whatsapp', 'modal')}
                       className="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--bg-linen)]"
                     >
                       <MessageCircle className="h-3.5 w-3.5 text-emerald-700" />
@@ -331,7 +360,7 @@ export function StudioPlayerModal({
             )}
 
             {/* Standalone HTML Download */}
-            {!isDraft && activeVariant && (
+            {((!isDraft && activeVariant) || isLocalCustomApp) && (
               <button
                 type="button"
                 onClick={handleDownload}
@@ -477,7 +506,7 @@ export function StudioPlayerModal({
                 onLoad={(e) => {
                   setIsLoading(false);
                   if (!target.customUrl?.startsWith('http')) {
-                    if (activeMode === 'animation') {
+                    if (topic && activeMode === 'animation') {
                       activateAnimationAutoPlay(e.currentTarget, {
                         hideControls: true,
                         autoLoop: true,

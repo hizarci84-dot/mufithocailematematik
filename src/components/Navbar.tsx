@@ -19,6 +19,7 @@ import {
   trackTopicOpen,
   trackUsageModal,
 } from '../utils/analytics';
+import { resolveStudioUrl } from '../utils/shareAndDownload';
 
 interface NavbarProps {
   topics: TopicModule[];
@@ -26,7 +27,7 @@ interface NavbarProps {
   onJumpToFavorites: () => void;
   onSelectGrade: (grade: 'all' | GradeLevel) => void;
   onOpenTopic: (topic: TopicModule, mode: 'animation' | 'lab') => void;
-  onOpenAppUrl: (title: string, url: string) => void;
+  onOpenAppUrl: (title: string, url: string, productId?: string) => void;
   onOpenUsageModal: () => void;
   onOpenLiveShowcase: () => void;
 }
@@ -381,29 +382,54 @@ export function Navbar({
                           </div>
                         ) : (
                           <>
-                            <a
-                              href={product.href}
-                              target="_blank"
-                              rel="noreferrer"
-                              onClick={() => {
-                                setOpenMenu(null);
-                                trackPortalClick(product.title, 'portal_ac', 'menu');
-                              }}
-                              className="group/item min-w-0 flex-1"
-                            >
-                              <div className="flex items-center gap-2">
-                                <span
-                                  className="h-2 w-2 shrink-0 rounded-full"
-                                  style={{ backgroundColor: product.accentColor }}
-                                />
-                                <span className="truncate text-xs font-extrabold text-[var(--text-primary)] group-hover/item:text-[var(--accent-cobalt)]">
-                                  {product.title}
-                                </span>
-                              </div>
-                              <p className="mt-0.5 truncate pl-4 text-[11px] text-[var(--text-secondary)]">
-                                {product.subtitle}
-                              </p>
-                            </a>
+                            {product.openInPlayer && product.href ? (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setOpenMenu(null);
+                                  trackPortalClick(product.title, 'onizleme', 'menu');
+                                  onOpenAppUrl(product.title, product.href!, product.id);
+                                }}
+                                className="group/item min-w-0 flex-1 text-left"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <span
+                                    className="h-2 w-2 shrink-0 rounded-full"
+                                    style={{ backgroundColor: product.accentColor }}
+                                  />
+                                  <span className="truncate text-xs font-extrabold text-[var(--text-primary)] group-hover/item:text-[var(--accent-cobalt)]">
+                                    {product.title}
+                                  </span>
+                                </div>
+                                <p className="mt-0.5 truncate pl-4 text-[11px] text-[var(--text-secondary)]">
+                                  {product.subtitle}
+                                </p>
+                              </button>
+                            ) : (
+                              <a
+                                href={resolveStudioUrl(product.href!)}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={() => {
+                                  setOpenMenu(null);
+                                  trackPortalClick(product.title, 'portal_ac', 'menu');
+                                }}
+                                className="group/item min-w-0 flex-1"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <span
+                                    className="h-2 w-2 shrink-0 rounded-full"
+                                    style={{ backgroundColor: product.accentColor }}
+                                  />
+                                  <span className="truncate text-xs font-extrabold text-[var(--text-primary)] group-hover/item:text-[var(--accent-cobalt)]">
+                                    {product.title}
+                                  </span>
+                                </div>
+                                <p className="mt-0.5 truncate pl-4 text-[11px] text-[var(--text-secondary)]">
+                                  {product.subtitle}
+                                </p>
+                              </a>
+                            )}
 
                             <div className="flex shrink-0 items-center gap-1">
                               {product.allowModalPreview && product.href && (
@@ -412,7 +438,7 @@ export function Navbar({
                                   onClick={() => {
                                     setOpenMenu(null);
                                     trackPortalClick(product.title, 'onizleme', 'menu');
-                                    onOpenAppUrl(product.title, product.href!);
+                                    onOpenAppUrl(product.title, product.href!, product.id);
                                   }}
                                   title="Site içi pencerede önizle"
                                   className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border-warm)] bg-[var(--bg-surface)] text-[var(--text-secondary)] transition hover:border-[var(--accent-cobalt)] hover:text-[var(--accent-cobalt)]"
@@ -421,7 +447,7 @@ export function Navbar({
                                 </button>
                               )}
                               <a
-                                href={product.href}
+                                href={resolveStudioUrl(product.href!)}
                                 target="_blank"
                                 rel="noreferrer"
                                 onClick={() => {
@@ -560,10 +586,24 @@ export function Navbar({
                         {product.badge}
                       </span>
                     </div>
+                  ) : product.openInPlayer ? (
+                    <button
+                      key={product.id}
+                      type="button"
+                      onClick={() => {
+                        setMobileOpen(false);
+                        trackPortalClick(product.title, 'onizleme', 'mobil_menu');
+                        onOpenAppUrl(product.title, product.href!, product.id);
+                      }}
+                      className="flex w-full items-center justify-between gap-2 rounded-xl border border-[var(--border-warm)] bg-[var(--bg-canvas)] px-3 py-2.5 text-left text-xs font-bold text-[var(--text-primary)]"
+                    >
+                      <span className="truncate">{product.title}</span>
+                      <Maximize2 className="h-3.5 w-3.5 shrink-0 text-[var(--accent-terracotta)]" />
+                    </button>
                   ) : (
                     <a
                       key={product.id}
-                      href={product.href}
+                      href={resolveStudioUrl(product.href)}
                       target="_blank"
                       rel="noreferrer"
                       onClick={() => {

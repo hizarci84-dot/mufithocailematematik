@@ -72,6 +72,26 @@ export const STUDIO_PRODUCTS: StudioProduct[] = [
     allowModalPreview: true,
   },
   {
+    id: 'geometri-pergel-cetvel-studyosu',
+    title: 'Türkçe Geometri & Pergel–Cetvel Stüdyosu',
+    subtitle: 'Etkileşimli Pergel, Cetvel, Açıölçer ve Kesişim Yakalama Aracı',
+    description:
+      'Sıfırdan geliştirilmiş %100 Türkçe geometri çizim laboratuvarı: cm ölçekli cetvel, yay ve çember çizen pergel, döndürülebilir/ölçeklenebilir açıölçer, kesişim yakalama ve soru görseli ekleme.',
+    category: 'Araç',
+    status: 'active',
+    badge: 'Yeni • %100 Türkçe',
+    accentColor: '#D94E34',
+    highlights: [
+      'Türkçe Pergel, Cetvel (cm), Açıölçer (0°–180°), Doğru Parçası ve Kalem',
+      'Gerçek kesişim noktalarına ve cetvel kenarına otomatik mıknatıslanma',
+      'Soru fotoğrafı yükleme, koyu tahta modu ve PNG / tek dosya HTML çıktısı',
+    ],
+    actionLabel: 'Stüdyoyu Aç',
+    href: 'apps/araclar/geometri_studyo.html',
+    openInPlayer: true,
+    allowModalPreview: true,
+  },
+  {
     id: 'yeni-uygulama-ve-urunler',
     title: 'Yeni Uygulamalar & Dijital Ürünler',
     subtitle: 'Üst Sınıf Portalları, Sınav Araçları ve Eğitim Paketleri',

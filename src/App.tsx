@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { CATALOG_TOPICS } from './data/catalog';
-import { BRAND_CONFIG } from './data/products';
+import { BRAND_CONFIG, STUDIO_PRODUCTS } from './data/products';
 import type { GradeLevel, TopicModule } from './types/studio';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
@@ -27,6 +27,18 @@ const FAV_STORAGE_KEY = 'mufithoca_favorites';
 function getInitialTargetFromUrl(): PlayerTarget | null {
   try {
     const params = new URLSearchParams(window.location.search);
+    const aracId = params.get('arac');
+    if (aracId) {
+      const product = STUDIO_PRODUCTS.find((p) => p.id === aracId && p.href);
+      if (product && product.href) {
+        return {
+          customTitle: product.title,
+          customUrl: product.href,
+          customProductId: product.id,
+          mode: 'lab',
+        };
+      }
+    }
     const topicId = params.get('konu');
     const mod = params.get('mod');
     if (!topicId) return null;
@@ -119,9 +131,15 @@ export function App() {
       if (playerTarget?.topic) {
         url.searchParams.set('konu', playerTarget.topic.id);
         url.searchParams.set('mod', playerTarget.mode);
+        url.searchParams.delete('arac');
+      } else if (playerTarget?.customProductId) {
+        url.searchParams.set('arac', playerTarget.customProductId);
+        url.searchParams.delete('konu');
+        url.searchParams.delete('mod');
       } else {
         url.searchParams.delete('konu');
         url.searchParams.delete('mod');
+        url.searchParams.delete('arac');
       }
       window.history.replaceState({}, '', url.toString());
     } catch {
@@ -195,6 +213,15 @@ export function App() {
     setPlayerTarget({ topic: nextTopic, mode: nextMode });
   };
 
+  const openCustomApp = (title: string, url: string, productId?: string) => {
+    setPlayerTarget({
+      customTitle: title,
+      customUrl: url,
+      customProductId: productId,
+      mode: 'lab',
+    });
+  };
+
   return (
     <div className="warm-studio-bg min-h-screen overflow-x-hidden text-[var(--text-primary)]">
       <Navbar
@@ -205,9 +232,7 @@ export function App() {
         onOpenTopic={(topic: TopicModule, mode: 'animation' | 'lab') =>
           setPlayerTarget({ topic, mode })
         }
-        onOpenAppUrl={(title, url) =>
-          setPlayerTarget({ customTitle: title, customUrl: url, mode: 'animation' })
-        }
+        onOpenAppUrl={openCustomApp}
         onOpenUsageModal={() => setIsUsageModalOpen(true)}
         onOpenLiveShowcase={() => handleOpenLiveShowcase(true, 'menu')}
       />
@@ -241,11 +266,7 @@ export function App() {
           }
         />
 
-        <ProductsShowcase
-          onOpenAppUrl={(title, url) =>
-            setPlayerTarget({ customTitle: title, customUrl: url, mode: 'animation' })
-          }
-        />
+        <ProductsShowcase onOpenAppUrl={openCustomApp} />
 
         <UsageGuideSection />
       </main>

@@ -25,6 +25,25 @@ async function getCompactLogoDataUrl(): Promise<string | null> {
   }
 }
 
+export function resolveStudioUrl(relativeOrExternalUrl: string): string {
+  if (
+    relativeOrExternalUrl.startsWith('http') ||
+    relativeOrExternalUrl.startsWith('#') ||
+    relativeOrExternalUrl.startsWith('/')
+  ) {
+    return relativeOrExternalUrl;
+  }
+  return `${import.meta.env.BASE_URL}${relativeOrExternalUrl}`;
+}
+
+export function getProductShareUrl(productId: string): string {
+  const url = new URL(window.location.href);
+  url.search = '';
+  url.hash = '';
+  url.searchParams.set('arac', productId);
+  return url.toString();
+}
+
 export function getTopicShareUrl(topicId: string, mode: 'animation' | 'lab' = 'animation'): string {
   const url = new URL(window.location.href);
   url.search = '';
@@ -77,7 +96,7 @@ export async function downloadStandaloneHtml(relativeUrl: string, filename: stri
   const logoDataUrl = await getCompactLogoDataUrl();
   if (logoDataUrl) {
     html = html
-      .replace(/src=["']\.\.\/\.\.\/logom\.png["']/gi, `src="${logoDataUrl}"`)
+      .replace(/src=["']\.\.\/\.\.\/logom?\.png["']/gi, `src="${logoDataUrl}"`)
       .replace(/\s+onerror=["'][^"']*["']/gi, '');
   }
 

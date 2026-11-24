@@ -246,6 +246,7 @@ export function fitModalIframeOnMobile(iframe: HTMLIFrameElement | null): void {
   try {
     const doc = iframe.contentDocument || iframe.contentWindow?.document;
     if (!doc || !doc.head || !doc.body) return;
+    if (doc.querySelector('meta[name="studio-responsive"][content="true"]')) return;
 
     const styleId = 'studio-modal-mobile-fit';
     if (!doc.getElementById(styleId)) {
